@@ -10,7 +10,7 @@ app = FastAPI()
 @app.get("/api/price/{asset}")
 async def get_live_price(asset: str):
     asset = asset.upper()
-    price = 4145.50  # Prezzo di sicurezza aggiornato all'ultimo livello reale
+    price = 4145.50
     
     try:
         async with httpx.AsyncClient(timeout=1.0, follow_redirects=True) as client:
@@ -43,7 +43,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Master v39 Ultimate Sync</title>
+    <title>Signal Desk Pro - Master v40 Fixed</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -176,7 +176,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">v39 ULTIMATE</div>
+        <div class="badge">v40 FIXED</div>
     </div>
 
     <div class="card">
@@ -279,7 +279,7 @@ def serve_home(full_path: str = ""):
             btnEl.innerText = "Sincronizzazione in corso...";
             btnEl.disabled = true;
 
-            let livePrice = 4145.50; // Valore di riserva predefinito aggiornato
+            let livePrice = 4145.50;
             
             try {
                 const response = await fetch('/api/price/' + encodeURIComponent(asset));
@@ -291,10 +291,8 @@ def serve_home(full_path: str = ""):
 
             const decimals = (asset.includes("USD") && !asset.includes("XAU") && !asset.includes("BTC")) ? 4 : 2;
 
-            // Logica di direzione bilanciata con breakout rigoroso
             const direction = Math.random() > 0.48 ? "BUY" : "SELL";
             
-            // DISTACCO GEOMETRICO RIGIDO DI SICUREZZA ($2.00 netti dal prezzo reale attuale)
             const strictGap = asset.includes("XAU") ? 2.00 : (livePrice * 0.0006);
             let entryLevel, tp, sl;
 
@@ -342,7 +340,7 @@ def serve_home(full_path: str = ""):
             const dir = document.getElementById('res-direction').innerText;
             const entry = document.getElementById('res-entry').innerText;
             const tp = document.getElementById('res-tp').innerText;
-            const sl = document.getElementById('res-sl'].innerText;
+            const sl = document.getElementById('res-sl').innerText;
 
             const text = `🚨 SEGNALE ULTIMATE PRO 🚨\\nAsset: ${asset}\\nDirezione: ${dir}\\nEntry Level: ${entry}\\nTake Profit: ${tp}\\nStop Loss: ${sl}\\n⚡ Sincronizzazione Garantita`;
 
