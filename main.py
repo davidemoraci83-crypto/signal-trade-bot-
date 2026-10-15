@@ -40,7 +40,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Master v30 Institutional</title>
+    <title>Signal Desk Pro - Master v31 Institutional</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -175,7 +175,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">MASTER v30</div>
+        <div class="badge">MASTER v31</div>
     </div>
 
     <div class="card">
@@ -293,26 +293,25 @@ def serve_home(full_path: str = ""):
 
             const decimals = (asset.includes("USD") && !asset.includes("XAU") && !asset.includes("BTC")) ? 4 : 2;
 
-            // Micro-oscillazione di mercato
-            const jitter = (Math.random() - 0.48) * (livePrice * 0.00004);
-            livePrice = Number((livePrice + jitter).toFixed(decimals));
+            // Micro-oscillazione dinamica anti-ripetizione
+            const stepJitter = (Math.random() * 0.8 + 0.4) * (livePrice * 0.00008);
+            livePrice = Number((livePrice + stepJitter).toFixed(decimals));
             baselinePrices[asset] = livePrice;
 
-            // Direzione basata su momentum tecnico
             const direction = Math.random() > 0.45 ? "BUY" : "SELL";
             
-            // DISTACCO INTELLIGENTE DELL'ENTRY: Non inviamo il prezzo attuale ma un livello di breakout calcolato
-            const offsetStep = livePrice * 0.00035; // Distanza ideale per breakout
+            // DISTACCO FORZATO DELL'ENTRY: Garantisce sempre un margine di breakout pulito
+            const breakoutOffset = livePrice * 0.00055; 
             let entryLevel, tp, sl;
 
             if (direction === "BUY") {
-                entryLevel = Number((livePrice + offsetStep).toFixed(decimals));
-                tp = Number((entryLevel + (livePrice * 0.0015)).toFixed(decimals));
-                sl = Number((entryLevel - (livePrice * 0.0008)).toFixed(decimals));
+                entryLevel = Number((livePrice + breakoutOffset).toFixed(decimals));
+                tp = Number((entryLevel + (livePrice * 0.0018)).toFixed(decimals));
+                sl = Number((entryLevel - (livePrice * 0.0009)).toFixed(decimals));
             } else {
-                entryLevel = Number((livePrice - offsetStep).toFixed(decimals));
-                tp = Number((entryLevel - (livePrice * 0.0015)).toFixed(decimals));
-                sl = Number((entryLevel + (livePrice * 0.0008)).toFixed(decimals));
+                entryLevel = Number((livePrice - breakoutOffset).toFixed(decimals));
+                tp = Number((entryLevel - (livePrice * 0.0018)).toFixed(decimals));
+                sl = Number((entryLevel + (livePrice * 0.0009)).toFixed(decimals));
             }
 
             const now = new Date();
@@ -335,7 +334,6 @@ def serve_home(full_path: str = ""):
             btnEl.innerText = "⚡ GENERA SEGNALE PRO";
             btnEl.disabled = false;
 
-            // Aggiorna log di sessione
             const logBox = document.getElementById('history-log');
             const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} @ ${entryLevel.toFixed(decimals)}<br>`;
             if (logBox.innerText.includes("Nessun segnale")) {
