@@ -71,32 +71,52 @@ class TradeResultRequest(BaseModel):
 @app.get("/api/price/{asset}")
 async def get_live_price(asset: str):
     asset = asset.upper()
-    price = 4145.50
+    price = None
+    
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
     
     try:
-        async with httpx.AsyncClient(timeout=1.5, follow_redirects=True) as client:
+        async with httpx.AsyncClient(timeout=3.0, follow_redirects=True) as client:
             if "XAU" in asset or "GOLD" in asset:
+                # API 1: Yahoo Finance GC=F (Gold Spot Futures)
                 url = "https://query1.finance.yahoo.com/v8/finance/chart/GC=F?interval=1m&range=1d"
-                headers = {'User-Agent': 'Mozilla/5.0'}
                 res = await client.get(url, headers=headers)
                 if res.status_code == 200:
                     data = res.json()
-                    meta_price = data['chart']['result'][0]['meta']['regularMarketPrice']
-                    if meta_price:
-                        price = float(meta_price)
+                    price = data['chart']['result'][0]['meta'].get('regularMarketPrice')
+                
+                # API 2 Backup: GoldApi / Stooq se il primo fallisce
+                if not price:
+                    stooq_url = "https://stooq.com/q/l/?s=xauusd&f=sd2t2ohlcv&h&e=json"
+                    res2 = await client.get(stooq_url, headers=headers)
+                    if res2.status_code == 200:
+                        d2 = res2.json()
+                        price = float(d2['symbols'][0]['close'])
+
             elif "EUR" in asset:
-                price = 1.0842
+                url = "https://query1.finance.yahoo.com/v8/finance/chart/EURUSD=X?interval=1m&range=1d"
+                res = await client.get(url, headers=headers)
+                if res.status_code == 200:
+                    price = res.json()['chart']['result'][0]['meta'].get('regularMarketPrice')
+
             elif "GBP" in asset:
-                price = 1.3015
+                url = "https://query1.finance.yahoo.com/v8/finance/chart/GBPUSD=X?interval=1m&range=1d"
+                res = await client.get(url, headers=headers)
+                if res.status_code == 200:
+                    price = res.json()['chart']['result'][0]['meta'].get('regularMarketPrice')
+
             elif "BTC" in asset:
                 res = await client.get("https://api.coincap.io/v2/assets/bitcoin")
                 if res.status_code == 200:
-                    data = res.json()
-                    price = float(data['data']['priceUsd'])
+                    price = float(res.json()['data']['priceUsd'])
+
     except Exception:
         pass
-        
-    return {"asset": asset, "price": price, "timestamp": time.time()}
+
+    if not price:
+        raise HTTPException(status_code=503, detail="Feed prezzo non disponibile momentaneamente")
+
+    return {"asset": asset, "price": float(price), "timestamp": time.time()}
 
 @app.get("/api/stats")
 async def get_stats():
@@ -117,7 +137,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Master v45 Pro Fix</title>
+    <title>Signal Desk Pro - v46 Real Sync Fix</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -267,7 +287,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">PRO TRADER v45</div>
+        <div class="badge">LIVE SYNC v46</div>
     </div>
 
     <div class="card">
@@ -458,12 +478,10 @@ def serve_home(full_path: str = ""):
                 const res = await fetch('/api/price/' + encodeURIComponent(assetSelect));
                 const data = await res.json();
                 if (data && data.price) {
-                    alert("Sincronizzazione completata con successo! Prezzo live: " + data.price);
-                } else {
-                    alert("Sincronizzazione completata.");
+                    alert("Sincronizzazione completata! Prezzo live da broker: $" + data.price);
                 }
             } catch(e) {
-                alert("Feed aggiornato correttamente.");
+                alert("Errore sincronizzazione live. Riprova tra un secondo.");
             } finally {
                 syncBtn.innerText = "🔄 SYNC";
                 syncBtn.disabled = false;
@@ -478,23 +496,28 @@ def serve_home(full_path: str = ""):
             if (!assetSelect || !btnEl || !signalBox) return;
 
             const asset = assetSelect.value;
-            btnEl.innerText = "Analisi Prezzo Live...";
+            btnEl.innerText = "Sincronizzazione Live...";
             btnEl.disabled = true;
 
-            let livePrice = 4145.50;
+            let livePrice = 0;
             
             try {
                 const response = await fetch('/api/price/' + encodeURIComponent(asset));
+                if (!response.ok) throw new Error("Feed error");
                 const data = await response.json();
                 if (data && data.price && data.price > 1) {
                     livePrice = parseFloat(data.price);
                 }
-            } catch (e) {}
+            } catch (e) {
+                alert("⚠️ Impossibile sincronizzare il prezzo live del broker. Il segnale non è stato generato per evitare errori di quotazione.");
+                btnEl.innerText = "⚡ GENERA SEGNALE PRO";
+                btnEl.disabled = false;
+                return;
+            }
 
             const decimals = (asset.includes("USD") && !asset.includes("XAU") && !asset.includes("BTC")) ? 4 : 2;
             const direction = Math.random() > 0.48 ? "BUY" : "SELL";
             
-            // CORRETTO: Range basato sul prezzo live reale (esatto come i trader professionisti)
             const step = asset.includes("XAU") ? 2.50 : 0.0025;
             let rangeText, slVal, tpText;
             const cleanAssetSymbol = asset.replace("/", "");
