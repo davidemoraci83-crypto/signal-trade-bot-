@@ -1,11 +1,72 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
 import httpx
 import uvicorn
 import os
 import time
 
 app = FastAPI()
+
+# ==========================================
+# GESTORE STATO & SMART WIN RATE (BACKEND)
+# ==========================================
+class SignalTrackerState:
+    def __init__(self):
+        self.total_trades = 0
+        self.wins = 0
+        self.losses = 0
+        self.recovery_trades = 0
+        self.recovery_wins = 0
+        self.is_in_recovery = False
+        self.recovery_attempts = 0
+        self.base_lot = 0.01
+        self.lot_multiplier = 1.5
+        self.max_recovery_attempts = 2
+
+    def get_next_lot(self):
+        if self.is_in_recovery and self.recovery_attempts <= self.max_recovery_attempts:
+            return round(self.base_lot * (self.lot_multiplier ** self.recovery_attempts), 2)
+        return self.base_lot
+
+    def process_result(self, is_win: bool):
+        self.total_trades += 1
+        if self.is_in_recovery:
+            self.recovery_trades += 1
+
+        if is_win:
+            self.wins += 1
+            if self.is_in_recovery:
+                self.recovery_wins += 1
+            self.is_in_recovery = False
+            self.recovery_attempts = 0
+        else:
+            self.losses += 1
+            self.recovery_attempts += 1
+            if self.recovery_attempts <= self.max_recovery_attempts:
+                self.is_in_recovery = True
+            else:
+                self.is_in_recovery = False
+                self.recovery_attempts = 0
+
+    def get_stats(self):
+        std_wr = (self.wins / self.total_trades * 100) if self.total_trades > 0 else 0.0
+        rec_wr = (self.recovery_wins / self.recovery_trades * 100) if self.recovery_trades > 0 else 0.0
+        return {
+            "total_trades": self.total_trades,
+            "wins": self.wins,
+            "losses": self.losses,
+            "standard_win_rate": round(std_wr, 2),
+            "recovery_win_rate": round(rec_wr, 2),
+            "is_in_recovery": self.is_in_recovery,
+            "recovery_attempts": self.recovery_attempts,
+            "next_lot": self.get_next_lot()
+        }
+
+tracker = SignalTrackerState()
+
+class TradeResultRequest(BaseModel):
+    is_win: bool
 
 @app.get("/api/price/{asset}")
 async def get_live_price(asset: str):
@@ -37,6 +98,15 @@ async def get_live_price(asset: str):
         
     return {"asset": asset, "price": price, "timestamp": time.time()}
 
+@app.get("/api/stats")
+async def get_stats():
+    return tracker.get_stats()
+
+@app.post("/api/trade/result")
+async def post_trade_result(payload: TradeResultRequest):
+    tracker.process_result(payload.is_win)
+    return tracker.get_stats()
+
 @app.get("/", response_class=HTMLResponse)
 @app.get("/signals", response_class=HTMLResponse)
 @app.get("/{full_path:path}", response_class=HTMLResponse)
@@ -47,7 +117,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Master v43 Sync Fixed</title>
+    <title>Signal Desk Pro - Master v44 Smart Recovery</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -70,7 +140,7 @@ def serve_home(full_path: str = ""):
         }
         .badge {
             font-size: 0.65rem;
-            background-color: #16a34a;
+            background-color: #0284c7;
             color: #f0fdf4;
             padding: 3px 8px;
             border-radius: 9999px;
@@ -157,6 +227,14 @@ def serve_home(full_path: str = ""):
             color: #cbd5e1;
             flex: 0.4;
         }
+        .btn-success {
+            background: linear-gradient(135deg, #22c55e, #15803d);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
         .btn:active { opacity: 0.8; }
         .signal-container {
             display: none;
@@ -189,7 +267,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">v43 SYNC FIX</div>
+        <div class="badge">SMART RECOVERY v44</div>
     </div>
 
     <div class="card">
@@ -215,6 +293,34 @@ def serve_home(full_path: str = ""):
         <div class="btn-group">
             <button type="button" id="action-btn" class="btn" onclick="generaSegnalePips()">⚡ GENERA SEGNALE PRO</button>
             <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 SYNC</button>
+        </div>
+    </div>
+
+    <!-- NUOVA CARD: SMART WIN RATE & RECOVERY MANAGEMENT -->
+    <div class="card" style="border-left: 4px solid #22c55e;">
+        <div style="font-size: 0.75rem; color: #22c55e; margin-bottom: 8px; font-weight: bold;">📊 SMART WIN RATE & RECOVERY MONITOR</div>
+        
+        <div class="data-row">
+            <span>Win Rate Standard (Puro):</span>
+            <strong id="stat-std-wr" style="color: #38bdf8;">0.00%</strong>
+        </div>
+        <div class="data-row">
+            <span>Smart Recovery Rate:</span>
+            <strong id="stat-rec-wr" style="color: #4ade80;">0.00%</strong>
+        </div>
+        <div class="data-row">
+            <span>Stato Gestione Corrente:</span>
+            <strong id="stat-status" style="color: #fbbf24;">Standard Mode</strong>
+        </div>
+        <div class="data-row">
+            <span>Lotto Consigliato Prossimo Trade:</span>
+            <strong id="stat-lot" style="color: #38bdf8; font-size: 0.95rem;">0.01</strong>
+        </div>
+
+        <div style="margin-top: 10px; font-size: 0.72rem; color: #94a3b8; margin-bottom: 6px;">Simula esito ultimo segnale:</div>
+        <div class="btn-group">
+            <button type="button" class="btn btn-success" style="padding: 8px; font-size: 0.78rem;" onclick="registraEsito(true)">✅ SEGNA VINTO (WIN)</button>
+            <button type="button" class="btn btn-danger" style="padding: 8px; font-size: 0.78rem;" onclick="registraEsito(false)">❌ SEGNA PERSO (LOSS)</button>
         </div>
     </div>
 
@@ -258,7 +364,7 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card" style="padding: 10px 12px;">
-        <label>Log Sessione Sync Fix:</label>
+        <label>Log Sessione Smart Recovery:</label>
         <div id="history-log" class="history-box">Nessun segnale generato in questa sessione.</div>
     </div>
 
@@ -266,6 +372,48 @@ def serve_home(full_path: str = ""):
     <script>
         let currentTF = 'M1';
         let tvWidget = null;
+
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                if (data) {
+                    document.getElementById('stat-std-wr').innerText = data.standard_win_rate + '% (' + data.wins + '/' + data.total_trades + ')';
+                    document.getElementById('stat-rec-wr').innerText = data.recovery_win_rate + '%';
+                    
+                    const statusEl = document.getElementById('stat-status');
+                    if (data.is_in_recovery) {
+                        statusEl.innerText = '🔥 RECOVERY MODE (Tentativo ' + data.recovery_attempts + '/2)';
+                        statusEl.style.color = '#ef4444';
+                    } else {
+                        statusEl.innerText = '🛡️ STANDARD MODE (Pronto)';
+                        statusEl.style.color = '#22c55e';
+                    }
+                    document.getElementById('stat-lot').innerText = data.next_lot;
+                }
+            } catch(e) {}
+        }
+
+        async function registraEsito(isWin) {
+            try {
+                const res = await fetch('/api/trade/result', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_win: isWin })
+                });
+                const data = await res.json();
+                fetchStats();
+                
+                const logBox = document.getElementById('history-log');
+                const nowStr = new Date().toTimeString().split(' ')[0];
+                const msg = isWin ? `🟢 [${nowStr}] Trade chiuso in PROFITTO (WIN)` : `🔴 [${nowStr}] Trade chiuso in PERDITA (LOSS) -> Attivato recupero`;
+                logBox.innerHTML = msg + '<br>' + logBox.innerHTML;
+            } catch(e) {
+                alert("Errore nella registrazione dell'esito.");
+            }
+        }
+
+        fetchStats();
 
         function initChart(symbolCode) {
             document.getElementById('tradingview_widget').innerHTML = "";
@@ -348,10 +496,8 @@ def serve_home(full_path: str = ""):
             } catch (e) {}
 
             const decimals = (asset.includes("USD") && !asset.includes("XAU") && !asset.includes("BTC")) ? 4 : 2;
-
             const direction = Math.random() > 0.48 ? "BUY" : "SELL";
             
-            // DISTACCO MINIMO DI SICUREZZA (30 Pips / $3.00 netti reali dal prezzo attuale)
             const pipsOffset = asset.includes("XAU") ? 3.00 : 0.0030;
             let entryLevel, tp, sl;
 
@@ -384,6 +530,8 @@ def serve_home(full_path: str = ""):
             signalBox.style.display = 'block';
             btnEl.innerText = "⚡ GENERA SEGNALE PRO";
             btnEl.disabled = false;
+
+            fetchStats();
 
             const logBox = document.getElementById('history-log');
             const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} @ ${entryLevel.toFixed(decimals)}<br>`;
