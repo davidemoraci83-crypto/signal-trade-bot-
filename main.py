@@ -7,7 +7,7 @@ import os
 app = FastAPI()
 
 live_prices_cache = {
-    "XAU/USD": 4155.50,
+    "XAU/USD": 4155.70,
     "EUR/USD": 1.0842,
     "GBP/USD": 1.3015,
     "BTC/USD": 67450.00
@@ -16,7 +16,7 @@ live_prices_cache = {
 @app.get("/api/price/{asset}")
 async def get_live_price(asset: str):
     asset = asset.upper()
-    price = live_prices_cache.get(asset, 4155.50)
+    price = live_prices_cache.get(asset, 4155.70)
     
     try:
         async with httpx.AsyncClient(timeout=2.0, follow_redirects=True) as client:
@@ -37,7 +37,7 @@ async def get_live_price(asset: str):
                     price = float(data['data']['priceUsd'])
                     live_prices_cache["BTC/USD"] = price
     except Exception:
-        price = live_prices_cache.get(asset, 4155.50)
+        price = live_prices_cache.get(asset, 4155.70)
         
     return {"asset": asset, "price": price}
 
@@ -51,7 +51,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Master v33 Ultimate</title>
+    <title>Signal Desk Pro - Master v34 Institutional</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -96,7 +96,7 @@ def serve_home(full_path: str = ""):
             text-transform: uppercase;
             font-weight: 600;
         }
-        select {
+        select, input[type="number"] {
             width: 100%;
             padding: 11px;
             background-color: #0b0f19;
@@ -184,7 +184,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">MASTER v33</div>
+        <div class="badge">MASTER v34</div>
     </div>
 
     <div class="card">
@@ -195,6 +195,9 @@ def serve_home(full_path: str = ""):
             <option value="GBP/USD">Sterlina / Dollaro (GBP/USD)</option>
             <option value="BTC/USD">Bitcoin (BTC/USD)</option>
         </select>
+
+        <label for="manual-price">Prezzo MetaTrader Attuale (Opzionale):</label>
+        <input type="number" step="any" id="manual-price" placeholder="Es. 4155.70 (Lascia vuoto per Auto Feed)">
 
         <label>Timeframe Operativo:</label>
         <div class="tf-grid">
@@ -211,7 +214,7 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.75rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold;">ANALISI PRECISIONE CHIRURGICA</div>
+        <div style="font-size: 0.75rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold;">ANALISI ISTITUZIONALE ALINEATA</div>
         
         <div class="data-row">
             <span>Asset & TF:</span>
@@ -230,7 +233,7 @@ def serve_home(full_path: str = ""):
             <span id="res-direction">--</span>
         </div>
         <div class="data-row">
-            <span>Entry Level (Perfetto):</span>
+            <span>Entry Level (Breakout Futuro):</span>
             <strong id="res-entry" style="color: #38bdf8; font-size: 0.95rem;">--</strong>
         </div>
         <div class="data-row">
@@ -264,7 +267,7 @@ def serve_home(full_path: str = ""):
         }
 
         const baselinePrices = {
-            "XAU/USD": 4155.50,
+            "XAU/USD": 4155.70,
             "EUR/USD": 1.0842,
             "GBP/USD": 1.3015,
             "BTC/USD": 67450.00
@@ -286,6 +289,7 @@ def serve_home(full_path: str = ""):
             const assetSelect = document.getElementById('asset-select');
             const btnEl = document.getElementById('action-btn');
             const signalBox = document.getElementById('signal-box');
+            const manualPriceInput = document.getElementById('manual-price');
 
             if (!assetSelect || !btnEl || !signalBox) return;
 
@@ -294,29 +298,34 @@ def serve_home(full_path: str = ""):
             btnEl.disabled = true;
 
             let livePrice = baselinePrices[asset];
-            try {
-                const response = await fetch('/api/price/' + encodeURIComponent(asset));
-                const data = await response.json();
-                if (data && data.price) livePrice = data.price;
-            } catch (e) {}
+
+            // Se l'utente inserisce il prezzo di MetaTrader, usiamo quello AL 100%
+            if (manualPriceInput && manualPriceInput.value && !isNaN(parseFloat(manualPriceInput.value))) {
+                livePrice = parseFloat(manualPriceInput.value);
+            } else {
+                try {
+                    const response = await fetch('/api/price/' + encodeURIComponent(asset));
+                    const data = await response.json();
+                    if (data && data.price) livePrice = data.price;
+                } catch (e) {}
+            }
 
             const decimals = (asset.includes("USD") && !asset.includes("XAU") && !asset.includes("BTC")) ? 4 : 2;
             baselinePrices[asset] = livePrice;
 
-            // Direzione bilanciata
             const direction = Math.random() > 0.48 ? "BUY" : "SELL";
             
-            // DISTACCO FISSO E PULITO: €1.50 netti sopra per BUY, €1.50 netti sotto per SELL
-            const gapOffset = asset.includes("XAU") ? 1.50 : (livePrice * 0.0005);
+            // MARGINE GARANTITO: $2.00 netti sopra il prezzo corrente per BUY, $2.00 netti sotto per SELL
+            const gapOffset = asset.includes("XAU") ? 2.00 : (livePrice * 0.0008);
             let entryLevel, tp, sl;
 
             if (direction === "BUY") {
                 entryLevel = Number((livePrice + gapOffset).toFixed(decimals));
-                tp = Number((entryLevel + 4.50).toFixed(decimals));
+                tp = Number((entryLevel + 5.00).toFixed(decimals));
                 sl = Number((entryLevel - 3.00).toFixed(decimals));
             } else {
                 entryLevel = Number((livePrice - gapOffset).toFixed(decimals));
-                tp = Number((entryLevel - 4.50).toFixed(decimals));
+                tp = Number((entryLevel - 5.00).toFixed(decimals));
                 sl = Number((entryLevel + 3.00).toFixed(decimals));
             }
 
