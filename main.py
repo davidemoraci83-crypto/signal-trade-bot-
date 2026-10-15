@@ -117,7 +117,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Master v44 Smart Recovery</title>
+    <title>Signal Desk Pro - Master v45 Pro Fix</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -267,7 +267,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">SMART RECOVERY v44</div>
+        <div class="badge">PRO TRADER v45</div>
     </div>
 
     <div class="card">
@@ -291,12 +291,11 @@ def serve_home(full_path: str = ""):
         </div>
 
         <div class="btn-group">
-            <button type="button" id="action-btn" class="btn" onclick="generaSegnalePips()">⚡ GENERA SEGNALE PRO</button>
+            <button type="button" id="action-btn" class="btn" onclick="generaSegnalePro()">⚡ GENERA SEGNALE PRO</button>
             <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 SYNC</button>
         </div>
     </div>
 
-    <!-- NUOVA CARD: SMART WIN RATE & RECOVERY MANAGEMENT -->
     <div class="card" style="border-left: 4px solid #22c55e;">
         <div style="font-size: 0.75rem; color: #22c55e; margin-bottom: 8px; font-weight: bold;">📊 SMART WIN RATE & RECOVERY MONITOR</div>
         
@@ -325,7 +324,7 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.72rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold;">ANALISI DISTACCO 30 PIPS MINIMO</div>
+        <div style="font-size: 0.72rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold;">ANALISI RANGE DI MERCATO PROFESSIONALE</div>
         
         <div class="data-row">
             <span>Asset & TF:</span>
@@ -336,35 +335,31 @@ def serve_home(full_path: str = ""):
             <strong id="res-liveprice" style="color: #38bdf8;">--</strong>
         </div>
         <div class="data-row">
-            <span>Precisione Algoritmo:</span>
-            <strong style="color: #38bdf8;" id="res-winrate">99.9%</strong>
-        </div>
-        <div class="data-row">
-            <span>Direzione Operativa:</span>
+            <span>Direzione:</span>
             <span id="res-direction">--</span>
         </div>
         <div class="data-row">
-            <span>Entry Level (Distanziato):</span>
-            <strong id="res-entry" style="color: #38bdf8; font-size: 0.95rem;">--</strong>
-        </div>
-        <div class="data-row">
-            <span>Take Profit (TP):</span>
-            <strong id="res-tp" style="color: #4ade80;">--</strong>
+            <span>Range di Ingresso:</span>
+            <strong id="res-range" style="color: #38bdf8; font-size: 0.95rem;">--</strong>
         </div>
         <div class="data-row">
             <span>Stop Loss (SL):</span>
             <strong id="res-sl" style="color: #f87171;">--</strong>
         </div>
         <div class="data-row">
+            <span>Take Profit (TP):</span>
+            <strong id="res-tp" style="color: #4ade80;">--</strong>
+        </div>
+        <div class="data-row">
             <span>Timestamp:</span>
             <span id="res-time" style="color: #94a3b8;">--</span>
         </div>
 
-        <button type="button" class="btn" style="margin-top: 10px; padding: 10px; font-size: 0.82rem;" onclick="copiaSegnale()">📋 COPIA SEGNALE PER TELEGRAM</button>
+        <button type="button" class="btn" style="margin-top: 10px; padding: 10px; font-size: 0.82rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
     </div>
 
     <div class="card" style="padding: 10px 12px;">
-        <label>Log Sessione Smart Recovery:</label>
+        <label>Log Sessione Pro:</label>
         <div id="history-log" class="history-box">Nessun segnale generato in questa sessione.</div>
     </div>
 
@@ -372,6 +367,7 @@ def serve_home(full_path: str = ""):
     <script>
         let currentTF = 'M1';
         let tvWidget = null;
+        let lastSignalData = {};
 
         async function fetchStats() {
             try {
@@ -474,7 +470,7 @@ def serve_home(full_path: str = ""):
             }
         }
 
-        async function generaSegnalePips() {
+        async function generaSegnalePro() {
             const assetSelect = document.getElementById('asset-select');
             const btnEl = document.getElementById('action-btn');
             const signalBox = document.getElementById('signal-box');
@@ -482,7 +478,7 @@ def serve_home(full_path: str = ""):
             if (!assetSelect || !btnEl || !signalBox) return;
 
             const asset = assetSelect.value;
-            btnEl.innerText = "Sincronizzazione 30 Pips...";
+            btnEl.innerText = "Analisi Prezzo Live...";
             btnEl.disabled = true;
 
             let livePrice = 4145.50;
@@ -498,33 +494,54 @@ def serve_home(full_path: str = ""):
             const decimals = (asset.includes("USD") && !asset.includes("XAU") && !asset.includes("BTC")) ? 4 : 2;
             const direction = Math.random() > 0.48 ? "BUY" : "SELL";
             
-            const pipsOffset = asset.includes("XAU") ? 3.00 : 0.0030;
-            let entryLevel, tp, sl;
+            // CORRETTO: Range basato sul prezzo live reale (esatto come i trader professionisti)
+            const step = asset.includes("XAU") ? 2.50 : 0.0025;
+            let rangeText, slVal, tpText;
+            const cleanAssetSymbol = asset.replace("/", "");
 
             if (direction === "BUY") {
-                entryLevel = Number((livePrice + pipsOffset).toFixed(decimals));
-                tp = Number((entryLevel + (pipsOffset * 2.5)).toFixed(decimals));
-                sl = Number((entryLevel - (pipsOffset * 1.5)).toFixed(decimals));
+                let upperEntry = livePrice;
+                let lowerEntry = livePrice - step;
+                let sl = lowerEntry - (step * 1.5);
+                let tp1 = upperEntry + (step * 2);
+                let tp2 = upperEntry + (step * 4);
+
+                rangeText = `${upperEntry.toFixed(decimals)} / ${lowerEntry.toFixed(decimals)}`;
+                slVal = sl.toFixed(decimals);
+                tpText = `${tp1.toFixed(decimals)} / ${tp2.toFixed(decimals)}`;
             } else {
-                entryLevel = Number((livePrice - pipsOffset).toFixed(decimals));
-                tp = Number((entryLevel - (pipsOffset * 2.5)).toFixed(decimals));
-                sl = Number((entryLevel + (pipsOffset * 1.5)).toFixed(decimals));
+                let lowerEntry = livePrice;
+                let upperEntry = livePrice + step;
+                let sl = upperEntry + (step * 1.5);
+                let tp1 = lowerEntry - (step * 2);
+                let tp2 = lowerEntry - (step * 4);
+
+                rangeText = `${lowerEntry.toFixed(decimals)} / ${upperEntry.toFixed(decimals)}`;
+                slVal = sl.toFixed(decimals);
+                tpText = `${tp1.toFixed(decimals)} / ${tp2.toFixed(decimals)}`;
             }
 
             const now = new Date();
             const timeStr = now.toTimeString().split(' ')[0];
 
+            lastSignalData = {
+                symbol: cleanAssetSymbol,
+                dir: direction,
+                range: rangeText,
+                sl: slVal,
+                tp: tpText
+            };
+
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
-            document.getElementById('res-winrate').innerText = '99.9% (30 Pips Safe)';
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction;
+            dirElem.innerText = direction + " RANGE";
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
-            document.getElementById('res-entry').innerText = entryLevel.toFixed(decimals);
-            document.getElementById('res-tp').innerText = tp.toFixed(decimals);
-            document.getElementById('res-sl').innerText = sl.toFixed(decimals);
+            document.getElementById('res-range').innerText = rangeText;
+            document.getElementById('res-sl').innerText = slVal;
+            document.getElementById('res-tp').innerText = tpText;
             document.getElementById('res-time').innerText = timeStr;
 
             signalBox.style.display = 'block';
@@ -534,7 +551,7 @@ def serve_home(full_path: str = ""):
             fetchStats();
 
             const logBox = document.getElementById('history-log');
-            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} @ ${entryLevel.toFixed(decimals)}<br>`;
+            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} RANGE @ ${rangeText}<br>`;
             if (logBox.innerText.includes("Nessun segnale")) {
                 logBox.innerHTML = logText;
             } else {
@@ -542,17 +559,16 @@ def serve_home(full_path: str = ""):
             }
         }
 
-        function copiaSegnale() {
-            const asset = document.getElementById('res-asset').innerText;
-            const dir = document.getElementById('res-direction').innerText;
-            const entry = document.getElementById('res-entry').innerText;
-            const tp = document.getElementById('res-tp').innerText;
-            const sl = document.getElementById('res-sl').innerText;
+        function copiaSegnalePro() {
+            if (!lastSignalData.symbol) {
+                alert("Genera prima un segnale!");
+                return;
+            }
 
-            const text = `🚨 SEGNALE PRO PIPS GUARD 🚨\\nAsset: ${asset}\\nDirezione: ${dir}\\nEntry Level: ${entry}\\nTake Profit: ${tp}\\nStop Loss: ${sl}\\n⚡ Distacco Minimo Garantito`;
+            const text = `🟢 ${lastSignalData.symbol} 🟢\\n\\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\\n\\nSL: ${lastSignalData.sl}\\n\\nTP: ${lastSignalData.tp}`;
 
             navigator.clipboard.writeText(text).then(() => {
-                alert("Segnale copiato negli appunti!");
+                alert("Segnale in stile pro copiato negli appunti per Telegram!");
             });
         }
     </script>
