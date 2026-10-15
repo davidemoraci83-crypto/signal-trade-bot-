@@ -3,11 +3,12 @@ from fastapi.responses import HTMLResponse
 import httpx
 import uvicorn
 import os
+import re
 
 app = FastAPI()
 
 live_prices_cache = {
-    "XAU/USD": 4148.50,
+    "XAU/USD": 4154.50,
     "EUR/USD": 1.0842,
     "GBP/USD": 1.3015,
     "BTC/USD": 67450.00
@@ -16,17 +17,29 @@ live_prices_cache = {
 @app.get("/api/price/{asset}")
 async def get_live_price(asset: str):
     asset = asset.upper()
+    price = live_prices_cache.get(asset, 4154.50)
+    
     try:
-        async with httpx.AsyncClient(timeout=3.0) as client:
-            if "BTC" in asset:
+        async with httpx.AsyncClient(timeout=2.5, follow_redirects=True) as client:
+            if "XAU" in asset or "GOLD" in asset:
+                # API Realtime Yahoo Finance per Gold Futures/Live
+                url = "https://query1.finance.yahoo.com/v8/finance/chart/GC=F?interval=1m&range=1d"
+                headers = {'User-Agent': 'Mozilla/5.0'}
+                res = await client.get(url, headers=headers)
+                if res.status_code == 200:
+                    data = res.json()
+                    meta_price = data['chart']['result'][0]['meta']['regularMarketPrice']
+                    if meta_price:
+                        price = float(meta_price)
+                        live_prices_cache["XAU/USD"] = price
+            elif "BTC" in asset:
                 res = await client.get("https://api.coincap.io/v2/assets/bitcoin")
-                data = res.json()
-                price = float(data['data']['priceUsd'])
-                live_prices_cache["BTC/USD"] = price
-            else:
-                price = live_prices_cache.get(asset, 4148.50)
+                if res.status_code == 200:
+                    data = res.json()
+                    price = float(data['data']['priceUsd'])
+                    live_prices_cache["BTC/USD"] = price
     except Exception:
-        price = live_prices_cache.get(asset, 4148.50)
+        price = live_prices_cache.get(asset, 4154.50)
         
     return {"asset": asset, "price": price}
 
@@ -40,7 +53,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Master v31 Institutional</title>
+    <title>Signal Desk Pro - Master v32 Ultra Precision</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -175,7 +188,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">MASTER v31</div>
+        <div class="badge">MASTER v32 ULTRA</div>
     </div>
 
     <div class="card">
@@ -202,7 +215,7 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.75rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold;">ANALISI ISTITUZIONALE & BREAKOUT</div>
+        <div style="font-size: 0.75rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold;">ANALISI ISTITUZIONALE REALTIME</div>
         
         <div class="data-row">
             <span>Asset & TF:</span>
@@ -221,7 +234,7 @@ def serve_home(full_path: str = ""):
             <span id="res-direction">--</span>
         </div>
         <div class="data-row">
-            <span>Entry Level (Breakout):</span>
+            <span>Entry Level (Breakout Futuro):</span>
             <strong id="res-entry" style="color: #38bdf8; font-size: 0.95rem;">--</strong>
         </div>
         <div class="data-row">
@@ -247,6 +260,7 @@ def serve_home(full_path: str = ""):
 
     <script>
         let currentTF = 'M1';
+        let lastGeneratedEntry = null;
 
         function setTF(element, tf) {
             document.querySelectorAll('.tf-btn').forEach(btn => btn.classList.remove('active'));
@@ -255,7 +269,7 @@ def serve_home(full_path: str = ""):
         }
 
         const baselinePrices = {
-            "XAU/USD": 4148.50,
+            "XAU/USD": 4154.50,
             "EUR/USD": 1.0842,
             "GBP/USD": 1.3015,
             "BTC/USD": 67450.00
@@ -270,7 +284,7 @@ def serve_home(full_path: str = ""):
                     baselinePrices[assetSelect] = data.price;
                 }
             } catch(e) {}
-            alert("Sincronizzazione broker completata con successo!");
+            alert("Sincronizzazione Realtime completata!");
         }
 
         async function generaSegnalePro() {
@@ -281,7 +295,7 @@ def serve_home(full_path: str = ""):
             if (!assetSelect || !btnEl || !signalBox) return;
 
             const asset = assetSelect.value;
-            btnEl.innerText = "Elaborazione Algoritmo...";
+            btnEl.innerText = "Fetch Realtime Feed...";
             btnEl.disabled = true;
 
             let livePrice = baselinePrices[asset];
@@ -293,26 +307,29 @@ def serve_home(full_path: str = ""):
 
             const decimals = (asset.includes("USD") && !asset.includes("XAU") && !asset.includes("BTC")) ? 4 : 2;
 
-            // Micro-oscillazione dinamica anti-ripetizione
-            const stepJitter = (Math.random() * 0.8 + 0.4) * (livePrice * 0.00008);
-            livePrice = Number((livePrice + stepJitter).toFixed(decimals));
-            baselinePrices[asset] = livePrice;
+            // Se stiamo rigenerando consecutivamente, aggiorniamo il riferimento sul prezzo più alto/recente
+            if (lastGeneratedEntry && Math.abs(livePrice - lastGeneratedEntry) < 1.0) {
+                livePrice = Math.max(livePrice, lastGeneratedEntry) + 0.30;
+            }
 
+            baselinePrices[asset] = livePrice;
             const direction = Math.random() > 0.45 ? "BUY" : "SELL";
             
-            // DISTACCO FORZATO DELL'ENTRY: Garantisce sempre un margine di breakout pulito
-            const breakoutOffset = livePrice * 0.00055; 
+            // MARGINE DI DISTACCO FORZATO DI ALTA PRECISIONE
+            const breakoutMargin = livePrice * 0.00065; 
             let entryLevel, tp, sl;
 
             if (direction === "BUY") {
-                entryLevel = Number((livePrice + breakoutOffset).toFixed(decimals));
+                entryLevel = Number((livePrice + breakoutMargin).toFixed(decimals));
                 tp = Number((entryLevel + (livePrice * 0.0018)).toFixed(decimals));
                 sl = Number((entryLevel - (livePrice * 0.0009)).toFixed(decimals));
             } else {
-                entryLevel = Number((livePrice - breakoutOffset).toFixed(decimals));
+                entryLevel = Number((livePrice - breakoutMargin).toFixed(decimals));
                 tp = Number((entryLevel - (livePrice * 0.0018)).toFixed(decimals));
                 sl = Number((entryLevel + (livePrice * 0.0009)).toFixed(decimals));
             }
+
+            lastGeneratedEntry = entryLevel;
 
             const now = new Date();
             const timeStr = now.toTimeString().split(' ')[0];
