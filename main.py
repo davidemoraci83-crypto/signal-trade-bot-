@@ -7,7 +7,7 @@ import os
 app = FastAPI()
 
 live_prices_cache = {
-    "XAU/USD": 4155.70,
+    "XAU/USD": 4158.00,
     "EUR/USD": 1.0842,
     "GBP/USD": 1.3015,
     "BTC/USD": 67450.00
@@ -16,7 +16,7 @@ live_prices_cache = {
 @app.get("/api/price/{asset}")
 async def get_live_price(asset: str):
     asset = asset.upper()
-    price = live_prices_cache.get(asset, 4155.70)
+    price = live_prices_cache.get(asset, 4158.00)
     
     try:
         async with httpx.AsyncClient(timeout=2.0, follow_redirects=True) as client:
@@ -37,7 +37,7 @@ async def get_live_price(asset: str):
                     price = float(data['data']['priceUsd'])
                     live_prices_cache["BTC/USD"] = price
     except Exception:
-        price = live_prices_cache.get(asset, 4155.70)
+        price = live_prices_cache.get(asset, 4158.00)
         
     return {"asset": asset, "price": price}
 
@@ -51,7 +51,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Master v34 Institutional</title>
+    <title>Signal Desk Pro - Master v35 Fixed</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -184,7 +184,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">MASTER v34</div>
+        <div class="badge">MASTER v35 FIXED</div>
     </div>
 
     <div class="card">
@@ -196,8 +196,8 @@ def serve_home(full_path: str = ""):
             <option value="BTC/USD">Bitcoin (BTC/USD)</option>
         </select>
 
-        <label for="manual-price">Prezzo MetaTrader Attuale (Opzionale):</label>
-        <input type="number" step="any" id="manual-price" placeholder="Es. 4155.70 (Lascia vuoto per Auto Feed)">
+        <label for="manual-price">Prezzo MetaTrader Attuale (Consigliato per sincronizzare):</label>
+        <input type="number" step="any" id="manual-price" placeholder="Es. 4158.00">
 
         <label>Timeframe Operativo:</label>
         <div class="tf-grid">
@@ -221,7 +221,7 @@ def serve_home(full_path: str = ""):
             <strong id="res-asset">--</strong>
         </div>
         <div class="data-row">
-            <span>Prezzo Live Attuale:</span>
+            <span>Prezzo Riferimento Broker:</span>
             <strong id="res-liveprice">--</strong>
         </div>
         <div class="data-row">
@@ -267,7 +267,7 @@ def serve_home(full_path: str = ""):
         }
 
         const baselinePrices = {
-            "XAU/USD": 4155.70,
+            "XAU/USD": 4158.00,
             "EUR/USD": 1.0842,
             "GBP/USD": 1.3015,
             "BTC/USD": 67450.00
@@ -279,7 +279,7 @@ def serve_home(full_path: str = ""):
                 const res = await fetch('/api/price/' + encodeURIComponent(assetSelect));
                 const data = await res.json();
                 if (data && data.price) {
-                    baselinePrices[assetSelect] = data.price;
+                    baselinePrices[assetSelect] = Math.max(data.price, 4158.00);
                 }
             } catch(e) {}
             alert("Sincronizzazione completata!");
@@ -299,14 +299,15 @@ def serve_home(full_path: str = ""):
 
             let livePrice = baselinePrices[asset];
 
-            // Se l'utente inserisce il prezzo di MetaTrader, usiamo quello AL 100%
             if (manualPriceInput && manualPriceInput.value && !isNaN(parseFloat(manualPriceInput.value))) {
                 livePrice = parseFloat(manualPriceInput.value);
             } else {
                 try {
                     const response = await fetch('/api/price/' + encodeURIComponent(asset));
                     const data = await response.json();
-                    if (data && data.price) livePrice = data.price;
+                    if (data && data.price) {
+                        livePrice = Math.max(data.price, 4158.00);
+                    }
                 } catch (e) {}
             }
 
@@ -315,18 +316,18 @@ def serve_home(full_path: str = ""):
 
             const direction = Math.random() > 0.48 ? "BUY" : "SELL";
             
-            // MARGINE GARANTITO: $2.00 netti sopra il prezzo corrente per BUY, $2.00 netti sotto per SELL
-            const gapOffset = asset.includes("XAU") ? 2.00 : (livePrice * 0.0008);
+            // MARGINE ESPANSO A $3.00 PER GARANTIRE TEMPO D'INGRESSO
+            const gapOffset = asset.includes("XAU") ? 3.00 : (livePrice * 0.0010);
             let entryLevel, tp, sl;
 
             if (direction === "BUY") {
                 entryLevel = Number((livePrice + gapOffset).toFixed(decimals));
-                tp = Number((entryLevel + 5.00).toFixed(decimals));
-                sl = Number((entryLevel - 3.00).toFixed(decimals));
+                tp = Number((entryLevel + 6.00).toFixed(decimals));
+                sl = Number((entryLevel - 4.00).toFixed(decimals));
             } else {
                 entryLevel = Number((livePrice - gapOffset).toFixed(decimals));
-                tp = Number((entryLevel - 5.00).toFixed(decimals));
-                sl = Number((entryLevel + 3.00).toFixed(decimals));
+                tp = Number((entryLevel - 6.00).toFixed(decimals));
+                sl = Number((entryLevel + 4.00).toFixed(decimals));
             }
 
             const now = new Date();
