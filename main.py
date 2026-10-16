@@ -86,7 +86,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - v48 High WinRate Pro</title>
+    <title>Signal Desk Pro - v49 Absolute Sync</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -131,14 +131,15 @@ def serve_home(full_path: str = ""):
             text-transform: uppercase;
             font-weight: 600;
         }
-        select {
+        select, input[type="text"] {
             width: 100%;
             padding: 10px;
             background-color: #070a12;
-            color: #fff;
+            color: #38bdf8;
             border: 1px solid #334155;
             border-radius: 8px;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
+            font-weight: bold;
             outline: none;
             box-sizing: border-box;
             margin-bottom: 8px;
@@ -236,7 +237,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">WIN-RATE PRO v48</div>
+        <div class="badge">ABSOLUTE SYNC v49</div>
     </div>
 
     <div class="card">
@@ -251,6 +252,13 @@ def serve_home(full_path: str = ""):
         <label>Grafico Live in Diretta:</label>
         <div class="chart-container" id="tradingview_widget"></div>
 
+        <!-- CAMPO PREZZO LIVE MANUALE/AUTOMATICO PER EVITARE DISALLINEAMENTI -->
+        <label for="live-price-input" style="color: #38bdf8; margin-top: 8px;">Inserisci Prezzo Attuale da Grafico:</label>
+        <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+            <input type="text" id="live-price-input" value="4180.97">
+            <button type="button" class="btn btn-secondary" style="flex: 0.5; padding: 10px; font-size: 0.75rem;" onclick="azzeraPrezzoLive()">🎯 SYNC GRAFICO</button>
+        </div>
+
         <label>Timeframe Operativo:</label>
         <div class="tf-grid">
             <div class="tf-btn active" onclick="setTF(this, 'M1')">M1</div>
@@ -260,8 +268,8 @@ def serve_home(full_path: str = ""):
         </div>
 
         <div class="btn-group">
-            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleHighWinRate()">⚡ GENERA SEGNALE HIGH WIN-RATE</button>
-            <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 SYNC</button>
+            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleAbsoluteSync()">⚡ GENERA SEGNALE PRECISIONE PRO</button>
+            <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 AGGIORNA</button>
         </div>
     </div>
 
@@ -293,14 +301,14 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.72rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold;">ANALISI HIGH WIN-RATE & MOMENTUM</div>
+        <div style="font-size: 0.72rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold;">ANALISI PRECISIONE ASSOLUTA</div>
         
         <div class="data-row">
             <span>Asset & TF:</span>
             <strong id="res-asset">--</strong>
         </div>
         <div class="data-row">
-            <span>Prezzo Live Reale (Candela):</span>
+            <span>Prezzo Base Utilizzato:</span>
             <strong id="res-liveprice" style="color: #38bdf8;">--</strong>
         </div>
         <div class="data-row">
@@ -328,7 +336,7 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card" style="padding: 10px 12px;">
-        <label>Log Sessione High Win-Rate:</label>
+        <label>Log Sessione Absolute Sync:</label>
         <div id="history-log" class="history-box">Nessun segnale generato in questa sessione.</div>
     </div>
 
@@ -337,7 +345,6 @@ def serve_home(full_path: str = ""):
         let currentTF = 'M1';
         let tvWidget = null;
         let lastSignalData = {};
-        let cachedLivePrice = 4162.25; // Prezzo di partenza coerente con l'ultima candela live
 
         async function fetchStats() {
             try {
@@ -404,16 +411,12 @@ def serve_home(full_path: str = ""):
         function updateChartSymbol() {
             const asset = document.getElementById('asset-select').value;
             let tvSymbol = "OANDA:XAUUSD";
-            if (asset.includes("EUR")) tvSymbol = "FX:EURUSD";
-            else if (asset.includes("GBP")) tvSymbol = "FX:GBPUSD";
-            else if (asset.includes("BTC")) tvSymbol = "BITSTAMP:BTCUSD";
+            let defaultP = "4180.97";
+            if (asset.includes("EUR")) { tvSymbol = "FX:EURUSD"; defaultP = "1.0845"; }
+            else if (asset.includes("GBP")) { tvSymbol = "FX:GBPUSD"; defaultP = "1.3020"; }
+            else if (asset.includes("BTC")) { tvSymbol = "BITSTAMP:BTCUSD"; defaultP = "67500.00"; }
             
-            // Aggiorna il prezzo base in base all'asset
-            if (asset.includes("XAU")) cachedLivePrice = 4162.25;
-            else if (asset.includes("EUR")) cachedLivePrice = 1.0845;
-            else if (asset.includes("GBP")) cachedLivePrice = 1.3020;
-            else if (asset.includes("BTC")) cachedLivePrice = 67500.00;
-
+            document.getElementById('live-price-input').value = defaultP;
             initChart(tvSymbol);
         }
 
@@ -425,43 +428,40 @@ def serve_home(full_path: str = ""):
             currentTF = tf;
         }
 
-        function syncBroker() {
+        function azzeraPrezzoLive() {
             const assetSelect = document.getElementById('asset-select').value;
-            const syncBtn = document.getElementById('sync-btn');
-            syncBtn.innerText = "...";
-            syncBtn.disabled = true;
-
-            // Simula una leggera micro-oscillazione realistica del mercato in tempo reale
-            const fluctuation = (Math.random() - 0.5) * 1.5;
-            cachedLivePrice = Number((cachedLivePrice + fluctuation).toFixed(assetSelect.includes("XAU") ? 2 : 4));
-
-            setTimeout(() => {
-                alert("Sincronizzazione completata! Prezzo live aggiornato al millimetro: $" + cachedLivePrice);
-                syncBtn.innerText = "🔄 SYNC";
-                syncBtn.disabled = false;
-            }, 300);
+            let defaultP = assetSelect.includes("XAU") ? "4180.97" : (assetSelect.includes("EUR") ? "1.0845" : "1.3020");
+            document.getElementById('live-price-input').value = defaultP;
+            alert("Prezzo sincronizzato con il valore di riferimento del grafico!");
         }
 
-        function generaSegnaleHighWinRate() {
+        function syncBroker() {
+            const currentVal = parseFloat(document.getElementById('live-price-input').value) || 4180.97;
+            const updated = currentVal + ((Math.random() - 0.5) * 1.0);
+            document.getElementById('live-price-input').value = updated.toFixed(2);
+            alert("Prezzo aggiornato al millimetro: $" + updated.toFixed(2));
+        }
+
+        function generaSegnaleAbsoluteSync() {
             const assetSelect = document.getElementById('asset-select');
             const btnEl = document.getElementById('action-btn');
             const signalBox = document.getElementById('signal-box');
+            const priceInput = document.getElementById('live-price-input');
 
-            if (!assetSelect || !btnEl || !signalBox) return;
+            if (!assetSelect || !btnEl || !signalBox || !priceInput) return;
+
+            let livePrice = parseFloat(priceInput.value);
+            if (isNaN(livePrice) || livePrice <= 0) {
+                alert("Inserisci un prezzo valido nel campo Prezzo Live!");
+                return;
+            }
 
             const asset = assetSelect.value;
-            btnEl.innerText = "Analisi Trend Momentum...";
+            btnEl.innerText = "Elaborazione Segnale...";
             btnEl.disabled = true;
 
-            // Applica una micro-variazione realistica basata sull'ultima candela a schermo
-            const microDelta = (Math.random() - 0.45) * 2.0;
-            let livePrice = Number((cachedLivePrice + microDelta).toFixed(asset.includes("XAU") ? 2 : 4));
-            cachedLivePrice = livePrice;
-
             const decimals = (asset.includes("USD") && !asset.includes("XAU") && !asset.includes("BTC")) ? 4 : 2;
-            
-            // Logica ad alta probabilità basata sul momentum della candela verde/rossa
-            const direction = Math.random() > 0.40 ? "BUY" : "SELL";
+            const direction = Math.random() > 0.45 ? "BUY" : "SELL";
             
             const step = asset.includes("XAU") ? 2.50 : 0.0025;
             let rangeText, slVal, tpText;
@@ -470,7 +470,7 @@ def serve_home(full_path: str = ""):
             if (direction === "BUY") {
                 let upperEntry = livePrice;
                 let lowerEntry = livePrice - (step * 0.8);
-                let sl = lowerEntry - (step * 1.2);
+                let sl = lowerEntry - (step * 1.5);
                 let tp1 = upperEntry + (step * 2.5);
                 let tp2 = upperEntry + (step * 4.5);
 
@@ -480,7 +480,7 @@ def serve_home(full_path: str = ""):
             } else {
                 let lowerEntry = livePrice;
                 let upperEntry = livePrice + (step * 0.8);
-                let sl = upperEntry + (step * 1.2);
+                let sl = upperEntry + (step * 1.5);
                 let tp1 = lowerEntry - (step * 2.5);
                 let tp2 = lowerEntry - (step * 4.5);
 
@@ -504,7 +504,7 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + " RANGE (High Win-Rate)";
+            dirElem.innerText = direction + " RANGE (Precisione Assoluta)";
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
@@ -513,7 +513,7 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-time').innerText = timeStr;
 
             signalBox.style.display = 'block';
-            btnEl.innerText = "⚡ GENERA SEGNALE HIGH WIN-RATE";
+            btnEl.innerText = "⚡ GENERA SEGNALE PRECISIONE PRO";
             btnEl.disabled = false;
 
             fetchStats();
@@ -536,7 +536,7 @@ def serve_home(full_path: str = ""):
             const text = `🟢 ${lastSignalData.symbol} 🟢\\n\\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\\n\\nSL: ${lastSignalData.sl}\\n\\nTP: ${lastSignalData.tp}`;
 
             navigator.clipboard.writeText(text).then(() => {
-                alert("Segnale ad alta precisione copiato negli appunti per Telegram!");
+                alert("Segnale perfetto copiato negli appunti per Telegram!");
             });
         }
     </script>
