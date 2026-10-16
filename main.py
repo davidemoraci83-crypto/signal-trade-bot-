@@ -86,7 +86,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - v49 Absolute Sync</title>
+    <title>Signal Desk Pro - v50 Crypto 24/7</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -109,8 +109,8 @@ def serve_home(full_path: str = ""):
         }
         .badge {
             font-size: 0.65rem;
-            background-color: #16a34a;
-            color: #f0fdf4;
+            background-color: #f59e0b;
+            color: #fff;
             padding: 3px 8px;
             border-radius: 9999px;
             font-weight: bold;
@@ -237,25 +237,30 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">ABSOLUTE SYNC v49</div>
+        <div class="badge">CRYPTO 24/7 v50</div>
     </div>
 
     <div class="card">
         <label for="asset-select">Seleziona Asset / Mercato:</label>
         <select id="asset-select" onchange="updateChartSymbol()">
-            <option value="XAU/USD">Oro (XAU/USD)</option>
-            <option value="EUR/USD">Euro / Dollaro (EUR/USD)</option>
-            <option value="GBP/USD">Sterlina / Dollaro (GBP/USD)</option>
-            <option value="BTC/USD">Bitcoin (BTC/USD)</option>
+            <optgroup label="Mercati Tradizionali">
+                <option value="XAU/USD">Oro (XAU/USD)</option>
+                <option value="EUR/USD">Euro / Dollaro (EUR/USD)</option>
+                <option value="GBP/USD">Sterlina / Dollaro (GBP/USD)</option>
+            </optgroup>
+            <optgroup label="Criptovalute (H24 / Weekend)">
+                <option value="BTC/USD">Bitcoin (BTC/USD)</option>
+                <option value="ETH/USD">Ethereum (ETH/USD)</option>
+                <option value="XRP/USD">Ripple (XRP/USD)</option>
+            </optgroup>
         </select>
 
         <label>Grafico Live in Diretta:</label>
         <div class="chart-container" id="tradingview_widget"></div>
 
-        <!-- CAMPO PREZZO LIVE MANUALE/AUTOMATICO PER EVITARE DISALLINEAMENTI -->
         <label for="live-price-input" style="color: #38bdf8; margin-top: 8px;">Inserisci Prezzo Attuale da Grafico:</label>
         <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-            <input type="text" id="live-price-input" value="4180.97">
+            <input type="text" id="live-price-input" value="67500.00">
             <button type="button" class="btn btn-secondary" style="flex: 0.5; padding: 10px; font-size: 0.75rem;" onclick="azzeraPrezzoLive()">🎯 SYNC GRAFICO</button>
         </div>
 
@@ -268,7 +273,7 @@ def serve_home(full_path: str = ""):
         </div>
 
         <div class="btn-group">
-            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleAbsoluteSync()">⚡ GENERA SEGNALE PRECISIONE PRO</button>
+            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">⚡ GENERA SEGNALE 24/7</button>
             <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 AGGIORNA</button>
         </div>
     </div>
@@ -301,7 +306,7 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.72rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold;">ANALISI PRECISIONE ASSOLUTA</div>
+        <div style="font-size: 0.72rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold;">ANALISI MERCATO 24/7</div>
         
         <div class="data-row">
             <span>Asset & TF:</span>
@@ -336,7 +341,7 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card" style="padding: 10px 12px;">
-        <label>Log Sessione Absolute Sync:</label>
+        <label>Log Sessione Crypto 24/7:</label>
         <div id="history-log" class="history-box">Nessun segnale generato in questa sessione.</div>
     </div>
 
@@ -412,9 +417,12 @@ def serve_home(full_path: str = ""):
             const asset = document.getElementById('asset-select').value;
             let tvSymbol = "OANDA:XAUUSD";
             let defaultP = "4180.97";
+
             if (asset.includes("EUR")) { tvSymbol = "FX:EURUSD"; defaultP = "1.0845"; }
             else if (asset.includes("GBP")) { tvSymbol = "FX:GBPUSD"; defaultP = "1.3020"; }
             else if (asset.includes("BTC")) { tvSymbol = "BITSTAMP:BTCUSD"; defaultP = "67500.00"; }
+            else if (asset.includes("ETH")) { tvSymbol = "BITSTAMP:ETHUSD"; defaultP = "2650.00"; }
+            else if (asset.includes("XRP")) { tvSymbol = "BITSTAMP:XRPUSD"; defaultP = "0.5500"; }
             
             document.getElementById('live-price-input').value = defaultP;
             initChart(tvSymbol);
@@ -430,19 +438,26 @@ def serve_home(full_path: str = ""):
 
         function azzeraPrezzoLive() {
             const assetSelect = document.getElementById('asset-select').value;
-            let defaultP = assetSelect.includes("XAU") ? "4180.97" : (assetSelect.includes("EUR") ? "1.0845" : "1.3020");
+            let defaultP = "4180.97";
+            if (assetSelect.includes("EUR")) defaultP = "1.0845";
+            else if (assetSelect.includes("GBP")) defaultP = "1.3020";
+            else if (assetSelect.includes("BTC")) defaultP = "67500.00";
+            else if (assetSelect.includes("ETH")) defaultP = "2650.00";
+            else if (assetSelect.includes("XRP")) defaultP = "0.5500";
+
             document.getElementById('live-price-input').value = defaultP;
-            alert("Prezzo sincronizzato con il valore di riferimento del grafico!");
+            alert("Prezzo sincronizzato con il valore di riferimento!");
         }
 
         function syncBroker() {
-            const currentVal = parseFloat(document.getElementById('live-price-input').value) || 4180.97;
-            const updated = currentVal + ((Math.random() - 0.5) * 1.0);
-            document.getElementById('live-price-input').value = updated.toFixed(2);
-            alert("Prezzo aggiornato al millimetro: $" + updated.toFixed(2));
+            const currentVal = parseFloat(document.getElementById('live-price-input').value) || 100.0;
+            const stepDelta = currentVal > 1000 ? 15.0 : (currentVal > 10 ? 1.0 : 0.002);
+            const updated = currentVal + ((Math.random() - 0.5) * stepDelta);
+            document.getElementById('live-price-input').value = updated.toFixed(currentVal < 5 ? 4 : 2);
+            alert("Prezzo aggiornato live: $" + parseFloat(document.getElementById('live-price-input').value));
         }
 
-        function generaSegnaleAbsoluteSync() {
+        function generaSegnaleCrypto() {
             const assetSelect = document.getElementById('asset-select');
             const btnEl = document.getElementById('action-btn');
             const signalBox = document.getElementById('signal-box');
@@ -457,13 +472,20 @@ def serve_home(full_path: str = ""):
             }
 
             const asset = assetSelect.value;
-            btnEl.innerText = "Elaborazione Segnale...";
+            btnEl.innerText = "Elaborazione Segnale 24/7...";
             btnEl.disabled = true;
 
-            const decimals = (asset.includes("USD") && !asset.includes("XAU") && !asset.includes("BTC")) ? 4 : 2;
+            // Decimale dinamico in base all'asset (es. crypto minori usano 4 decimali, BTC/ETH usano 2)
+            const decimals = asset.includes("XRP") ? 4 : (asset.includes("BTC") || asset.includes("ETH") || asset.includes("XAU") ? 2 : 4);
             const direction = Math.random() > 0.45 ? "BUY" : "SELL";
             
-            const step = asset.includes("XAU") ? 2.50 : 0.0025;
+            // Step di volatilità specifico per crypto o forex
+            let step = 2.50;
+            if (asset.includes("BTC")) step = 150.00;
+            else if (asset.includes("ETH")) step = 15.00;
+            else if (asset.includes("XRP")) step = 0.0050;
+            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0025;
+
             let rangeText, slVal, tpText;
             const cleanAssetSymbol = asset.replace("/", "");
 
@@ -504,7 +526,7 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + " RANGE (Precisione Assoluta)";
+            dirElem.innerText = direction + " RANGE (Crypto 24/7)";
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
@@ -513,7 +535,7 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-time').innerText = timeStr;
 
             signalBox.style.display = 'block';
-            btnEl.innerText = "⚡ GENERA SEGNALE PRECISIONE PRO";
+            btnEl.innerText = "⚡ GENERA SEGNALE 24/7";
             btnEl.disabled = false;
 
             fetchStats();
@@ -536,7 +558,7 @@ def serve_home(full_path: str = ""):
             const text = `🟢 ${lastSignalData.symbol} 🟢\\n\\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\\n\\nSL: ${lastSignalData.sl}\\n\\nTP: ${lastSignalData.tp}`;
 
             navigator.clipboard.writeText(text).then(() => {
-                alert("Segnale perfetto copiato negli appunti per Telegram!");
+                alert("Segnale crypto copiato negli appunti per Telegram!");
             });
         }
     </script>
