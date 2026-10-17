@@ -86,7 +86,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - v51 Expanded Crypto 24/7</title>
+    <title>Signal Desk Pro - v52 Nasdaq Included</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -237,14 +237,15 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">CRYPTO 24/7 v51</div>
+        <div class="badge">PRO MASTER v52</div>
     </div>
 
     <div class="card">
         <label for="asset-select">Seleziona Asset / Mercato:</label>
         <select id="asset-select" onchange="updateChartSymbol()">
-            <optgroup label="Mercati Tradizionali">
+            <optgroup label="Mercati Tradizionali & Indici">
                 <option value="XAU/USD">Oro (XAU/USD)</option>
+                <option value="NAS100">Nasdaq 100 (NAS100)</option>
                 <option value="EUR/USD">Euro / Dollaro (EUR/USD)</option>
                 <option value="GBP/USD">Sterlina / Dollaro (GBP/USD)</option>
             </optgroup>
@@ -263,7 +264,7 @@ def serve_home(full_path: str = ""):
 
         <label for="live-price-input" style="color: #38bdf8; margin-top: 8px;">Inserisci Prezzo Attuale da Grafico:</label>
         <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-            <input type="text" id="live-price-input" value="67500.00">
+            <input type="text" id="live-price-input" value="4180.97">
             <button type="button" class="btn btn-secondary" style="flex: 0.5; padding: 10px; font-size: 0.75rem;" onclick="azzeraPrezzoLive()">🎯 SYNC GRAFICO</button>
         </div>
 
@@ -276,7 +277,7 @@ def serve_home(full_path: str = ""):
         </div>
 
         <div class="btn-group">
-            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">⚡ GENERA SEGNALE 24/7</button>
+            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">⚡ GENERA SEGNALE PRO</button>
             <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 AGGIORNA</button>
         </div>
     </div>
@@ -309,7 +310,7 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.72rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold;">ANALISI MERCATO 24/7</div>
+        <div style="font-size: 0.72rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold;">ANALISI MERCATO PRO</div>
         
         <div class="data-row">
             <span>Asset & TF:</span>
@@ -344,7 +345,7 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card" style="padding: 10px 12px;">
-        <label>Log Sessione Crypto 24/7:</label>
+        <label>Log Sessione Pro:</label>
         <div id="history-log" class="history-box">Nessun segnale generato in questa sessione.</div>
     </div>
 
@@ -421,7 +422,8 @@ def serve_home(full_path: str = ""):
             let tvSymbol = "OANDA:XAUUSD";
             let defaultP = "4180.97";
 
-            if (asset.includes("EUR")) { tvSymbol = "FX:EURUSD"; defaultP = "1.0845"; }
+            if (asset.includes("NAS100")) { tvSymbol = "CAPITALCOM:US100"; defaultP = "20500.00"; }
+            else if (asset.includes("EUR")) { tvSymbol = "FX:EURUSD"; defaultP = "1.0845"; }
             else if (asset.includes("GBP")) { tvSymbol = "FX:GBPUSD"; defaultP = "1.3020"; }
             else if (asset.includes("BTC")) { tvSymbol = "BITSTAMP:BTCUSD"; defaultP = "67500.00"; }
             else if (asset.includes("ETH")) { tvSymbol = "BITSTAMP:ETHUSD"; defaultP = "2650.00"; }
@@ -445,7 +447,8 @@ def serve_home(full_path: str = ""):
         function azzeraPrezzoLive() {
             const assetSelect = document.getElementById('asset-select').value;
             let defaultP = "4180.97";
-            if (assetSelect.includes("EUR")) defaultP = "1.0845";
+            if (assetSelect.includes("NAS100")) defaultP = "20500.00";
+            else if (assetSelect.includes("EUR")) defaultP = "1.0845";
             else if (assetSelect.includes("GBP")) defaultP = "1.3020";
             else if (assetSelect.includes("BTC")) defaultP = "67500.00";
             else if (assetSelect.includes("ETH")) defaultP = "2650.00";
@@ -460,7 +463,7 @@ def serve_home(full_path: str = ""):
 
         function syncBroker() {
             const currentVal = parseFloat(document.getElementById('live-price-input').value) || 100.0;
-            const stepDelta = currentVal > 1000 ? 15.0 : (currentVal > 10 ? 0.5 : 0.002);
+            const stepDelta = currentVal > 10000 ? 25.0 : (currentVal > 1000 ? 15.0 : (currentVal > 10 ? 0.5 : 0.002));
             const updated = currentVal + ((Math.random() - 0.5) * stepDelta);
             document.getElementById('live-price-input').value = updated.toFixed(currentVal < 10 ? 4 : 2);
             alert("Prezzo aggiornato live: $" + parseFloat(document.getElementById('live-price-input').value));
@@ -481,16 +484,17 @@ def serve_home(full_path: str = ""):
             }
 
             const asset = assetSelect.value;
-            btnEl.innerText = "Elaborazione Segnale 24/7...";
+            btnEl.innerText = "Elaborazione Segnale Pro...";
             btnEl.disabled = true;
 
-            // Precisione decimale in base all'asset
+            // Precisione decimale
             const decimals = (asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) ? 4 : 2;
             const direction = Math.random() > 0.45 ? "BUY" : "SELL";
             
-            // Step di volatilità calibrati sulle crypto
+            // Step di volatilità per il Nasdaq e gli altri asset
             let step = 2.50;
-            if (asset.includes("BTC")) step = 150.00;
+            if (asset.includes("NAS100")) step = 35.00;
+            else if (asset.includes("BTC")) step = 150.00;
             else if (asset.includes("ETH")) step = 15.00;
             else if (asset.includes("SOL")) step = 1.20;
             else if (asset.includes("NEAR")) step = 0.0800;
@@ -538,7 +542,7 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + " RANGE (Crypto 24/7)";
+            dirElem.innerText = direction + " RANGE";
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
@@ -547,7 +551,7 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-time').innerText = timeStr;
 
             signalBox.style.display = 'block';
-            btnEl.innerText = "⚡ GENERA SEGNALE 24/7";
+            btnEl.innerText = "⚡ GENERA SEGNALE PRO";
             btnEl.disabled = false;
 
             fetchStats();
@@ -570,7 +574,7 @@ def serve_home(full_path: str = ""):
             const text = `🟢 ${lastSignalData.symbol} 🟢\\n\\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\\n\\nSL: ${lastSignalData.sl}\\n\\nTP: ${lastSignalData.tp}`;
 
             navigator.clipboard.writeText(text).then(() => {
-                alert("Segnale crypto copiato negli appunti per Telegram!");
+                alert("Segnale copiato negli appunti per Telegram!");
             });
         }
     </script>
