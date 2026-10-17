@@ -86,7 +86,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - v50 Crypto 24/7</title>
+    <title>Signal Desk Pro - v51 Expanded Crypto 24/7</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -237,7 +237,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">CRYPTO 24/7 v50</div>
+        <div class="badge">CRYPTO 24/7 v51</div>
     </div>
 
     <div class="card">
@@ -251,6 +251,9 @@ def serve_home(full_path: str = ""):
             <optgroup label="Criptovalute (H24 / Weekend)">
                 <option value="BTC/USD">Bitcoin (BTC/USD)</option>
                 <option value="ETH/USD">Ethereum (ETH/USD)</option>
+                <option value="SOL/USD">Solana (SOL/USD)</option>
+                <option value="NEAR/USD">NEAR Protocol (NEAR/USD)</option>
+                <option value="SUI/USD">Sui (SUI/USD)</option>
                 <option value="XRP/USD">Ripple (XRP/USD)</option>
             </optgroup>
         </select>
@@ -422,6 +425,9 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("GBP")) { tvSymbol = "FX:GBPUSD"; defaultP = "1.3020"; }
             else if (asset.includes("BTC")) { tvSymbol = "BITSTAMP:BTCUSD"; defaultP = "67500.00"; }
             else if (asset.includes("ETH")) { tvSymbol = "BITSTAMP:ETHUSD"; defaultP = "2650.00"; }
+            else if (asset.includes("SOL")) { tvSymbol = "BITSTAMP:SOLUSD"; defaultP = "104.80"; }
+            else if (asset.includes("NEAR")) { tvSymbol = "BINANCE:NEARUSD"; defaultP = "5.25"; }
+            else if (asset.includes("SUI")) { tvSymbol = "COINBASE:SUIUSD"; defaultP = "1.00"; }
             else if (asset.includes("XRP")) { tvSymbol = "BITSTAMP:XRPUSD"; defaultP = "0.5500"; }
             
             document.getElementById('live-price-input').value = defaultP;
@@ -443,6 +449,9 @@ def serve_home(full_path: str = ""):
             else if (assetSelect.includes("GBP")) defaultP = "1.3020";
             else if (assetSelect.includes("BTC")) defaultP = "67500.00";
             else if (assetSelect.includes("ETH")) defaultP = "2650.00";
+            else if (assetSelect.includes("SOL")) defaultP = "104.80";
+            else if (assetSelect.includes("NEAR")) defaultP = "5.25";
+            else if (assetSelect.includes("SUI")) defaultP = "1.00";
             else if (assetSelect.includes("XRP")) defaultP = "0.5500";
 
             document.getElementById('live-price-input').value = defaultP;
@@ -451,9 +460,9 @@ def serve_home(full_path: str = ""):
 
         function syncBroker() {
             const currentVal = parseFloat(document.getElementById('live-price-input').value) || 100.0;
-            const stepDelta = currentVal > 1000 ? 15.0 : (currentVal > 10 ? 1.0 : 0.002);
+            const stepDelta = currentVal > 1000 ? 15.0 : (currentVal > 10 ? 0.5 : 0.002);
             const updated = currentVal + ((Math.random() - 0.5) * stepDelta);
-            document.getElementById('live-price-input').value = updated.toFixed(currentVal < 5 ? 4 : 2);
+            document.getElementById('live-price-input').value = updated.toFixed(currentVal < 10 ? 4 : 2);
             alert("Prezzo aggiornato live: $" + parseFloat(document.getElementById('live-price-input').value));
         }
 
@@ -475,14 +484,17 @@ def serve_home(full_path: str = ""):
             btnEl.innerText = "Elaborazione Segnale 24/7...";
             btnEl.disabled = true;
 
-            // Decimale dinamico in base all'asset (es. crypto minori usano 4 decimali, BTC/ETH usano 2)
-            const decimals = asset.includes("XRP") ? 4 : (asset.includes("BTC") || asset.includes("ETH") || asset.includes("XAU") ? 2 : 4);
+            // Precisione decimale in base all'asset
+            const decimals = (asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) ? 4 : 2;
             const direction = Math.random() > 0.45 ? "BUY" : "SELL";
             
-            // Step di volatilità specifico per crypto o forex
+            // Step di volatilità calibrati sulle crypto
             let step = 2.50;
             if (asset.includes("BTC")) step = 150.00;
             else if (asset.includes("ETH")) step = 15.00;
+            else if (asset.includes("SOL")) step = 1.20;
+            else if (asset.includes("NEAR")) step = 0.0800;
+            else if (asset.includes("SUI")) step = 0.0200;
             else if (asset.includes("XRP")) step = 0.0050;
             else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0025;
 
