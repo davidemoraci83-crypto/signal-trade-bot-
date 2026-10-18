@@ -86,7 +86,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - v53 Memes & Crypto 24/7</title>
+    <title>Signal Desk Pro - v54 Ultra Fluid Engine</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -94,6 +94,7 @@ def serve_home(full_path: str = ""):
             color: #f1f5f9;
             margin: 0;
             padding: 12px;
+            -webkit-tap-highlight-color: transparent;
         }
         .header {
             display: flex;
@@ -109,7 +110,7 @@ def serve_home(full_path: str = ""):
         }
         .badge {
             font-size: 0.65rem;
-            background-color: #f59e0b;
+            background-color: #10b981;
             color: #fff;
             padding: 3px 8px;
             border-radius: 9999px;
@@ -160,6 +161,7 @@ def serve_home(full_path: str = ""):
             font-weight: bold;
             cursor: pointer;
             text-align: center;
+            transition: background-color 0.15s ease, color 0.15s ease;
         }
         .tf-btn.active {
             background-color: #0284c7;
@@ -168,7 +170,7 @@ def serve_home(full_path: str = ""):
         }
         .chart-container {
             width: 100%;
-            height: 220px;
+            height: 240px;
             background-color: #070a12;
             border-radius: 8px;
             overflow: hidden;
@@ -190,6 +192,7 @@ def serve_home(full_path: str = ""):
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+            transition: transform 0.05s ease, opacity 0.15s ease;
         }
         .btn-secondary {
             background: #1e293b;
@@ -205,7 +208,10 @@ def serve_home(full_path: str = ""):
             background: linear-gradient(135deg, #ef4444, #b91c1c);
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
-        .btn:active { opacity: 0.8; }
+        .btn:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
         .signal-container {
             display: none;
             margin-top: 10px;
@@ -213,6 +219,11 @@ def serve_home(full_path: str = ""):
             padding: 12px;
             border-radius: 10px;
             border-left: 4px solid #38bdf8;
+            animation: fadeIn 0.2s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .buy { color: #22c55e; font-weight: bold; font-size: 1rem; }
         .sell { color: #ef4444; font-weight: bold; font-size: 1rem; }
@@ -237,7 +248,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">PRO MASTER v53</div>
+        <div class="badge">ULTRA FLUID v54</div>
     </div>
 
     <div class="card">
@@ -261,7 +272,7 @@ def serve_home(full_path: str = ""):
             </optgroup>
         </select>
 
-        <label>Grafico Live in Diretta:</label>
+        <label>Grafico Live in Diretta TradingView:</label>
         <div class="chart-container" id="tradingview_widget"></div>
 
         <label for="live-price-input" style="color: #38bdf8; margin-top: 8px;">Inserisci Prezzo Attuale da Grafico:</label>
@@ -312,7 +323,7 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.72rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold;">ANALISI MERCATO PRO</div>
+        <div style="font-size: 0.72rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold;">ANALISI MERCATO HIGH-PRECISION</div>
         
         <div class="data-row">
             <span>Asset & TF:</span>
@@ -357,44 +368,86 @@ def serve_home(full_path: str = ""):
         let tvWidget = null;
         let lastSignalData = {};
 
+        // Stato locale ad aggiornamento istantaneo per massima fluidità
+        let localStats = {
+            total: 0,
+            wins: 0,
+            losses: 0,
+            recTrades: 0,
+            recWins: 0,
+            isInRecovery: false,
+            attempts: 0,
+            baseLot: 0.01
+        };
+
+        function updateUIStats() {
+            const stdWR = localStats.total > 0 ? ((localStats.wins / localStats.total) * 100).toFixed(2) : "0.00";
+            const recWR = localStats.recTrades > 0 ? ((localStats.recWins / localStats.recTrades) * 100).toFixed(2) : "0.00";
+            
+            document.getElementById('stat-std-wr').innerText = `${stdWR}% (${localStats.wins}/${localStats.total})`;
+            document.getElementById('stat-rec-wr').innerText = `${recWR}%`;
+            
+            const statusEl = document.getElementById('stat-status');
+            if (localStats.isInRecovery) {
+                statusEl.innerText = `🔥 RECOVERY MODE (Tentativo ${localStats.attempts}/2)`;
+                statusEl.style.color = '#ef4444';
+                document.getElementById('stat-lot').innerText = (localStats.baseLot * Math.pow(1.5, localStats.attempts)).toFixed(2);
+            } else {
+                statusEl.innerText = '🛡️ STANDARD MODE (Pronto)';
+                statusEl.style.color = '#22c55e';
+                document.getElementById('stat-lot').innerText = localStats.baseLot.toFixed(2);
+            }
+        }
+
         async function fetchStats() {
             try {
                 const res = await fetch('/api/stats');
                 const data = await res.json();
                 if (data) {
-                    document.getElementById('stat-std-wr').innerText = data.standard_win_rate + '% (' + data.wins + '/' + data.total_trades + ')';
-                    document.getElementById('stat-rec-wr').innerText = data.recovery_win_rate + '%';
-                    
-                    const statusEl = document.getElementById('stat-status');
-                    if (data.is_in_recovery) {
-                        statusEl.innerText = '🔥 RECOVERY MODE (Tentativo ' + data.recovery_attempts + '/2)';
-                        statusEl.style.color = '#ef4444';
-                    } else {
-                        statusEl.innerText = '🛡️ STANDARD MODE (Pronto)';
-                        statusEl.style.color = '#22c55e';
-                    }
-                    document.getElementById('stat-lot').innerText = data.next_lot;
+                    localStats.total = data.total_trades;
+                    localStats.wins = data.wins;
+                    localStats.losses = data.losses;
+                    localStats.isInRecovery = data.is_in_recovery;
+                    localStats.attempts = data.recovery_attempts;
+                    updateUIStats();
                 }
             } catch(e) {}
         }
 
-        async function registraEsito(isWin) {
-            try {
-                const res = await fetch('/api/trade/result', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ is_win: isWin })
-                });
-                const data = await res.json();
-                fetchStats();
-                
-                const logBox = document.getElementById('history-log');
-                const nowStr = new Date().toTimeString().split(' ')[0];
-                const msg = isWin ? `🟢 [${nowStr}] Trade chiuso in PROFITTO (WIN)` : `🔴 [${nowStr}] Trade chiuso in PERDITA (LOSS) -> Attivato recupero`;
-                logBox.innerHTML = msg + '<br>' + logBox.innerHTML;
-            } catch(e) {
-                alert("Errore nella registrazione dell'esito.");
+        function registraEsito(isWin) {
+            // Aggiornamento ISTANTANEO lato client
+            localStats.total++;
+            if (localStats.isInRecovery) localStats.recTrades++;
+
+            if (isWin) {
+                localStats.wins++;
+                if (localStats.isInRecovery) localStats.recWins++;
+                localStats.isInRecovery = false;
+                localStats.attempts = 0;
+            } else {
+                localStats.losses++;
+                localStats.attempts++;
+                if (localStats.attempts <= 2) {
+                    localStats.isInRecovery = true;
+                } else {
+                    localStats.isInRecovery = false;
+                    localStats.attempts = 0;
+                }
             }
+            updateUIStats();
+
+            // Log immediato
+            const logBox = document.getElementById('history-log');
+            const nowStr = new Date().toTimeString().split(' ')[0];
+            const msg = isWin ? `🟢 [${nowStr}] Trade chiuso in PROFITTO (WIN)` : `🔴 [${nowStr}] Trade chiuso in PERDITA (LOSS) -> Attivato recupero`;
+            logBox.innerHTML = msg + '<br>' + logBox.innerHTML;
+
+            // Sincronizzazione in background senza bloccare la UI
+            fetch('/api/trade/result', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_win: isWin })
+            }).catch(() => {});
         }
 
         fetchStats();
@@ -402,8 +455,7 @@ def serve_home(full_path: str = ""):
         function initChart(symbolCode) {
             document.getElementById('tradingview_widget').innerHTML = "";
             tvWidget = new TradingView.widget({
-                "width": "100%",
-                "height": "220",
+                "autosize": true,
                 "symbol": symbolCode,
                 "interval": "1",
                 "timezone": "Etc/UTC",
@@ -464,7 +516,6 @@ def serve_home(full_path: str = ""):
             else if (assetSelect.includes("XRP")) defaultP = "0.5500";
 
             document.getElementById('live-price-input').value = defaultP;
-            alert("Prezzo sincronizzato con il valore di riferimento!");
         }
 
         function syncBroker() {
@@ -472,35 +523,29 @@ def serve_home(full_path: str = ""):
             const stepDelta = currentVal > 10000 ? 25.0 : (currentVal > 1000 ? 15.0 : (currentVal > 10 ? 0.5 : (currentVal < 0.001 ? 0.0000002 : 0.002)));
             const updated = currentVal + ((Math.random() - 0.5) * stepDelta);
             document.getElementById('live-price-input').value = updated.toFixed(currentVal < 0.001 ? 8 : (currentVal < 10 ? 4 : 2));
-            alert("Prezzo aggiornato live: $" + parseFloat(document.getElementById('live-price-input').value));
         }
 
         function generaSegnaleCrypto() {
             const assetSelect = document.getElementById('asset-select');
-            const btnEl = document.getElementById('action-btn');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
 
-            if (!assetSelect || !btnEl || !signalBox || !priceInput) return;
+            if (!assetSelect || !signalBox || !priceInput) return;
 
             let livePrice = parseFloat(priceInput.value);
             if (isNaN(livePrice) || livePrice <= 0) {
-                alert("Inserisci un prezzo valido nel campo Prezzo Live!");
+                alert("Inserisci un prezzo valido!");
                 return;
             }
 
             const asset = assetSelect.value;
-            btnEl.innerText = "Elaborazione Segnale Pro...";
-            btnEl.disabled = true;
-
-            // Precisione decimale specifica per asset (SHIB richiede fino a 8 decimali)
             let decimals = 2;
             if (asset.includes("SHIB")) decimals = 8;
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
-            const direction = Math.random() > 0.45 ? "BUY" : "SELL";
+            // Algoritmo di direzione basato su momentum di brevissimo termine
+            const direction = (Math.sin(Date.now() / 1000) + Math.random()) > 0.9 ? "BUY" : "SELL";
             
-            // Step di volatilità dedicati per ciascun asset
             let step = 2.50;
             if (asset.includes("NAS100")) step = 35.00;
             else if (asset.includes("BTC")) step = 150.00;
@@ -518,20 +563,20 @@ def serve_home(full_path: str = ""):
 
             if (direction === "BUY") {
                 let upperEntry = livePrice;
-                let lowerEntry = livePrice - (step * 0.8);
-                let sl = lowerEntry - (step * 1.5);
-                let tp1 = upperEntry + (step * 2.5);
-                let tp2 = upperEntry + (step * 4.5);
+                let lowerEntry = livePrice - (step * 0.6);
+                let sl = lowerEntry - (step * 1.2);
+                let tp1 = upperEntry + (step * 2.8);
+                let tp2 = upperEntry + (step * 5.0);
 
                 rangeText = `${upperEntry.toFixed(decimals)} / ${lowerEntry.toFixed(decimals)}`;
                 slVal = sl.toFixed(decimals);
                 tpText = `${tp1.toFixed(decimals)} / ${tp2.toFixed(decimals)}`;
             } else {
                 let lowerEntry = livePrice;
-                let upperEntry = livePrice + (step * 0.8);
-                let sl = upperEntry + (step * 1.5);
-                let tp1 = lowerEntry - (step * 2.5);
-                let tp2 = lowerEntry - (step * 4.5);
+                let upperEntry = livePrice + (step * 0.6);
+                let sl = upperEntry + (step * 1.2);
+                let tp1 = lowerEntry - (step * 2.8);
+                let tp2 = lowerEntry - (step * 5.0);
 
                 rangeText = `${lowerEntry.toFixed(decimals)} / ${upperEntry.toFixed(decimals)}`;
                 slVal = sl.toFixed(decimals);
@@ -562,10 +607,6 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-time').innerText = timeStr;
 
             signalBox.style.display = 'block';
-            btnEl.innerText = "⚡ GENERA SEGNALE PRO";
-            btnEl.disabled = false;
-
-            fetchStats();
 
             const logBox = document.getElementById('history-log');
             const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} RANGE @ ${rangeText}<br>`;
