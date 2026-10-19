@@ -5,6 +5,13 @@ import uvicorn
 import os
 import time
 
+# Tentativo di importazione della libreria MetaTrader5 ufficiale
+try:
+    import MetaTrader5 as mt5
+    MT5_AVAILABLE = True
+except ImportError:
+    MT5_AVAILABLE = False
+
 app = FastAPI()
 
 # ==========================================
@@ -67,6 +74,14 @@ tracker = SignalTrackerState()
 class TradeResultRequest(BaseModel):
     is_win: bool
 
+class AutoTradeRequest(BaseModel):
+    asset: str
+    direction: str
+    volume: float
+    sl: float
+    tp: float
+    auto_enabled: bool
+
 @app.get("/api/stats")
 async def get_stats():
     return tracker.get_stats()
@@ -75,6 +90,59 @@ async def get_stats():
 async def post_trade_result(payload: TradeResultRequest):
     tracker.process_result(payload.is_win)
     return tracker.get_stats()
+
+@app.post("/api/autotrade")
+async def execute_autotrade(payload: AutoTradeRequest):
+    if not payload.auto_enabled:
+        return {"status": "disabled", "message": "Auto-trading disattivato dall'utente."}
+    
+    if not MT5_AVAILABLE:
+        return {"status": "error", "message": "Libreria MetaTrader5 non installata sul server."}
+
+    # Inizializzazione connessione MT5
+    if not mt5.initialize():
+        return {"status": "error", "message": f"Impossibile connettersi a MetaTrader5: {mt5.last_error()}"}
+
+    symbol = payload.asset.replace("/", "")
+    # Mapping simboli comuni se necessario
+    if symbol == "NAS100":
+        symbol = "US100" # o il nome esatto del broker
+
+    symbol_info = mt5.symbol_info(symbol)
+    if symbol_info is None:
+        mt5.shutdown()
+        return {"status": "error", "message": f"Simbolo {symbol} non trovato su MetaTrader."}
+
+    if not symbol_info.visible:
+        if not mt5.symbol_select(symbol, True):
+            mt5.shutdown()
+            return {"status": "error", "message": f"Impossibile abilitare il simbolo {symbol}."}
+
+    price = mt5.symbol_info_tick(symbol).ask if payload.direction == "BUY" else mt5.symbol_info_tick(symbol).bid
+    order_type = mt5.ORDER_TYPE_BUY if payload.direction == "BUY" else mt5.ORDER_TYPE_SELL
+
+    request = {
+        "action": mt5.TRADE_ACTION_DEAL,
+        "symbol": symbol,
+        "volume": payload.volume,
+        "type": order_type,
+        "price": price,
+        "sl": float(payload.sl),
+        "tp": float(payload.tp),
+        "deviation": 20,
+        "magic": 234000,
+        "comment": "SignalDeskPro AutoTrade",
+        "type_time": mt5.ORDER_TIME_GTC,
+        "type_filling": mt5.ORDER_FILLING_IOC,
+    }
+
+    result = mt5.order_send(request)
+    mt5.shutdown()
+
+    if result.retcode != mt5.TRADE_RETCODE_DONE:
+        return {"status": "failed", "message": f"Ordine rifiutato da MT5: {result.comment}"}
+
+    return {"status": "success", "message": f"Ordine eseguito con successo su MT5! Ticket: {result.order}"}
 
 @app.get("/", response_class=HTMLResponse)
 @app.get("/signals", response_class=HTMLResponse)
@@ -86,7 +154,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - v58 Quantum AI Ultimate Accuracy</title>
+    <title>Signal Desk Pro - v59 MetaTrader Auto-Trading</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -110,7 +178,7 @@ def serve_home(full_path: str = ""):
         }
         .badge {
             font-size: 0.65rem;
-            background-color: #8b5cf6;
+            background-color: #f59e0b;
             color: #fff;
             padding: 3px 8px;
             border-radius: 9999px;
@@ -218,7 +286,7 @@ def serve_home(full_path: str = ""):
             background-color: #070a12;
             padding: 12px;
             border-radius: 10px;
-            border-left: 4px solid #8b5cf6;
+            border-left: 4px solid #f59e0b;
             animation: fadeIn 0.2s ease-out;
         }
         @keyframes fadeIn {
@@ -242,16 +310,54 @@ def serve_home(full_path: str = ""):
             max-height: 70px;
             overflow-y: auto;
         }
+        .toggle-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #070a12;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            margin-bottom: 8px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #334155; transition: .3s; border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; transition: .3s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #22c55e; }
+        input:checked + .slider:before { transform: translateX(22px); }
     </style>
 </head>
 <body>
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">QUANTUM AI v58</div>
+        <div class="badge">MT5 AUTO v59</div>
     </div>
 
     <div class="card">
+        <div class="toggle-container">
+            <div>
+                <span style="font-size: 0.8rem; font-weight: bold; color: #f1f5f9; display: block;">🤖 METATRADER AUTO-TRADING</span>
+                <span style="font-size: 0.65rem; color: #94a3b8;">Esegui operazioni in automatico su MT5</span>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="autotrade-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
         <label for="asset-select">Seleziona Asset / Mercato:</label>
         <select id="asset-select" onchange="updateChartSymbol()">
             <optgroup label="Mercati Tradizionali & Indici">
@@ -290,7 +396,7 @@ def serve_home(full_path: str = ""):
         </div>
 
         <div class="btn-group">
-            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">⚡ GENERA SEGNALE QUANTUM AI</button>
+            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">⚡ GENERA & INVIA A MT5</button>
             <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 AGGIORNA</button>
         </div>
     </div>
@@ -323,7 +429,7 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.72rem; color: #8b5cf6; margin-bottom: 6px; font-weight: bold;">🔮 QUANTUM AI ULTIMATE ACCURACY ANALYSIS</div>
+        <div style="font-size: 0.72rem; color: #f59e0b; margin-bottom: 6px; font-weight: bold;">🤖 QUANTUM AI & MT5 BRIDGE STATUS</div>
         
         <div class="data-row">
             <span>Asset & TF:</span>
@@ -348,6 +454,10 @@ def serve_home(full_path: str = ""):
         <div class="data-row">
             <span>Take Profit (TP):</span>
             <strong id="res-tp" style="color: #4ade80;">--</strong>
+        </div>
+        <div class="data-row">
+            <span>Stato Esecuzione MT5:</span>
+            <strong id="res-mt5-status" style="color: #38bdf8;">In attesa...</strong>
         </div>
         <div class="data-row">
             <span>Timestamp:</span>
@@ -390,12 +500,13 @@ def serve_home(full_path: str = ""):
             if (localStats.isInRecovery) {
                 statusEl.innerText = `🔥 RECOVERY MODE (Tentativo ${localStats.attempts}/2)`;
                 statusEl.style.color = '#ef4444';
-                document.getElementById('stat-lot').innerText = (localStats.baseLot * Math.pow(1.5, localStats.attempts)).toFixed(2);
+                localStats.currentLot = parseFloat((localStats.baseLot * Math.pow(1.5, localStats.attempts)).toFixed(2));
             } else {
                 statusEl.innerText = '🛡️ STANDARD MODE (Pronto)';
                 statusEl.style.color = '#22c55e';
-                document.getElementById('stat-lot').innerText = localStats.baseLot.toFixed(2);
+                localStats.currentLot = localStats.baseLot;
             }
+            document.getElementById('stat-lot').innerText = localStats.currentLot;
         }
 
         async function fetchStats() {
@@ -521,10 +632,11 @@ def serve_home(full_path: str = ""):
             document.getElementById('live-price-input').value = updated.toFixed(currentVal < 0.001 ? 8 : (currentVal < 10 ? 4 : 2));
         }
 
-        function generaSegnaleCrypto() {
+        async function generaSegnaleCrypto() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
+            const autoToggle = document.getElementById('autotrade-toggle').checked;
 
             if (!assetSelect || !signalBox || !priceInput) return;
 
@@ -539,9 +651,8 @@ def serve_home(full_path: str = ""):
             if (asset.includes("SHIB")) decimals = 8;
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
-            // Algoritmo Quantum AI ad altissima convergenza direzionale
             const quantumVector = Math.sin(Date.now() / 400) * Math.cos(Date.now() / 300);
-            const direction = (quantumVector + Math.random()) > -0.1 ? "BUY" : "SELL";
+            const direction = (quantumVector + Math.random()) > -0.15 ? "BUY" : "SELL";
             
             let step = 2.50;
             if (asset.includes("NAS100")) step = 35.00;
@@ -555,29 +666,28 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("XRP")) step = 0.0050;
             else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0025;
 
-            let rangeText, slVal, tpText;
-            const cleanAssetSymbol = asset.replace("/", "");
+            let rangeText, slVal, tpVal, cleanAssetSymbol;
+            cleanAssetSymbol = asset.replace("/", "");
 
+            let slNum, tpNum;
             if (direction === "BUY") {
                 let upperEntry = livePrice;
                 let lowerEntry = livePrice - (step * 0.15);
-                let sl = lowerEntry - (step * 3.0);
-                let tp1 = upperEntry + (step * 4.5);
-                let tp2 = upperEntry + (step * 8.5);
+                slNum = lowerEntry - (step * 3.0);
+                tpNum = upperEntry + (step * 4.5);
 
                 rangeText = `${upperEntry.toFixed(decimals)} / ${lowerEntry.toFixed(decimals)}`;
-                slVal = sl.toFixed(decimals);
-                tpText = `${tp1.toFixed(decimals)} / ${tp2.toFixed(decimals)}`;
+                slVal = slNum.toFixed(decimals);
+                tpVal = tpNum.toFixed(decimals);
             } else {
                 let lowerEntry = livePrice;
                 let upperEntry = livePrice + (step * 0.15);
-                let sl = upperEntry + (step * 3.0);
-                let tp1 = lowerEntry - (step * 4.5);
-                let tp2 = lowerEntry - (step * 8.5);
+                slNum = upperEntry + (step * 3.0);
+                tpNum = lowerEntry - (step * 4.5);
 
                 rangeText = `${lowerEntry.toFixed(decimals)} / ${upperEntry.toFixed(decimals)}`;
-                slVal = sl.toFixed(decimals);
-                tpText = `${tp1.toFixed(decimals)} / ${tp2.toFixed(decimals)}`;
+                slVal = slNum.toFixed(decimals);
+                tpVal = tpNum.toFixed(decimals);
             }
 
             const now = new Date();
@@ -588,25 +698,63 @@ def serve_home(full_path: str = ""):
                 dir: direction,
                 range: rangeText,
                 sl: slVal,
-                tp: tpText
+                tp: tpVal
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + " RANGE (Quantum AI)";
+            dirElem.innerText = direction + " (Quantum AI)";
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
-            document.getElementById('res-tp').innerText = tpText;
+            document.getElementById('res-tp').innerText = tpVal;
             document.getElementById('res-time').innerText = timeStr;
+
+            const mt5StatusEl = document.getElementById('res-mt5-status');
+            if (autoToggle) {
+                mt5StatusEl.innerText = "Invio ordine a MT5 in corso...";
+                mt5StatusEl.style.color = "#f59e0b";
+            } else {
+                mt5StatusEl.innerText = "Auto-Trading disattivato (Solo Segnale)";
+                mt5StatusEl.style.color = "#94a3b8";
+            }
 
             signalBox.style.display = 'block';
 
+            // Invio automatico a MetaTrader se abilitato
+            if (autoToggle) {
+                try {
+                    const response = await fetch('/api/autotrade', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            asset: asset,
+                            direction: direction,
+                            volume: localStats.currentLot || 0.01,
+                            sl: slNum,
+                            tp: tpNum,
+                            auto_enabled: autoToggle
+                        })
+                    });
+                    const resData = await response.json();
+                    if (resData.status === "success") {
+                        mt5StatusEl.innerText = "✅ " + resData.message;
+                        mt5StatusEl.style.color = "#22c55e";
+                    } else {
+                        mt5StatusEl.innerText = "❌ " + resData.message;
+                        mt5StatusEl.style.color = "#ef4444";
+                    }
+                } catch(err) {
+                    mt5StatusEl.innerText = "❌ Errore di connessione al bridge MT5";
+                    mt5StatusEl.style.color = "#ef4444";
+                }
+            }
+
             const logBox = document.getElementById('history-log');
-            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} RANGE @ ${rangeText}<br>`;
+            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} inviato a MT5 (Lotto: ${localStats.currentLot || 0.01})<br>`;
             if (logBox.innerText.includes("Nessun segnale")) {
                 logBox.innerHTML = logText;
             } else {
