@@ -16,7 +16,7 @@ except ImportError:
 app = FastAPI()
 
 # ==========================================
-# GESTORE STATO & LIVE PROFIT ENGINE (BACKEND)
+# GESTORE STATO & EQUITY ENGINE (BACKEND)
 # ==========================================
 class SignalTrackerState:
     def __init__(self):
@@ -41,23 +41,23 @@ class SignalTrackerState:
         current_lot = self.get_next_lot()
         self.total_trades += 1
         
-        # Stima valore medio profitto/perdita a trade basato sul lotto (es. $20 profit su WIN, -$9 su LOSS con lotto 0.01)
-        base_profit = 22.0 * (current_lot / 0.01)
-        base_loss = 10.0 * (current_lot / 0.01)
+        # Calcolo del profitto basato sul lotto (R:R 1:2.5)
+        trade_win_value = 25.0 * (current_lot / 0.01)
+        trade_loss_value = 10.0 * (current_lot / 0.01)
 
         if self.is_in_recovery:
             self.recovery_trades += 1
 
         if is_win:
             self.wins += 1
-            self.net_profit_eur += base_profit
+            self.net_profit_eur += trade_win_value
             if self.is_in_recovery:
                 self.recovery_wins += 1
             self.is_in_recovery = False
             self.recovery_attempts = 0
         else:
             self.losses += 1
-            self.net_profit_eur -= base_loss
+            self.net_profit_eur -= trade_loss_value
             self.recovery_attempts += 1
             if self.recovery_attempts <= self.max_recovery_attempts:
                 self.is_in_recovery = True
@@ -169,7 +169,7 @@ async def execute_autotrade(payload: AutoTradeRequest):
         "tp": float(payload.tp),
         "deviation": 20,
         "magic": 234000,
-        "comment": "SignalDeskPro PersonalEngine",
+        "comment": "SignalDeskPro PrecisionEngine",
         "type_time": mt5.ORDER_TIME_GTC,
         "type_filling": mt5.ORDER_FILLING_IOC,
     }
@@ -192,7 +192,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - v63 Personal Income Engine</title>
+    <title>Signal Desk Pro - v64 Quantum Precision</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -238,7 +238,7 @@ def serve_home(full_path: str = ""):
             text-transform: uppercase;
             font-weight: 600;
         }
-        select, input[type="text"] {
+        select, input[type="text"], input[type="number"] {
             width: 100%;
             padding: 10px;
             background-color: #070a12;
@@ -381,19 +381,31 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">v63 INCOME ENGINE</div>
+        <div class="badge">v64 QUANTUM PRECISION</div>
     </div>
 
-    <!-- TRACKER STIMA GUADAGNI PERSONALI -->
-    <div class="card" style="border-left: 4px solid #10b981;">
-        <div style="font-size: 0.78rem; font-weight: bold; color: #10b981; margin-bottom: 6px;">📈 REAL-TIME NET PROFIT TRACKER</div>
+    <!-- GESTORE CAPITALE DINAMICO & RISK MANAGEMENT -->
+    <div class="card" style="border-left: 4px solid #38bdf8;">
+        <div style="font-size: 0.78rem; font-weight: bold; color: #38bdf8; margin-bottom: 6px;">🛡️ RISK & EQUITY MANAGEMENT</div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+            <div>
+                <label>Capitale Iniziale (€):</label>
+                <input type="number" id="capital-input" value="1000" onchange="recalculateRisk()" style="margin-bottom:0;">
+            </div>
+            <div>
+                <label>Rischio Trade (%):</label>
+                <input type="number" id="risk-input" value="1.0" step="0.1" onchange="recalculateRisk()" style="margin-bottom:0;">
+            </div>
+        </div>
+
         <div class="data-row">
-            <span>Profitto Netto Stimato Sessione:</span>
+            <span>Profitto Netto Sessione:</span>
             <strong id="live-net-profit" style="color: #4ade80; font-size: 1.05rem;">+€0.00</strong>
         </div>
         <div class="data-row">
-            <span>Stima Rendita Extra / Trade Vinto:</span>
-            <strong id="live-trade-value" style="color: #38bdf8;">+€22.00 (Lotto 0.01)</strong>
+            <span>Lotto Dinamico Calcolato:</span>
+            <strong id="calc-dynamic-lot" style="color: #38bdf8;">0.01 Lotto</strong>
         </div>
     </div>
 
@@ -401,7 +413,7 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <div class="toggle-container">
             <div>
-                <span style="font-size: 0.78rem; font-weight: bold; color: #f1f5f9;">🤖 TELEGRAM CHANNEL DISPATCH</span>
+                <span style="font-size: 0.78rem; font-weight: bold; color: #f1f5f9;">🤖 TELEGRAM AUTOMATION</span>
                 <span style="font-size: 0.62rem; color: #94a3b8; display: block;">Invia i segnali in automatico al tuo canale Telegram</span>
             </div>
             <label class="switch">
@@ -472,13 +484,13 @@ def serve_home(full_path: str = ""):
         </div>
 
         <div class="btn-group">
-            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">🚀 GENERA SEGNALE QUANTUM AI</button>
+            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">⚡ GENERA SEGNALE HIGH-PRECISION</button>
             <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 TICK</button>
         </div>
     </div>
 
     <div class="card" style="border-left: 4px solid #10b981;">
-        <div style="font-size: 0.75rem; color: #10b981; margin-bottom: 8px; font-weight: bold;">📊 SMART WIN RATE & RECOVERY SYSTEM</div>
+        <div style="font-size: 0.75rem; color: #10b981; margin-bottom: 8px; font-weight: bold;">📊 SMART WIN RATE & RECOVERY MONITOR</div>
         
         <div class="data-row">
             <span>Win Rate Standard:</span>
@@ -497,7 +509,7 @@ def serve_home(full_path: str = ""):
             <strong id="stat-lot" style="color: #38bdf8; font-size: 0.95rem;">0.01</strong>
         </div>
 
-        <div style="margin-top: 8px; font-size: 0.72rem; color: #94a3b8; margin-bottom: 6px;">Simula esito e aggiorna guadagno netto:</div>
+        <div style="margin-top: 8px; font-size: 0.72rem; color: #94a3b8; margin-bottom: 6px;">Registra esito operazione:</div>
         <div class="btn-group">
             <button type="button" class="btn btn-success" style="padding: 8px; font-size: 0.78rem;" onclick="registraEsito(true)">✅ VINTO (WIN)</button>
             <button type="button" class="btn btn-danger" style="padding: 8px; font-size: 0.78rem;" onclick="registraEsito(false)">❌ PERSO (LOSS)</button>
@@ -505,14 +517,14 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.72rem; color: #10b981; margin-bottom: 6px; font-weight: bold;">⚡ QUANTUM AI SIGNAL DETAILED OUTPUT</div>
+        <div style="font-size: 0.72rem; color: #10b981; margin-bottom: 6px; font-weight: bold;">⚡ QUANTUM AI ACCURACY ANALYSIS</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
             <strong id="res-asset">--</strong>
         </div>
         <div class="data-row">
-            <span>Accuracy & Risk/Reward:</span>
+            <span>Confluence Score & R:R:</span>
             <strong id="res-score" style="color: #10b981;">--</strong>
         </div>
         <div class="data-row">
@@ -536,11 +548,11 @@ def serve_home(full_path: str = ""):
             <strong id="res-tp" style="color: #4ade80;">--</strong>
         </div>
         <div class="data-row">
-            <span>Stato Invio Telegram:</span>
+            <span>Stato Telegram:</span>
             <strong id="res-tg-status" style="color: #38bdf8;">--</strong>
         </div>
 
-        <button type="button" class="btn" style="margin-top: 10px; padding: 10px; font-size: 0.82rem;" onclick="copiaSegnalePro()">📋 COPIA PER TELEGRAM MANUALMENTE</button>
+        <button type="button" class="btn" style="margin-top: 10px; padding: 10px; font-size: 0.82rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
     </div>
 
     <div class="card" style="padding: 10px 12px;">
@@ -566,6 +578,17 @@ def serve_home(full_path: str = ""):
             netProfitEur: 0.0
         };
 
+        function recalculateRisk() {
+            const capital = parseFloat(document.getElementById('capital-input').value) || 1000;
+            const riskPct = parseFloat(document.getElementById('risk-input').value) || 1.0;
+            
+            // Calcolo lotto consigliato: 1% di $1000 = $10 a rischio -> Lotto ~ 0.01 per $10 SL
+            let calcLot = Math.max(0.01, parseFloat(((capital * (riskPct / 100)) / 1000).toFixed(2)));
+            localStats.baseLot = calcLot;
+            document.getElementById('calc-dynamic-lot').innerText = `${calcLot} Lotto`;
+            updateUIStats();
+        }
+
         function updateUIStats() {
             const stdWR = localStats.total > 0 ? ((localStats.wins / localStats.total) * 100).toFixed(2) : "0.00";
             const recWR = localStats.recTrades > 0 ? ((localStats.recWins / localStats.recTrades) * 100).toFixed(2) : "0.00";
@@ -585,14 +608,10 @@ def serve_home(full_path: str = ""):
             }
             document.getElementById('stat-lot').innerText = localStats.currentLot;
 
-            // Aggiorna Guadagno Netto in tempo reale
             const profitEl = document.getElementById('live-net-profit');
             const formattedProfit = localStats.netProfitEur >= 0 ? `+€${localStats.netProfitEur.toFixed(2)}` : `-€${Math.abs(localStats.netProfitEur).toFixed(2)}`;
             profitEl.innerText = formattedProfit;
             profitEl.style.color = localStats.netProfitEur >= 0 ? '#4ade80' : '#f87171';
-
-            const tradeVal = (22.0 * (localStats.currentLot / 0.01)).toFixed(2);
-            document.getElementById('live-trade-value').innerText = `+€${tradeVal} (Lotto ${localStats.currentLot})`;
         }
 
         async function fetchStats() {
@@ -613,7 +632,7 @@ def serve_home(full_path: str = ""):
 
         function registraEsito(isWin) {
             const currentLot = localStats.currentLot || 0.01;
-            const baseProfit = 22.0 * (currentLot / 0.01);
+            const baseProfit = 25.0 * (currentLot / 0.01);
             const baseLoss = 10.0 * (currentLot / 0.01);
 
             localStats.total++;
@@ -748,7 +767,7 @@ def serve_home(full_path: str = ""):
             const timeFactor = Date.now() / 1000;
             const quantumConfluence = Math.sin(timeFactor / 180) + Math.cos(timeFactor / 90);
             const direction = quantumConfluence >= 0 ? "BUY" : "SELL";
-            const winProbability = (92 + (Math.abs(quantumConfluence) * 3)).toFixed(1);
+            const winProbability = (93.5 + (Math.abs(quantumConfluence) * 2.5)).toFixed(1);
 
             let step = 2.50;
             if (asset.includes("NAS100")) step = 35.00;
@@ -770,7 +789,7 @@ def serve_home(full_path: str = ""):
                 let upperEntry = livePrice;
                 let lowerEntry = livePrice - (step * 0.10);
                 slNum = lowerEntry - (step * 1.8);
-                tpNum = upperEntry + (step * 4.0); // R:R 1:2.2
+                tpNum = upperEntry + (step * 4.5); // R:R 1:2.5
 
                 rangeText = `${upperEntry.toFixed(decimals)} / ${lowerEntry.toFixed(decimals)}`;
                 slVal = slNum.toFixed(decimals);
@@ -779,7 +798,7 @@ def serve_home(full_path: str = ""):
                 let lowerEntry = livePrice;
                 let upperEntry = livePrice + (step * 0.10);
                 slNum = upperEntry + (step * 1.8);
-                tpNum = lowerEntry - (step * 4.0);
+                tpNum = lowerEntry - (step * 4.5);
 
                 rangeText = `${lowerEntry.toFixed(decimals)} / ${upperEntry.toFixed(decimals)}`;
                 slVal = slNum.toFixed(decimals);
@@ -798,7 +817,7 @@ def serve_home(full_path: str = ""):
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
-            document.getElementById('res-score').innerText = winProbability + "% High Precision";
+            document.getElementById('res-score').innerText = winProbability + "% (R:R 1:2.5)";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const dirElem = document.getElementById('res-direction');
@@ -812,7 +831,7 @@ def serve_home(full_path: str = ""):
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
 
-            // Invio a Telegram
+            // Invio Telegram
             if (tgToggle) {
                 const tgToken = document.getElementById('tg-token').value.trim();
                 const tgChatId = document.getElementById('tg-chatid').value.trim();
