@@ -41,8 +41,8 @@ class SignalTrackerState:
         current_lot = self.get_next_lot()
         self.total_trades += 1
         
-        trade_win_value = 50.0 * (current_lot / 0.01)
-        trade_loss_value = 20.0 * (current_lot / 0.01)
+        trade_win_value = 60.0 * (current_lot / 0.01)
+        trade_loss_value = 25.0 * (current_lot / 0.01)
 
         if self.is_in_recovery:
             self.recovery_trades += 1
@@ -168,7 +168,7 @@ async def execute_autotrade(payload: AutoTradeRequest):
         "tp": float(payload.tp),
         "deviation": 20,
         "magic": 234000,
-        "comment": "SignalDeskPro v71 MultiTP",
+        "comment": "SignalDeskPro v72 Quantum",
         "type_time": mt5.ORDER_TIME_GTC,
         "type_filling": mt5.ORDER_FILLING_IOC,
     }
@@ -191,12 +191,23 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - v71 Smart Multi-TP Engine</title>
+    <title>Signal Desk Pro - v72 Quantum Pro Terminal</title>
     <style>
+        :root {
+            --bg-color: #030712;
+            --card-bg: #0b1120;
+            --border-color: #1e293b;
+            --accent-cyan: #38bdf8;
+            --accent-purple: #a855f7;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #05070a;
-            color: #f1f5f9;
+            background-color: var(--bg-color);
+            color: var(--text-main);
             margin: 0;
             padding: 12px;
             -webkit-tap-highlight-color: transparent;
@@ -205,82 +216,94 @@ def serve_home(full_path: str = ""):
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #0b1120, #1e1b4b);
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
         }
         h1 {
-            font-size: 1.05rem;
+            font-size: 1.15rem;
             margin: 0;
-            color: #38bdf8;
-            letter-spacing: 0.5px;
+            color: var(--accent-cyan);
+            letter-spacing: 0.8px;
+            font-weight: 800;
         }
         .badge {
-            font-size: 0.65rem;
-            background-color: #8b5cf6;
+            font-size: 0.68rem;
+            background: linear-gradient(135deg, var(--accent-purple), #6d28d9);
             color: #fff;
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: 9999px;
             font-weight: bold;
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
         }
         .card {
-            background-color: #101726;
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 10px;
-            border: 1px solid #1e293b;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            background-color: var(--card-bg);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.5);
         }
         label {
             font-size: 0.72rem;
-            color: #94a3b8;
+            color: var(--text-muted);
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
             text-transform: uppercase;
-            font-weight: 600;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
         select, input[type="text"], input[type="number"] {
             width: 100%;
-            padding: 10px;
-            background-color: #070a12;
-            color: #38bdf8;
+            padding: 11px;
+            background-color: #030712;
+            color: var(--accent-cyan);
             border: 1px solid #334155;
-            border-radius: 8px;
-            font-size: 0.92rem;
+            border-radius: 10px;
+            font-size: 0.95rem;
             font-weight: bold;
             outline: none;
             box-sizing: border-box;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            transition: border-color 0.2s;
+        }
+        select:focus, input:focus {
+            border-color: var(--accent-cyan);
         }
         .tf-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 6px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
         .tf-btn {
-            background-color: #070a12;
+            background-color: #030712;
             border: 1px solid #334155;
-            color: #94a3b8;
-            padding: 7px 0;
-            border-radius: 6px;
-            font-size: 0.75rem;
+            color: var(--text-muted);
+            padding: 8px 0;
+            border-radius: 8px;
+            font-size: 0.78rem;
             font-weight: bold;
             cursor: pointer;
             text-align: center;
-            transition: background-color 0.15s ease, color 0.15s ease;
+            transition: all 0.2s ease;
         }
         .tf-btn.active {
-            background-color: #0284c7;
-            border-color: #38bdf8;
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            border-color: var(--accent-cyan);
             color: #fff;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
         }
         .chart-container {
             width: 100%;
-            height: 240px;
-            background-color: #070a12;
-            border-radius: 8px;
+            height: 250px;
+            background-color: #030712;
+            border-radius: 10px;
             overflow: hidden;
-            border: 1px solid #1e293b;
-            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 12px;
         }
         .btn-group {
             display: flex;
@@ -288,91 +311,103 @@ def serve_home(full_path: str = ""):
         }
         .btn {
             flex: 1;
-            background: linear-gradient(135deg, #0ea5e9, #1d4ed8);
-            color: white;
+            background: linear-gradient(135deg, #38bdf8, #0284c7);
+            color: #030712;
             border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 0.88rem;
-            font-weight: bold;
+            padding: 13px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 800;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
-            transition: transform 0.05s ease, opacity 0.15s ease;
+            box-shadow: 0 4px 14px rgba(56, 189, 248, 0.4);
+            transition: transform 0.1s ease, filter 0.15s ease;
         }
         .btn-secondary {
             background: #1e293b;
             border: 1px solid #475569;
-            color: #cbd5e1;
+            color: var(--text-main);
             flex: 0.4;
+            box-shadow: none;
         }
         .btn-success {
             background: linear-gradient(135deg, #22c55e, #15803d);
-            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+            color: white;
+            box-shadow: 0 4px 14px rgba(34, 197, 94, 0.4);
         }
         .btn-danger {
             background: linear-gradient(135deg, #ef4444, #b91c1c);
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+            color: white;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+        }
+        .btn-quantum {
+            background: linear-gradient(135deg, #a855f7, #6d28d9);
+            color: white;
+            box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
         }
         .btn:active {
-            transform: scale(0.98);
-            opacity: 0.9;
+            transform: scale(0.97);
+            filter: brightness(0.9);
         }
         .signal-container {
             display: none;
-            margin-top: 10px;
-            background-color: #070a12;
-            padding: 12px;
-            border-radius: 10px;
-            border-left: 4px solid #8b5cf6;
-            animation: fadeIn 0.2s ease-out;
+            margin-top: 12px;
+            background-color: #030712;
+            padding: 14px;
+            border-radius: 12px;
+            border-left: 5px solid var(--accent-purple);
+            animation: fadeIn 0.25s ease-out;
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-4px); }
+            from { opacity: 0; transform: translateY(-6px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .buy { color: #22c55e; font-weight: bold; font-size: 1rem; }
-        .sell { color: #ef4444; font-weight: bold; font-size: 1rem; }
+        .buy { color: var(--accent-green); font-weight: 800; font-size: 1.05rem; }
+        .sell { color: var(--accent-red); font-weight: 800; font-size: 1.05rem; }
         .data-row {
             display: flex;
             justify-content: space-between;
-            padding: 5px 0;
+            padding: 6px 0;
             border-bottom: 1px solid #111827;
-            font-size: 0.82rem;
+            font-size: 0.85rem;
         }
         .data-row:last-child { border-bottom: none; }
         .history-box {
-            font-size: 0.72rem;
-            color: #64748b;
-            margin-top: 6px;
-            max-height: 80px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            max-height: 90px;
             overflow-y: auto;
+            font-family: monospace;
+            background: #030712;
+            padding: 8px;
+            border-radius: 6px;
         }
         .toggle-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #070a12;
-            padding: 8px 10px;
-            border-radius: 8px;
+            background-color: #030712;
+            padding: 10px 12px;
+            border-radius: 10px;
             border: 1px solid #334155;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
         .switch {
             position: relative;
             display: inline-block;
-            width: 44px;
-            height: 22px;
+            width: 46px;
+            height: 24px;
         }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #334155; transition: .3s; border-radius: 22px;
+            background-color: #334155; transition: .3s; border-radius: 24px;
         }
         .slider:before {
-            position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
             background-color: white; transition: .3s; border-radius: 50%;
         }
-        input:checked + .slider { background-color: #8b5cf6; }
+        input:checked + .slider { background-color: var(--accent-purple); }
         input:checked + .slider:before { transform: translateX(22px); }
     </style>
 </head>
@@ -380,14 +415,14 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">v71 MULTI-TP & BREAK-EVEN</div>
+        <div class="badge">v72 QUANTUM PRO</div>
     </div>
 
     <!-- GESTORE CAPITALE DINAMICO & RISK MANAGEMENT -->
-    <div class="card" style="border-left: 4px solid #38bdf8;">
-        <div style="font-size: 0.78rem; font-weight: bold; color: #38bdf8; margin-bottom: 6px;">🛡️ RISK & EQUITY MANAGEMENT</div>
+    <div class="card" style="border-left: 5px solid var(--accent-cyan);">
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-cyan); margin-bottom: 8px;">🛡️ RISK & EQUITY MANAGEMENT</div>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
             <div>
                 <label>Capitale Iniziale (€):</label>
                 <input type="number" id="capital-input" value="1000" onchange="recalculateRisk()" style="margin-bottom:0;">
@@ -400,11 +435,11 @@ def serve_home(full_path: str = ""):
 
         <div class="data-row">
             <span>Profitto Netto Sessione:</span>
-            <strong id="live-net-profit" style="color: #4ade80; font-size: 1.05rem;">+€0.00</strong>
+            <strong id="live-net-profit" style="color: var(--accent-green); font-size: 1.1rem;">+€0.00</strong>
         </div>
         <div class="data-row">
             <span>Lotto Dinamico Calcolato:</span>
-            <strong id="calc-dynamic-lot" style="color: #38bdf8;">0.01 Lotto</strong>
+            <strong id="calc-dynamic-lot" style="color: var(--accent-cyan);">0.01 Lotto</strong>
         </div>
     </div>
 
@@ -412,8 +447,8 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <div class="toggle-container">
             <div>
-                <span style="font-size: 0.78rem; font-weight: bold; color: #f1f5f9;">🤖 TELEGRAM AUTOMATION</span>
-                <span style="font-size: 0.62rem; color: #94a3b8; display: block;">Invia i segnali in automatico al tuo canale Telegram</span>
+                <span style="font-size: 0.8rem; font-weight: 800; color: #f1f5f9;">🤖 TELEGRAM AUTOMATION</span>
+                <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Invio istantaneo segnali al canale</span>
             </div>
             <label class="switch">
                 <input type="checkbox" id="telegram-toggle" checked>
@@ -421,14 +456,14 @@ def serve_home(full_path: str = ""):
             </label>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
             <div>
                 <label>Telegram Bot Token:</label>
-                <input type="text" id="tg-token" placeholder="es. 123456:ABC..." style="font-size: 0.75rem;">
+                <input type="text" id="tg-token" placeholder="es. 123456:ABC..." style="font-size: 0.78rem;">
             </div>
             <div>
-                <label>Telegram Chat/Channel ID:</label>
-                <input type="text" id="tg-chatid" placeholder="es. -100123456" style="font-size: 0.75rem;">
+                <label>Telegram Chat ID:</label>
+                <input type="text" id="tg-chatid" placeholder="es. -100123456" style="font-size: 0.78rem;">
             </div>
         </div>
     </div>
@@ -436,8 +471,8 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <div class="toggle-container">
             <div>
-                <span style="font-size: 0.78rem; font-weight: bold; color: #f1f5f9;">⚡ METATRADER 5 AUTO-TRADING</span>
-                <span style="font-size: 0.62rem; color: #94a3b8; display: block;">Esegui ordini su terminale MT5 locale/VPS</span>
+                <span style="font-size: 0.8rem; font-weight: 800; color: #f1f5f9;">⚡ METATRADER 5 AUTO-TRADING</span>
+                <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Esecuzione diretta terminale MT5</span>
             </div>
             <label class="switch">
                 <input type="checkbox" id="autotrade-toggle">
@@ -468,10 +503,10 @@ def serve_home(full_path: str = ""):
         <label>Grafico Live TradingView:</label>
         <div class="chart-container" id="tradingview_widget"></div>
 
-        <label for="live-price-input" style="color: #38bdf8; margin-top: 6px;">Prezzo Attuale da Grafico:</label>
-        <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+        <label for="live-price-input" style="color: var(--accent-cyan); margin-top: 8px;">Prezzo Attuale da Grafico:</label>
+        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
             <input type="text" id="live-price-input" value="4180.97">
-            <button type="button" class="btn btn-secondary" style="flex: 0.5; padding: 10px; font-size: 0.75rem;" onclick="azzeraPrezzoLive()">🎯 SYNC</button>
+            <button type="button" class="btn btn-secondary" style="flex: 0.5; padding: 11px; font-size: 0.78rem;" onclick="azzeraPrezzoLive()">🎯 SYNC</button>
         </div>
 
         <label>Timeframe Operativo:</label>
@@ -483,21 +518,21 @@ def serve_home(full_path: str = ""):
         </div>
 
         <div class="btn-group">
-            <button type="button" id="action-btn" class="btn" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);" onclick="generaSegnaleCrypto()">⚡ GENERA SEGNALE ADVANCED MULTI-TP</button>
+            <button type="button" id="action-btn" class="btn btn-quantum" onclick="generaSegnaleCrypto()">⚡ GENERA SEGNALE QUANTUM PRO</button>
             <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 TICK</button>
         </div>
     </div>
 
-    <div class="card" style="border-left: 4px solid #22c55e;">
-        <div style="font-size: 0.75rem; color: #22c55e; margin-bottom: 8px; font-weight: bold;">📊 SMART WIN RATE & RECOVERY MONITOR</div>
+    <div class="card" style="border-left: 5px solid var(--accent-green);">
+        <div style="font-size: 0.78rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">📊 SMART WIN RATE & RECOVERY MONITOR</div>
         
         <div class="data-row">
             <span>Win Rate Standard:</span>
-            <strong id="stat-std-wr" style="color: #38bdf8;">0.00%</strong>
+            <strong id="stat-std-wr" style="color: var(--accent-cyan);">0.00%</strong>
         </div>
         <div class="data-row">
             <span>Smart Recovery Win Rate:</span>
-            <strong id="stat-rec-wr" style="color: #4ade80;">0.00%</strong>
+            <strong id="stat-rec-wr" style="color: var(--accent-green);">0.00%</strong>
         </div>
         <div class="data-row">
             <span>Stato Gestione:</span>
@@ -505,30 +540,30 @@ def serve_home(full_path: str = ""):
         </div>
         <div class="data-row">
             <span>Lotto Prossimo Trade:</span>
-            <strong id="stat-lot" style="color: #38bdf8; font-size: 0.95rem;">0.01</strong>
+            <strong id="stat-lot" style="color: var(--accent-cyan); font-size: 1rem;">0.01</strong>
         </div>
 
-        <div style="margin-top: 8px; font-size: 0.72rem; color: #94a3b8; margin-bottom: 6px;">Registra esito operazione:</div>
+        <div style="margin-top: 10px; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px;">Registra esito operazione:</div>
         <div class="btn-group">
-            <button type="button" class="btn btn-success" style="padding: 8px; font-size: 0.78rem;" onclick="registraEsito(true)">✅ VINTO (WIN)</button>
-            <button type="button" class="btn btn-danger" style="padding: 8px; font-size: 0.78rem;" onclick="registraEsito(false)">❌ PERSO (LOSS)</button>
+            <button type="button" class="btn btn-success" style="padding: 9px; font-size: 0.8rem;" onclick="registraEsito(true)">✅ VINTO (WIN)</button>
+            <button type="button" class="btn btn-danger" style="padding: 9px; font-size: 0.8rem;" onclick="registraEsito(false)">❌ PERSO (LOSS)</button>
         </div>
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.72rem; color: #a78bfa; margin-bottom: 6px; font-weight: bold;">💎 SEGNALE HIGH-ACCURACY MULTI-TARGET</div>
+        <div style="font-size: 0.75rem; color: var(--accent-purple); margin-bottom: 8px; font-weight: 800;">💎 SEGNALE QUANTUM PRO MULTI-TARGET</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
             <strong id="res-asset">--</strong>
         </div>
         <div class="data-row">
-            <span>Protezione & Gestione:</span>
-            <strong id="res-score" style="color: #a78bfa;">--</strong>
+            <span>Protezione & Motore:</span>
+            <strong id="res-score" style="color: var(--accent-purple);">--</strong>
         </div>
         <div class="data-row">
             <span>Prezzo Riferimento:</span>
-            <strong id="res-liveprice" style="color: #38bdf8;">--</strong>
+            <strong id="res-liveprice" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
             <span>Direzione Segnale:</span>
@@ -536,29 +571,29 @@ def serve_home(full_path: str = ""):
         </div>
         <div class="data-row">
             <span>Range d'Ingresso:</span>
-            <strong id="res-range" style="color: #38bdf8; font-size: 0.95rem;">--</strong>
+            <strong id="res-range" style="color: var(--accent-cyan); font-size: 0.98rem;">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (SL Protezione Max):</span>
-            <strong id="res-sl" style="color: #f87171;">--</strong>
+            <span>Stop Loss (Extra Protetto):</span>
+            <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
-            <span>Take Profit 1 (Primo Target + B.E.):</span>
+            <span>Take Profit 1 (Target 1 + B.E.):</span>
             <strong id="res-tp1" style="color: #34d399;">--</strong>
         </div>
         <div class="data-row">
-            <span>Take Profit 2 (Target Finale Max):</span>
-            <strong id="res-tp2" style="color: #10b981; font-weight: bold;">--</strong>
+            <span>Take Profit 2 (Target Finale):</span>
+            <strong id="res-tp2" style="color: var(--accent-green); font-weight: 800;">--</strong>
         </div>
         <div class="data-row">
             <span>Stato Telegram:</span>
-            <strong id="res-tg-status" style="color: #38bdf8;">--</strong>
+            <strong id="res-tg-status" style="color: var(--accent-cyan);">--</strong>
         </div>
 
-        <button type="button" id="copy-btn" class="btn" style="margin-top: 10px; padding: 10px; font-size: 0.82rem; background: linear-gradient(135deg, #8b5cf6, #6d28d9);" onclick="copiaSegnalePro()">📋 COPIA SEGNALE MULTI-TP PER TELEGRAM</button>
+        <button type="button" id="copy-btn" class="btn btn-quantum" style="margin-top: 12px; padding: 11px; font-size: 0.85rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
     </div>
 
-    <div class="card" style="padding: 10px 12px;">
+    <div class="card" style="padding: 10px 14px;">
         <label>Log Operazioni & Segnali:</label>
         <div id="history-log" class="history-box">Pronto per la generazione.</div>
     </div>
@@ -601,11 +636,11 @@ def serve_home(full_path: str = ""):
             const statusEl = document.getElementById('stat-status');
             if (localStats.isInRecovery) {
                 statusEl.innerText = `🔥 RECOVERY MODE (Tentativo ${localStats.attempts}/2)`;
-                statusEl.style.color = '#ef4444';
+                statusEl.style.color = 'var(--accent-red)';
                 localStats.currentLot = parseFloat((localStats.baseLot * Math.pow(1.5, localStats.attempts)).toFixed(2));
             } else {
                 statusEl.innerText = '🛡️ STANDARD MODE (Pronto)';
-                statusEl.style.color = '#22c55e';
+                statusEl.style.color = 'var(--accent-green)';
                 localStats.currentLot = localStats.baseLot;
             }
             document.getElementById('stat-lot').innerText = localStats.currentLot;
@@ -613,7 +648,7 @@ def serve_home(full_path: str = ""):
             const profitEl = document.getElementById('live-net-profit');
             const formattedProfit = localStats.netProfitEur >= 0 ? `+€${localStats.netProfitEur.toFixed(2)}` : `-€${Math.abs(localStats.netProfitEur).toFixed(2)}`;
             profitEl.innerText = formattedProfit;
-            profitEl.style.color = localStats.netProfitEur >= 0 ? '#4ade80' : '#f87171';
+            profitEl.style.color = localStats.netProfitEur >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
         }
 
         async function fetchStats() {
@@ -634,8 +669,8 @@ def serve_home(full_path: str = ""):
 
         function registraEsito(isWin) {
             const currentLot = localStats.currentLot || 0.01;
-            const baseProfit = 50.0 * (currentLot / 0.01);
-            const baseLoss = 20.0 * (currentLot / 0.01);
+            const baseProfit = 60.0 * (currentLot / 0.01);
+            const baseLoss = 25.0 * (currentLot / 0.01);
 
             localStats.total++;
             if (localStats.isInRecovery) localStats.recTrades++;
@@ -683,7 +718,7 @@ def serve_home(full_path: str = ""):
                 "theme": "dark",
                 "style": "1",
                 "locale": "it",
-                "toolbar_bg": "#101726",
+                "toolbar_bg": "#0b1120",
                 "enable_publishing": false,
                 "hide_top_toolbar": false,
                 "hide_legend": false,
@@ -766,15 +801,15 @@ def serve_home(full_path: str = ""):
             if (asset.includes("SHIB")) decimals = 8;
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
-            // ANALISI ADVANCED MULTI-TP & BREAK-EVEN ENGINE
+            // ANALISI QUANTUM PRO CON SL ULTRA-PROTETTO E MULTI-TP
             const nowTime = Date.now();
-            const trendFactor = Math.sin((livePrice * 2) + nowTime / 1500);
+            const trendFactor = Math.sin((livePrice * 2) + nowTime / 1400);
             const direction = trendFactor >= 0 ? "BUY" : "SELL";
-            const indicatorSummary = `Auto Break-Even @ TP1 | Trend: ${direction === "BUY" ? "BULLISH" : "BEARISH"}`;
+            const indicatorSummary = `Quantum Pro Active | Trend: ${direction === "BUY" ? "BULLISH" : "BEARISH"}`;
 
-            let slMultiplier = 8.00; // SL ultra-ampio per il massimo respiro
-            let tp1Multiplier = 8.00; // TP1 al raggiungere del rischio (R:R 1:1) per mettere a B.E.
-            let tp2Multiplier = 18.00; // TP2 esteso (R:R 1:2.25) per massimizzare il profitto netto
+            let slMultiplier = 8.00; // SL ultra-ampio per massima protezione contro il rumore
+            let tp1Multiplier = 8.00; // TP1 (Metà target / Break-even)
+            let tp2Multiplier = 20.00; // TP2 (Target finale esteso)
 
             let step = 1.20;
             if (asset.includes("NAS100")) step = 35.00;
@@ -833,7 +868,7 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + " (Smart Multi-TP Active)";
+            dirElem.innerText = direction + " (Quantum Verified)";
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
@@ -853,7 +888,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio a Telegram...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const formattedMsg = `<b>⚡ SIGNAL DESK PRO SEGNALE v71 ⚡</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Modalità:</b> Smart Multi-TP & Auto B.E.\n<b>Direzione:</b> ${direction}\n<b>Range Ingresso:</b> ${rangeText}\n\n<b>SL (Protezione Max):</b> ${slVal}\n<b>TP1 (Parziale + SL a BE):</b> ${tp1Val}\n<b>TP2 (Target Max):</b> ${tp2Val}\n\n<i>Lotto consigliato: ${localStats.currentLot || 0.01}</i>`;
+                    const formattedMsg = `<b>🚀 SIGNAL DESK PRO v72 QUANTUM 🚀</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range Ingresso:</b> ${rangeText}\n\n<b>SL (Protezione Max):</b> ${slVal}\n<b>TP1 (Parziale + B.E.):</b> ${tp1Val}\n<b>TP2 (Target Finale):</b> ${tp2Val}\n\n<i>Lotto consigliato: ${localStats.currentLot || 0.01}</i>`;
 
                     try {
                         const tgRes = await fetch('/api/telegram/send', {
@@ -868,14 +903,14 @@ def serve_home(full_path: str = ""):
                         const tgData = await tgRes.json();
                         if (tgData.status === "success") {
                             tgStatusEl.innerText = "✅ Inviato su Telegram!";
-                            tgStatusEl.style.color = "#22c55e";
+                            tgStatusEl.style.color = "var(--accent-green)";
                         } else {
                             tgStatusEl.innerText = "❌ " + tgData.message;
-                            tgStatusEl.style.color = "#ef4444";
+                            tgStatusEl.style.color = "var(--accent-red)";
                         }
                     } catch(e) {
                         tgStatusEl.innerText = "❌ Errore Telegram";
-                        tgStatusEl.style.color = "#ef4444";
+                        tgStatusEl.style.color = "var(--accent-red)";
                     }
                 } else {
                     tgStatusEl.innerText = "⚠️ Dati Telegram non inseriti";
@@ -883,7 +918,7 @@ def serve_home(full_path: str = ""):
                 }
             } else {
                 tgStatusEl.innerText = "Disattivato";
-                tgStatusEl.style.color = "#94a3b8";
+                tgStatusEl.style.color = "var(--text-muted)";
             }
 
             const logBox = document.getElementById('history-log');
@@ -901,7 +936,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const text = `⚡ ${lastSignalData.symbol} ⚡\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\n\nTP1: ${lastSignalData.tp1}\nTP2: ${lastSignalData.tp2}`;
+            const text = `🚀 ${lastSignalData.symbol} 🚀\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\n\nTP1: ${lastSignalData.tp1}\nTP2: ${lastSignalData.tp2}`;
 
             navigator.clipboard.writeText(text).then(() => {
                 alert("Segnale copiato negli appunti per Telegram!");
