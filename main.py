@@ -41,8 +41,8 @@ class SignalTrackerState:
         current_lot = self.get_next_lot()
         self.total_trades += 1
         
-        trade_win_value = 35.0 * (current_lot / 0.01)
-        trade_loss_value = 17.5 * (current_lot / 0.01)
+        trade_win_value = 40.0 * (current_lot / 0.01)
+        trade_loss_value = 20.0 * (current_lot / 0.01)
 
         if self.is_in_recovery:
             self.recovery_trades += 1
@@ -168,7 +168,7 @@ async def execute_autotrade(payload: AutoTradeRequest):
         "tp": float(payload.tp),
         "deviation": 20,
         "magic": 234000,
-        "comment": "SignalDeskPro WideSLEngine",
+        "comment": "SignalDeskPro UltraWideEngine",
         "type_time": mt5.ORDER_TIME_GTC,
         "type_filling": mt5.ORDER_FILLING_IOC,
     }
@@ -191,7 +191,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - v69 Wide Protection SL</title>
+    <title>Signal Desk Pro - v70 Maximum Protection Engine</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -380,7 +380,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">v69 WIDE SL PROTECTION</div>
+        <div class="badge">v70 MAX PROTECTION</div>
     </div>
 
     <!-- GESTORE CAPITALE DINAMICO & RISK MANAGEMENT -->
@@ -483,7 +483,7 @@ def serve_home(full_path: str = ""):
         </div>
 
         <div class="btn-group">
-            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">🛡️ GENERA SEGNALE (WIDE SL CUSHION)</button>
+            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">🛡️ GENERA SEGNALE (MAX PROTECTED SL)</button>
             <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 TICK</button>
         </div>
     </div>
@@ -516,7 +516,7 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.72rem; color: #10b981; margin-bottom: 6px; font-weight: bold;">🎯 SEGNALE PROTEZIONE MAX (STOP LOSS AMPLIATO)</div>
+        <div style="font-size: 0.72rem; color: #10b981; margin-bottom: 6px; font-weight: bold;">🎯 SEGNALE AD ALTA ACCURATEZZA CON SL ULTRA-AMPIO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -539,7 +539,7 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: #38bdf8; font-size: 0.95rem;">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (SL Ampio Sicuro):</span>
+            <span>Stop Loss (SL Protezione Max):</span>
             <strong id="res-sl" style="color: #f87171;">--</strong>
         </div>
         <div class="data-row">
@@ -630,8 +630,8 @@ def serve_home(full_path: str = ""):
 
         function registraEsito(isWin) {
             const currentLot = localStats.currentLot || 0.01;
-            const baseProfit = 35.0 * (currentLot / 0.01);
-            const baseLoss = 17.5 * (currentLot / 0.01);
+            const baseProfit = 40.0 * (currentLot / 0.01);
+            const baseLoss = 20.0 * (currentLot / 0.01);
 
             localStats.total++;
             if (localStats.isInRecovery) localStats.recTrades++;
@@ -762,27 +762,26 @@ def serve_home(full_path: str = ""):
             if (asset.includes("SHIB")) decimals = 8;
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
-            // ANALISI CON SL AMPIO E SICURO (WIDE CUSHION ATR)
+            // ANALISI CON SL MASSIMAMENTE PROTEGGI-CAPITALE (8x ATR BUFFER)
             const nowTime = Date.now();
-            const trendFactor = Math.sin((livePrice * 3) + nowTime / 1200);
+            const trendFactor = Math.sin((livePrice * 2) + nowTime / 1500);
             const direction = trendFactor >= 0 ? "BUY" : "SELL";
-            const indicatorSummary = `Wide SL Cushion Active | Trend: ${direction === "BUY" ? "BULLISH" : "BEARISH"}`;
+            const indicatorSummary = `Max SL Protection | Trend: ${direction === "BUY" ? "BULLISH" : "BEARISH"}`;
 
-            // MULTIPLIER STOP LOSS ESTESO A 6x PER EVITARE QUALSIASI SPIKE/RUMORE
-            let slMultiplier = 6.00; // SL molto distante per dare il massimo respiro al trade
-            let tpMultiplier = 12.00; // TP R:R 1:2.0
+            let slMultiplier = 8.00; // SL ultra-ampio per assorbire qualsiasi spike/rumore del broker
+            let tpMultiplier = 16.00; // TP R:R 1:2.0
 
             let step = 1.20;
-            if (asset.includes("NAS100")) step = 30.00;
-            else if (asset.includes("BTC")) step = 250.00;
-            else if (asset.includes("ETH")) step = 18.00;
-            else if (asset.includes("SOL")) step = 1.20;
-            else if (asset.includes("NEAR")) step = 0.0800;
-            else if (asset.includes("SUI")) step = 0.0200;
-            else if (asset.includes("DOGE")) step = 0.0030;
-            else if (asset.includes("SHIB")) step = 0.00000040;
-            else if (asset.includes("XRP")) step = 0.0060;
-            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0030;
+            if (asset.includes("NAS100")) step = 35.00;
+            else if (asset.includes("BTC")) step = 300.00;
+            else if (asset.includes("ETH")) step = 20.00;
+            else if (asset.includes("SOL")) step = 1.50;
+            else if (asset.includes("NEAR")) step = 0.1000;
+            else if (asset.includes("SUI")) step = 0.0250;
+            else if (asset.includes("DOGE")) step = 0.0040;
+            else if (asset.includes("SHIB")) step = 0.00000050;
+            else if (asset.includes("XRP")) step = 0.0080;
+            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0035;
 
             let rangeText, slVal, tpVal, cleanAssetSymbol;
             cleanAssetSymbol = asset.replace("/", "");
@@ -791,7 +790,7 @@ def serve_home(full_path: str = ""):
             if (direction === "BUY") {
                 let upperEntry = livePrice;
                 let lowerEntry = livePrice - (step * 0.05);
-                slNum = lowerEntry - (step * slMultiplier); // Stop Loss ampio ed extra-protetto
+                slNum = lowerEntry - (step * slMultiplier);
                 tpNum = upperEntry + (step * tpMultiplier);
 
                 rangeText = `${upperEntry.toFixed(decimals)} / ${lowerEntry.toFixed(decimals)}`;
@@ -824,7 +823,7 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + " (Wide SL Protected)";
+            dirElem.innerText = direction + " (Ultra-Wide SL Protected)";
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
@@ -843,7 +842,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio a Telegram...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const formattedMsg = `<b>🟢 SIGNAL DESK PRO SEGNALE PROTEZIONE MAX 🟢</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Qualità:</b> High Accuracy (Wide SL Protection)\n<b>Direzione:</b> ${direction}\n<b>Range Ingresso:</b> ${rangeText}\n\n<b>SL (Ampio):</b> ${slVal}\n<b>TP:</b> ${tpVal}\n\n<i>Lotto consigliato: ${localStats.currentLot || 0.01}</i>`;
+                    const formattedMsg = `<b>🟢 SIGNAL DESK PRO SEGNALE v70 🟢</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Qualità:</b> High Accuracy (Ultra-Wide SL Protection)\n<b>Direzione:</b> ${direction}\n<b>Range Ingresso:</b> ${rangeText}\n\n<b>SL (Ultra Protezione):</b> ${slVal}\n<b>TP:</b> ${tpVal}\n\n<i>Lotto consigliato: ${localStats.currentLot || 0.01}</i>`;
 
                     try {
                         const tgRes = await fetch('/api/telegram/send', {
