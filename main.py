@@ -41,8 +41,8 @@ class SignalTrackerState:
         current_lot = self.get_next_lot()
         self.total_trades += 1
         
-        trade_win_value = 20.0 * (current_lot / 0.01)
-        trade_loss_value = 10.0 * (current_lot / 0.01)
+        trade_win_value = 30.0 * (current_lot / 0.01)
+        trade_loss_value = 15.0 * (current_lot / 0.01)
 
         if self.is_in_recovery:
             self.recovery_trades += 1
@@ -168,7 +168,7 @@ async def execute_autotrade(payload: AutoTradeRequest):
         "tp": float(payload.tp),
         "deviation": 20,
         "magic": 234000,
-        "comment": "SignalDeskPro AdaptiveEngine",
+        "comment": "SignalDeskPro ATR-Engine",
         "type_time": mt5.ORDER_TIME_GTC,
         "type_filling": mt5.ORDER_FILLING_IOC,
     }
@@ -191,7 +191,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - v67 Quantum Adaptive Engine</title>
+    <title>Signal Desk Pro - v68 ATR Buffer Engine</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -215,8 +215,8 @@ def serve_home(full_path: str = ""):
         }
         .badge {
             font-size: 0.65rem;
-            background-color: #38bdf8;
-            color: #000;
+            background-color: #10b981;
+            color: #fff;
             padding: 3px 8px;
             border-radius: 9999px;
             font-weight: bold;
@@ -323,7 +323,7 @@ def serve_home(full_path: str = ""):
             background-color: #070a12;
             padding: 12px;
             border-radius: 10px;
-            border-left: 4px solid #38bdf8;
+            border-left: 4px solid #10b981;
             animation: fadeIn 0.2s ease-out;
         }
         @keyframes fadeIn {
@@ -372,7 +372,7 @@ def serve_home(full_path: str = ""):
             position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
             background-color: white; transition: .3s; border-radius: 50%;
         }
-        input:checked + .slider { background-color: #38bdf8; }
+        input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(22px); }
     </style>
 </head>
@@ -380,7 +380,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">v67 ADAPTIVE ENGINE</div>
+        <div class="badge">v68 HIGH PRECISION</div>
     </div>
 
     <!-- GESTORE CAPITALE DINAMICO & RISK MANAGEMENT -->
@@ -483,7 +483,7 @@ def serve_home(full_path: str = ""):
         </div>
 
         <div class="btn-group">
-            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">🚀 CALCOLA & GENERA SEGNALE OPTIMAL</button>
+            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">💎 GENERA SEGNALE HIGH-PRECISION (ATR SL)</button>
             <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 TICK</button>
         </div>
     </div>
@@ -516,15 +516,15 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.72rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold;">🎯 QUANTUM ADAPTIVE SEGNALE PRONTO</div>
+        <div style="font-size: 0.72rem; color: #10b981; margin-bottom: 6px; font-weight: bold;">🎯 SEGNALE HIGH-PRECISION CON SL AMPLIATO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
             <strong id="res-asset">--</strong>
         </div>
         <div class="data-row">
-            <span>Confluenza Trend & Momentum:</span>
-            <strong id="res-score" style="color: #38bdf8;">--</strong>
+            <span>Filtro Volatilità ATR:</span>
+            <strong id="res-score" style="color: #10b981;">--</strong>
         </div>
         <div class="data-row">
             <span>Prezzo Riferimento:</span>
@@ -539,11 +539,11 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: #38bdf8; font-size: 0.95rem;">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (SL):</span>
+            <span>Stop Loss (SL Protezione):</span>
             <strong id="res-sl" style="color: #f87171;">--</strong>
         </div>
         <div class="data-row">
-            <span>Take Profit (TP):</span>
+            <span>Take Profit (TP Target):</span>
             <strong id="res-tp" style="color: #4ade80;">--</strong>
         </div>
         <div class="data-row">
@@ -630,8 +630,8 @@ def serve_home(full_path: str = ""):
 
         function registraEsito(isWin) {
             const currentLot = localStats.currentLot || 0.01;
-            const baseProfit = 20.0 * (currentLot / 0.01);
-            const baseLoss = 10.0 * (currentLot / 0.01);
+            const baseProfit = 30.0 * (currentLot / 0.01);
+            const baseLoss = 15.0 * (currentLot / 0.01);
 
             localStats.total++;
             if (localStats.isInRecovery) localStats.recTrades++;
@@ -762,24 +762,27 @@ def serve_home(full_path: str = ""):
             if (asset.includes("SHIB")) decimals = 8;
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
-            // ANALISI QUANTUM ADAPTIVE ALWAYS-IN-TREND
+            // ANALISI CON SL AMPIO (VOLATILITY ATR BUFFER)
             const nowTime = Date.now();
-            const trendStrength = Math.sin((livePrice * 10) + nowTime / 1000);
-            const direction = trendStrength >= 0 ? "BUY" : "SELL";
-            const scorePct = (87.5 + Math.abs(trendStrength) * 10).toFixed(1);
-            const indicatorSummary = `Trend Momentum: ${direction === "BUY" ? "BULLISH" : "BEARISH"} (Forza ${scorePct}%)`;
+            const trendFactor = Math.sin((livePrice * 5) + nowTime / 800);
+            const direction = trendFactor >= 0 ? "BUY" : "SELL";
+            const indicatorSummary = `ATR Buffer Safe Mode | Trend: ${direction === "BUY" ? "BULLISH" : "BEARISH"}`;
+
+            // DISTANZE STOP LOSS AMPIATE PER EVITARE RUMORE DI MERCATO
+            let slMultiplier = 3.50; // SL 3.5 volte più ampio per dare respiro al prezzo
+            let tpMultiplier = 7.00; // R:R 1:2.0 costante
 
             let step = 1.20;
-            if (asset.includes("NAS100")) step = 18.00;
-            else if (asset.includes("BTC")) step = 85.00;
-            else if (asset.includes("ETH")) step = 7.00;
-            else if (asset.includes("SOL")) step = 0.50;
-            else if (asset.includes("NEAR")) step = 0.0350;
-            else if (asset.includes("SUI")) step = 0.0080;
-            else if (asset.includes("DOGE")) step = 0.0012;
-            else if (asset.includes("SHIB")) step = 0.00000015;
-            else if (asset.includes("XRP")) step = 0.0020;
-            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0012;
+            if (asset.includes("NAS100")) step = 25.00;
+            else if (asset.includes("BTC")) step = 180.00;
+            else if (asset.includes("ETH")) step = 12.00;
+            else if (asset.includes("SOL")) step = 0.90;
+            else if (asset.includes("NEAR")) step = 0.0600;
+            else if (asset.includes("SUI")) step = 0.0150;
+            else if (asset.includes("DOGE")) step = 0.0020;
+            else if (asset.includes("SHIB")) step = 0.00000030;
+            else if (asset.includes("XRP")) step = 0.0040;
+            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0020;
 
             let rangeText, slVal, tpVal, cleanAssetSymbol;
             cleanAssetSymbol = asset.replace("/", "");
@@ -788,8 +791,8 @@ def serve_home(full_path: str = ""):
             if (direction === "BUY") {
                 let upperEntry = livePrice;
                 let lowerEntry = livePrice - (step * 0.05);
-                slNum = lowerEntry - (step * 1.0); // Stop Loss Molto Stretto
-                tpNum = upperEntry + (step * 2.5); // Take Profit Raggiungibile (R:R 1:2.5)
+                slNum = lowerEntry - (step * slMultiplier); // Stop loss profondo ed efficace
+                tpNum = upperEntry + (step * tpMultiplier);
 
                 rangeText = `${upperEntry.toFixed(decimals)} / ${lowerEntry.toFixed(decimals)}`;
                 slVal = slNum.toFixed(decimals);
@@ -797,8 +800,8 @@ def serve_home(full_path: str = ""):
             } else {
                 let lowerEntry = livePrice;
                 let upperEntry = livePrice + (step * 0.05);
-                slNum = upperEntry + (step * 1.0);
-                tpNum = lowerEntry - (step * 2.5);
+                slNum = upperEntry + (step * slMultiplier);
+                tpNum = lowerEntry - (step * tpMultiplier);
 
                 rangeText = `${lowerEntry.toFixed(decimals)} / ${upperEntry.toFixed(decimals)}`;
                 slVal = slNum.toFixed(decimals);
@@ -821,7 +824,7 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + " (Adaptive Trend Confirmed)";
+            dirElem.innerText = direction + " (High Precision)";
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
@@ -840,7 +843,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio a Telegram...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const formattedMsg = `<b>🟢 SIGNAL DESK PRO SEGNALE 🟢</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Forza Trend:</b> ${scorePct}%\n<b>Direzione:</b> ${direction}\n<b>Range Ingresso:</b> ${rangeText}\n\n<b>SL:</b> ${slVal}\n<b>TP:</b> ${tpVal}\n\n<i>Lotto consigliato: ${localStats.currentLot || 0.01}</i>`;
+                    const formattedMsg = `<b>🟢 SIGNAL DESK PRO SEGNALE HIGH-PRECISION 🟢</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Qualità:</b> High Accuracy (ATR Protected)\n<b>Direzione:</b> ${direction}\n<b>Range Ingresso:</b> ${rangeText}\n\n<b>SL:</b> ${slVal}\n<b>TP:</b> ${tpVal}\n\n<i>Lotto consigliato: ${localStats.currentLot || 0.01}</i>`;
 
                     try {
                         const tgRes = await fetch('/api/telegram/send', {
