@@ -1,9 +1,11 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, BackgroundTasks
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import uvicorn
 import os
-import time
+import urllib.request
+import urllib.parse
+import json
 
 # Tentativo di importazione della libreria MetaTrader5 ufficiale
 try:
@@ -82,6 +84,11 @@ class AutoTradeRequest(BaseModel):
     tp: float
     auto_enabled: bool
 
+class TelegramSendRequest(BaseModel):
+    bot_token: str
+    chat_id: str
+    message: str
+
 @app.get("/api/stats")
 async def get_stats():
     return tracker.get_stats()
@@ -91,6 +98,30 @@ async def post_trade_result(payload: TradeResultRequest):
     tracker.process_result(payload.is_win)
     return tracker.get_stats()
 
+@app.post("/api/telegram/send")
+async def send_telegram_signal(payload: TelegramSendRequest):
+    if not payload.bot_token or not payload.chat_id:
+        return {"status": "error", "message": "Token o Chat ID Telegram mancanti."}
+    
+    url = f"https://api.telegram.org/bot{payload.bot_token}/sendMessage"
+    params = {
+        "chat_id": payload.chat_id,
+        "text": payload.message,
+        "parse_mode": "HTML"
+    }
+    
+    try:
+        data = urllib.parse.urlencode(params).encode("utf-8")
+        req = urllib.request.Request(url, data=data)
+        with urllib.request.urlopen(req) as response:
+            res = json.loads(response.read().decode("utf-8"))
+            if res.get("ok"):
+                return {"status": "success", "message": "Segnale inviato su Telegram con successo!"}
+            else:
+                return {"status": "error", "message": res.get("description", "Errore Telegram")}
+    except Exception as e:
+        return {"status": "error", "message": f"Impossibile inviare a Telegram: {str(e)}"}
+
 @app.post("/api/autotrade")
 async def execute_autotrade(payload: AutoTradeRequest):
     if not payload.auto_enabled:
@@ -99,14 +130,12 @@ async def execute_autotrade(payload: AutoTradeRequest):
     if not MT5_AVAILABLE:
         return {"status": "error", "message": "Libreria MetaTrader5 non installata sul server."}
 
-    # Inizializzazione connessione MT5
     if not mt5.initialize():
         return {"status": "error", "message": f"Impossibile connettersi a MetaTrader5: {mt5.last_error()}"}
 
     symbol = payload.asset.replace("/", "")
-    # Mapping simboli comuni se necessario
     if symbol == "NAS100":
-        symbol = "US100" # o il nome esatto del broker
+        symbol = "US100"
 
     symbol_info = mt5.symbol_info(symbol)
     if symbol_info is None:
@@ -154,7 +183,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - v59 MetaTrader Auto-Trading</title>
+    <title>Signal Desk Pro - v60 Quantum AI & Telegram Autopilot</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -178,7 +207,7 @@ def serve_home(full_path: str = ""):
         }
         .badge {
             font-size: 0.65rem;
-            background-color: #f59e0b;
+            background-color: #8b5cf6;
             color: #fff;
             padding: 3px 8px;
             border-radius: 9999px;
@@ -207,7 +236,7 @@ def serve_home(full_path: str = ""):
             color: #38bdf8;
             border: 1px solid #334155;
             border-radius: 8px;
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             font-weight: bold;
             outline: none;
             box-sizing: border-box;
@@ -256,7 +285,7 @@ def serve_home(full_path: str = ""):
             border: none;
             padding: 12px;
             border-radius: 8px;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
@@ -276,6 +305,10 @@ def serve_home(full_path: str = ""):
             background: linear-gradient(135deg, #ef4444, #b91c1c);
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
+        .btn-purple {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
         .btn:active {
             transform: scale(0.98);
             opacity: 0.9;
@@ -286,7 +319,7 @@ def serve_home(full_path: str = ""):
             background-color: #070a12;
             padding: 12px;
             border-radius: 10px;
-            border-left: 4px solid #f59e0b;
+            border-left: 4px solid #8b5cf6;
             animation: fadeIn 0.2s ease-out;
         }
         @keyframes fadeIn {
@@ -307,7 +340,7 @@ def serve_home(full_path: str = ""):
             font-size: 0.72rem;
             color: #64748b;
             margin-top: 6px;
-            max-height: 70px;
+            max-height: 80px;
             overflow-y: auto;
         }
         .toggle-container {
@@ -315,7 +348,7 @@ def serve_home(full_path: str = ""):
             justify-content: space-between;
             align-items: center;
             background-color: #070a12;
-            padding: 10px;
+            padding: 8px 10px;
             border-radius: 8px;
             border: 1px solid #334155;
             margin-bottom: 8px;
@@ -323,19 +356,19 @@ def serve_home(full_path: str = ""):
         .switch {
             position: relative;
             display: inline-block;
-            width: 46px;
-            height: 24px;
+            width: 44px;
+            height: 22px;
         }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #334155; transition: .3s; border-radius: 24px;
+            background-color: #334155; transition: .3s; border-radius: 22px;
         }
         .slider:before {
-            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
             background-color: white; transition: .3s; border-radius: 50%;
         }
-        input:checked + .slider { background-color: #22c55e; }
+        input:checked + .slider { background-color: #8b5cf6; }
         input:checked + .slider:before { transform: translateX(22px); }
     </style>
 </head>
@@ -343,14 +376,39 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">MT5 AUTO v59</div>
+        <div class="badge">v60 QUANTUM TG</div>
+    </div>
+
+    <!-- CONFIGURAZIONE TELEGRAM & AUTOMAZIONE -->
+    <div class="card">
+        <div class="toggle-container">
+            <div>
+                <span style="font-size: 0.78rem; font-weight: bold; color: #f1f5f9;">🤖 AUTO-DISPATCH TELEGRAM</span>
+                <span style="font-size: 0.62rem; color: #94a3b8; display: block;">Invia i segnali in automatico al tuo canale</span>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="telegram-toggle" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <div>
+                <label>Telegram Bot Token:</label>
+                <input type="text" id="tg-token" placeholder="es. 123456:ABC..." style="font-size: 0.75rem;">
+            </div>
+            <div>
+                <label>Telegram Chat/Channel ID:</label>
+                <input type="text" id="tg-chatid" placeholder="es. -100123456" style="font-size: 0.75rem;">
+            </div>
+        </div>
     </div>
 
     <div class="card">
         <div class="toggle-container">
             <div>
-                <span style="font-size: 0.8rem; font-weight: bold; color: #f1f5f9; display: block;">🤖 METATRADER AUTO-TRADING</span>
-                <span style="font-size: 0.65rem; color: #94a3b8;">Esegui operazioni in automatico su MT5</span>
+                <span style="font-size: 0.78rem; font-weight: bold; color: #f1f5f9;">⚡ METATRADER 5 AUTO-TRADING</span>
+                <span style="font-size: 0.62rem; color: #94a3b8; display: block;">Esegui ordini su terminale MT5 locale/VPS</span>
             </div>
             <label class="switch">
                 <input type="checkbox" id="autotrade-toggle">
@@ -378,13 +436,13 @@ def serve_home(full_path: str = ""):
             </optgroup>
         </select>
 
-        <label>Grafico Live in Diretta TradingView:</label>
+        <label>Grafico Live TradingView:</label>
         <div class="chart-container" id="tradingview_widget"></div>
 
-        <label for="live-price-input" style="color: #38bdf8; margin-top: 8px;">Inserisci Prezzo Attuale da Grafico:</label>
+        <label for="live-price-input" style="color: #38bdf8; margin-top: 6px;">Prezzo Attuale da Grafico:</label>
         <div style="display: flex; gap: 6px; margin-bottom: 8px;">
             <input type="text" id="live-price-input" value="4180.97">
-            <button type="button" class="btn btn-secondary" style="flex: 0.5; padding: 10px; font-size: 0.75rem;" onclick="azzeraPrezzoLive()">🎯 SYNC GRAFICO</button>
+            <button type="button" class="btn btn-secondary" style="flex: 0.5; padding: 10px; font-size: 0.75rem;" onclick="azzeraPrezzoLive()">🎯 SYNC</button>
         </div>
 
         <label>Timeframe Operativo:</label>
@@ -396,55 +454,55 @@ def serve_home(full_path: str = ""):
         </div>
 
         <div class="btn-group">
-            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">⚡ GENERA & INVIA A MT5</button>
-            <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 AGGIORNA</button>
+            <button type="button" id="action-btn" class="btn btn-purple" onclick="generaSegnaleCrypto()">🚀 GENERA SEGNALE QUANTUM AI</button>
+            <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 TICK</button>
         </div>
     </div>
 
     <div class="card" style="border-left: 4px solid #22c55e;">
-        <div style="font-size: 0.75rem; color: #22c55e; margin-bottom: 8px; font-weight: bold;">📊 SMART WIN RATE & RECOVERY MONITOR</div>
+        <div style="font-size: 0.75rem; color: #22c55e; margin-bottom: 8px; font-weight: bold;">📊 SMART WIN RATE & RECOVERY SYSTEM</div>
         
         <div class="data-row">
-            <span>Win Rate Standard (Puro):</span>
+            <span>Win Rate Standard:</span>
             <strong id="stat-std-wr" style="color: #38bdf8;">0.00%</strong>
         </div>
         <div class="data-row">
-            <span>Smart Recovery Rate:</span>
+            <span>Smart Recovery Win Rate:</span>
             <strong id="stat-rec-wr" style="color: #4ade80;">0.00%</strong>
         </div>
         <div class="data-row">
-            <span>Stato Gestione Corrente:</span>
+            <span>Stato Gestione:</span>
             <strong id="stat-status" style="color: #fbbf24;">Standard Mode</strong>
         </div>
         <div class="data-row">
-            <span>Lotto Consigliato Prossimo Trade:</span>
+            <span>Lotto Prossimo Trade:</span>
             <strong id="stat-lot" style="color: #38bdf8; font-size: 0.95rem;">0.01</strong>
         </div>
 
-        <div style="margin-top: 10px; font-size: 0.72rem; color: #94a3b8; margin-bottom: 6px;">Simula esito ultimo segnale:</div>
+        <div style="margin-top: 8px; font-size: 0.72rem; color: #94a3b8; margin-bottom: 6px;">Simula esito ultimo segnale:</div>
         <div class="btn-group">
-            <button type="button" class="btn btn-success" style="padding: 8px; font-size: 0.78rem;" onclick="registraEsito(true)">✅ SEGNA VINTO (WIN)</button>
-            <button type="button" class="btn btn-danger" style="padding: 8px; font-size: 0.78rem;" onclick="registraEsito(false)">❌ SEGNA PERSO (LOSS)</button>
+            <button type="button" class="btn btn-success" style="padding: 8px; font-size: 0.78rem;" onclick="registraEsito(true)">✅ VINTO (WIN)</button>
+            <button type="button" class="btn btn-danger" style="padding: 8px; font-size: 0.78rem;" onclick="registraEsito(false)">❌ PERSO (LOSS)</button>
         </div>
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.72rem; color: #f59e0b; margin-bottom: 6px; font-weight: bold;">🤖 QUANTUM AI & MT5 BRIDGE STATUS</div>
+        <div style="font-size: 0.72rem; color: #8b5cf6; margin-bottom: 6px; font-weight: bold;">⚡ QUANTUM AI SIGNAL DETAILED OUTPUT</div>
         
         <div class="data-row">
-            <span>Asset & TF:</span>
+            <span>Asset & Timeframe:</span>
             <strong id="res-asset">--</strong>
         </div>
         <div class="data-row">
-            <span>Prezzo Base Utilizzato:</span>
+            <span>Prezzo Riferimento:</span>
             <strong id="res-liveprice" style="color: #38bdf8;">--</strong>
         </div>
         <div class="data-row">
-            <span>Direzione Ottimizzata:</span>
+            <span>Direzione:</span>
             <span id="res-direction">--</span>
         </div>
         <div class="data-row">
-            <span>Range di Ingresso:</span>
+            <span>Range d'Ingresso:</span>
             <strong id="res-range" style="color: #38bdf8; font-size: 0.95rem;">--</strong>
         </div>
         <div class="data-row">
@@ -456,20 +514,20 @@ def serve_home(full_path: str = ""):
             <strong id="res-tp" style="color: #4ade80;">--</strong>
         </div>
         <div class="data-row">
-            <span>Stato Esecuzione MT5:</span>
-            <strong id="res-mt5-status" style="color: #38bdf8;">In attesa...</strong>
+            <span>Stato Invio Telegram:</span>
+            <strong id="res-tg-status" style="color: #38bdf8;">--</strong>
         </div>
         <div class="data-row">
-            <span>Timestamp:</span>
-            <span id="res-time" style="color: #94a3b8;">--</span>
+            <span>Stato Esecuzione MT5:</span>
+            <strong id="res-mt5-status" style="color: #94a3b8;">--</strong>
         </div>
 
-        <button type="button" class="btn" style="margin-top: 10px; padding: 10px; font-size: 0.82rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
+        <button type="button" class="btn" style="margin-top: 10px; padding: 10px; font-size: 0.82rem;" onclick="copiaSegnalePro()">📋 COPIA PER TELEGRAM MANUALMENTE</button>
     </div>
 
     <div class="card" style="padding: 10px 12px;">
-        <label>Log Sessione Pro:</label>
-        <div id="history-log" class="history-box">Nessun segnale generato in questa sessione.</div>
+        <label>Log Operazioni & Segnali:</label>
+        <div id="history-log" class="history-box">Pronto per la generazione.</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -547,7 +605,7 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            const msg = isWin ? `🟢 [${nowStr}] Trade chiuso in PROFITTO (WIN)` : `🔴 [${nowStr}] Trade chiuso in PERDITA (LOSS) -> Attivato recupero`;
+            const msg = isWin ? `🟢 [${nowStr}] Trade WIN` : `🔴 [${nowStr}] Trade LOSS -> Recovery mode`;
             logBox.innerHTML = msg + '<br>' + logBox.innerHTML;
 
             fetch('/api/trade/result', {
@@ -637,6 +695,7 @@ def serve_home(full_path: str = ""):
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
             const autoToggle = document.getElementById('autotrade-toggle').checked;
+            const tgToggle = document.getElementById('telegram-toggle').checked;
 
             if (!assetSelect || !signalBox || !priceInput) return;
 
@@ -711,20 +770,63 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-time').innerText = timeStr;
 
             const mt5StatusEl = document.getElementById('res-mt5-status');
+            const tgStatusEl = document.getElementById('res-tg-status');
+
             if (autoToggle) {
-                mt5StatusEl.innerText = "Invio ordine a MT5 in corso...";
+                mt5StatusEl.innerText = "Invio ordine a MT5...";
                 mt5StatusEl.style.color = "#f59e0b";
             } else {
-                mt5StatusEl.innerText = "Auto-Trading disattivato (Solo Segnale)";
+                mt5StatusEl.innerText = "Disattivato (Solo Segnale)";
                 mt5StatusEl.style.color = "#94a3b8";
             }
 
             signalBox.style.display = 'block';
 
-            // Invio automatico a MetaTrader se abilitato
+            // Invio Automatico a Telegram via Bot Webhook
+            if (tgToggle) {
+                const tgToken = document.getElementById('tg-token').value.trim();
+                const tgChatId = document.getElementById('tg-chatid').value.trim();
+
+                if (tgToken && tgChatId) {
+                    tgStatusEl.innerText = "Invio a Telegram...";
+                    tgStatusEl.style.color = "#f59e0b";
+
+                    const formattedMsg = `<b>🟢 SIGNAL DESK PRO QUANTUM AI 🟢</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range Ingresso:</b> ${rangeText}\n\n<b>SL:</b> ${slVal}\n<b>TP:</b> ${tpVal}\n\n<i>Lotto consigliato: ${localStats.currentLot || 0.01}</i>`;
+
+                    try {
+                        const tgRes = await fetch('/api/telegram/send', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                bot_token: tgToken,
+                                chat_id: tgChatId,
+                                message: formattedMsg
+                            })
+                        });
+                        const tgData = await tgRes.json();
+                        if (tgData.status === "success") {
+                            tgStatusEl.innerText = "✅ Inviato sul Canale Telegram!";
+                            tgStatusEl.style.color = "#22c55e";
+                        } else {
+                            tgStatusEl.innerText = "❌ " + tgData.message;
+                            tgStatusEl.style.color = "#ef4444";
+                        }
+                    } catch(e) {
+                        tgStatusEl.innerText = "❌ Errore connessione Telegram";
+                        tgStatusEl.style.color = "#ef4444";
+                    }
+                } else {
+                    tgStatusEl.innerText = "⚠️ Token/Chat ID non inseriti";
+                    tgStatusEl.style.color = "#fbbf24";
+                }
+            } else {
+                tgStatusEl.innerText = "Disattivato";
+                tgStatusEl.style.color = "#94a3b8";
+            }
+
+            // Invio a MetaTrader se abilitato
             if (autoToggle) {
                 try {
                     const response = await fetch('/api/autotrade', {
@@ -748,14 +850,14 @@ def serve_home(full_path: str = ""):
                         mt5StatusEl.style.color = "#ef4444";
                     }
                 } catch(err) {
-                    mt5StatusEl.innerText = "❌ Errore di connessione al bridge MT5";
+                    mt5StatusEl.innerText = "❌ Errore bridge MT5";
                     mt5StatusEl.style.color = "#ef4444";
                 }
             }
 
             const logBox = document.getElementById('history-log');
-            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} inviato a MT5 (Lotto: ${localStats.currentLot || 0.01})<br>`;
-            if (logBox.innerText.includes("Nessun segnale")) {
+            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} generato<br>`;
+            if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
             } else {
                 logBox.innerHTML = logText + logBox.innerHTML;
@@ -768,7 +870,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const text = `🟢 ${lastSignalData.symbol} 🟢\\n\\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\\n\\nSL: ${lastSignalData.sl}\\n\\nTP: ${lastSignalData.tp}`;
+            const text = `🟢 ${lastSignalData.symbol} 🟢\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\n\nTP: ${lastSignalData.tp}`;
 
             navigator.clipboard.writeText(text).then(() => {
                 alert("Segnale copiato negli appunti per Telegram!");
