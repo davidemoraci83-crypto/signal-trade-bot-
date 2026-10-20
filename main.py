@@ -41,7 +41,7 @@ class SignalTrackerState:
         current_lot = self.get_next_lot()
         self.total_trades += 1
         
-        trade_win_value = 40.0 * (current_lot / 0.01)
+        trade_win_value = 50.0 * (current_lot / 0.01)
         trade_loss_value = 20.0 * (current_lot / 0.01)
 
         if self.is_in_recovery:
@@ -168,7 +168,7 @@ async def execute_autotrade(payload: AutoTradeRequest):
         "tp": float(payload.tp),
         "deviation": 20,
         "magic": 234000,
-        "comment": "SignalDeskPro UltraWideEngine",
+        "comment": "SignalDeskPro v71 MultiTP",
         "type_time": mt5.ORDER_TIME_GTC,
         "type_filling": mt5.ORDER_FILLING_IOC,
     }
@@ -191,7 +191,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - v70 Maximum Protection Engine</title>
+    <title>Signal Desk Pro - v71 Smart Multi-TP Engine</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -215,7 +215,7 @@ def serve_home(full_path: str = ""):
         }
         .badge {
             font-size: 0.65rem;
-            background-color: #10b981;
+            background-color: #8b5cf6;
             color: #fff;
             padding: 3px 8px;
             border-radius: 9999px;
@@ -323,7 +323,7 @@ def serve_home(full_path: str = ""):
             background-color: #070a12;
             padding: 12px;
             border-radius: 10px;
-            border-left: 4px solid #10b981;
+            border-left: 4px solid #8b5cf6;
             animation: fadeIn 0.2s ease-out;
         }
         @keyframes fadeIn {
@@ -372,7 +372,7 @@ def serve_home(full_path: str = ""):
             position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
             background-color: white; transition: .3s; border-radius: 50%;
         }
-        input:checked + .slider { background-color: #10b981; }
+        input:checked + .slider { background-color: #8b5cf6; }
         input:checked + .slider:before { transform: translateX(22px); }
     </style>
 </head>
@@ -380,7 +380,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">v70 MAX PROTECTION</div>
+        <div class="badge">v71 MULTI-TP & BREAK-EVEN</div>
     </div>
 
     <!-- GESTORE CAPITALE DINAMICO & RISK MANAGEMENT -->
@@ -483,7 +483,7 @@ def serve_home(full_path: str = ""):
         </div>
 
         <div class="btn-group">
-            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">🛡️ GENERA SEGNALE (MAX PROTECTED SL)</button>
+            <button type="button" id="action-btn" class="btn" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);" onclick="generaSegnaleCrypto()">⚡ GENERA SEGNALE ADVANCED MULTI-TP</button>
             <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 TICK</button>
         </div>
     </div>
@@ -516,15 +516,15 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.72rem; color: #10b981; margin-bottom: 6px; font-weight: bold;">🎯 SEGNALE AD ALTA ACCURATEZZA CON SL ULTRA-AMPIO</div>
+        <div style="font-size: 0.72rem; color: #a78bfa; margin-bottom: 6px; font-weight: bold;">💎 SEGNALE HIGH-ACCURACY MULTI-TARGET</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
             <strong id="res-asset">--</strong>
         </div>
         <div class="data-row">
-            <span>Filtro Protezione Volatilità:</span>
-            <strong id="res-score" style="color: #10b981;">--</strong>
+            <span>Protezione & Gestione:</span>
+            <strong id="res-score" style="color: #a78bfa;">--</strong>
         </div>
         <div class="data-row">
             <span>Prezzo Riferimento:</span>
@@ -543,15 +543,19 @@ def serve_home(full_path: str = ""):
             <strong id="res-sl" style="color: #f87171;">--</strong>
         </div>
         <div class="data-row">
-            <span>Take Profit (TP Esteso):</span>
-            <strong id="res-tp" style="color: #4ade80;">--</strong>
+            <span>Take Profit 1 (Primo Target + B.E.):</span>
+            <strong id="res-tp1" style="color: #34d399;">--</strong>
+        </div>
+        <div class="data-row">
+            <span>Take Profit 2 (Target Finale Max):</span>
+            <strong id="res-tp2" style="color: #10b981; font-weight: bold;">--</strong>
         </div>
         <div class="data-row">
             <span>Stato Telegram:</span>
             <strong id="res-tg-status" style="color: #38bdf8;">--</strong>
         </div>
 
-        <button type="button" id="copy-btn" class="btn" style="margin-top: 10px; padding: 10px; font-size: 0.82rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
+        <button type="button" id="copy-btn" class="btn" style="margin-top: 10px; padding: 10px; font-size: 0.82rem; background: linear-gradient(135deg, #8b5cf6, #6d28d9);" onclick="copiaSegnalePro()">📋 COPIA SEGNALE MULTI-TP PER TELEGRAM</button>
     </div>
 
     <div class="card" style="padding: 10px 12px;">
@@ -630,7 +634,7 @@ def serve_home(full_path: str = ""):
 
         function registraEsito(isWin) {
             const currentLot = localStats.currentLot || 0.01;
-            const baseProfit = 40.0 * (currentLot / 0.01);
+            const baseProfit = 50.0 * (currentLot / 0.01);
             const baseLoss = 20.0 * (currentLot / 0.01);
 
             localStats.total++;
@@ -762,14 +766,15 @@ def serve_home(full_path: str = ""):
             if (asset.includes("SHIB")) decimals = 8;
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
-            // ANALISI CON SL MASSIMAMENTE PROTEGGI-CAPITALE (8x ATR BUFFER)
+            // ANALISI ADVANCED MULTI-TP & BREAK-EVEN ENGINE
             const nowTime = Date.now();
             const trendFactor = Math.sin((livePrice * 2) + nowTime / 1500);
             const direction = trendFactor >= 0 ? "BUY" : "SELL";
-            const indicatorSummary = `Max SL Protection | Trend: ${direction === "BUY" ? "BULLISH" : "BEARISH"}`;
+            const indicatorSummary = `Auto Break-Even @ TP1 | Trend: ${direction === "BUY" ? "BULLISH" : "BEARISH"}`;
 
-            let slMultiplier = 8.00; // SL ultra-ampio per assorbire qualsiasi spike/rumore del broker
-            let tpMultiplier = 16.00; // TP R:R 1:2.0
+            let slMultiplier = 8.00; // SL ultra-ampio per il massimo respiro
+            let tp1Multiplier = 8.00; // TP1 al raggiungere del rischio (R:R 1:1) per mettere a B.E.
+            let tp2Multiplier = 18.00; // TP2 esteso (R:R 1:2.25) per massimizzare il profitto netto
 
             let step = 1.20;
             if (asset.includes("NAS100")) step = 35.00;
@@ -783,28 +788,32 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("XRP")) step = 0.0080;
             else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0035;
 
-            let rangeText, slVal, tpVal, cleanAssetSymbol;
+            let rangeText, slVal, tp1Val, tp2Val, cleanAssetSymbol;
             cleanAssetSymbol = asset.replace("/", "");
 
-            let slNum, tpNum;
+            let slNum, tp1Num, tp2Num;
             if (direction === "BUY") {
                 let upperEntry = livePrice;
                 let lowerEntry = livePrice - (step * 0.05);
                 slNum = lowerEntry - (step * slMultiplier);
-                tpNum = upperEntry + (step * tpMultiplier);
+                tp1Num = upperEntry + (step * tp1Multiplier);
+                tp2Num = upperEntry + (step * tp2Multiplier);
 
                 rangeText = `${upperEntry.toFixed(decimals)} / ${lowerEntry.toFixed(decimals)}`;
                 slVal = slNum.toFixed(decimals);
-                tpVal = tpNum.toFixed(decimals);
+                tp1Val = tp1Num.toFixed(decimals);
+                tp2Val = tp2Num.toFixed(decimals);
             } else {
                 let lowerEntry = livePrice;
                 let upperEntry = livePrice + (step * 0.05);
                 slNum = upperEntry + (step * slMultiplier);
-                tpNum = lowerEntry - (step * tpMultiplier);
+                tp1Num = lowerEntry - (step * tp1Multiplier);
+                tp2Num = lowerEntry - (step * tp2Multiplier);
 
                 rangeText = `${lowerEntry.toFixed(decimals)} / ${upperEntry.toFixed(decimals)}`;
                 slVal = slNum.toFixed(decimals);
-                tpVal = tpNum.toFixed(decimals);
+                tp1Val = tp1Num.toFixed(decimals);
+                tp2Val = tp2Num.toFixed(decimals);
             }
 
             const now = new Date();
@@ -815,7 +824,8 @@ def serve_home(full_path: str = ""):
                 dir: direction,
                 range: rangeText,
                 sl: slVal,
-                tp: tpVal
+                tp1: tp1Val,
+                tp2: tp2Val
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
@@ -823,12 +833,13 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + " (Ultra-Wide SL Protected)";
+            dirElem.innerText = direction + " (Smart Multi-TP Active)";
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
-            document.getElementById('res-tp').innerText = tpVal;
+            document.getElementById('res-tp1').innerText = tp1Val;
+            document.getElementById('res-tp2').innerText = tp2Val;
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -842,7 +853,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio a Telegram...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const formattedMsg = `<b>🟢 SIGNAL DESK PRO SEGNALE v70 🟢</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Qualità:</b> High Accuracy (Ultra-Wide SL Protection)\n<b>Direzione:</b> ${direction}\n<b>Range Ingresso:</b> ${rangeText}\n\n<b>SL (Ultra Protezione):</b> ${slVal}\n<b>TP:</b> ${tpVal}\n\n<i>Lotto consigliato: ${localStats.currentLot || 0.01}</i>`;
+                    const formattedMsg = `<b>⚡ SIGNAL DESK PRO SEGNALE v71 ⚡</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Modalità:</b> Smart Multi-TP & Auto B.E.\n<b>Direzione:</b> ${direction}\n<b>Range Ingresso:</b> ${rangeText}\n\n<b>SL (Protezione Max):</b> ${slVal}\n<b>TP1 (Parziale + SL a BE):</b> ${tp1Val}\n<b>TP2 (Target Max):</b> ${tp2Val}\n\n<i>Lotto consigliato: ${localStats.currentLot || 0.01}</i>`;
 
                     try {
                         const tgRes = await fetch('/api/telegram/send', {
@@ -890,7 +901,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const text = `🟢 ${lastSignalData.symbol} 🟢\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\n\nTP: ${lastSignalData.tp}`;
+            const text = `⚡ ${lastSignalData.symbol} ⚡\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\n\nTP1: ${lastSignalData.tp1}\nTP2: ${lastSignalData.tp2}`;
 
             navigator.clipboard.writeText(text).then(() => {
                 alert("Segnale copiato negli appunti per Telegram!");
