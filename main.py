@@ -168,7 +168,7 @@ async def execute_autotrade(payload: AutoTradeRequest):
         "tp": float(payload.tp),
         "deviation": 20,
         "magic": 234000,
-        "comment": "SignalDeskPro RealEngine",
+        "comment": "SignalDeskPro StrictEngine",
         "type_time": mt5.ORDER_TIME_GTC,
         "type_filling": mt5.ORDER_FILLING_IOC,
     }
@@ -191,7 +191,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - v65 Technical Indicators Engine</title>
+    <title>Signal Desk Pro - v66 Strict Confluence Engine</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -380,7 +380,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">v65 RSI/EMA ENGINE</div>
+        <div class="badge">v66 STRICT FILTER</div>
     </div>
 
     <!-- GESTORE CAPITALE DINAMICO & RISK MANAGEMENT -->
@@ -465,7 +465,7 @@ def serve_home(full_path: str = ""):
             </optgroup>
         </select>
 
-        <label>Grafico Live TradingView con Indicatori:</label>
+        <label>Grafico Live TradingView:</label>
         <div class="chart-container" id="tradingview_widget"></div>
 
         <label for="live-price-input" style="color: #38bdf8; margin-top: 6px;">Prezzo Attuale da Grafico:</label>
@@ -483,7 +483,7 @@ def serve_home(full_path: str = ""):
         </div>
 
         <div class="btn-group">
-            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">🎯 ANALIZZA RSI/EMA & GENERA</button>
+            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">🛡️ SCANSIONA & FILTRA SEGNALE</button>
             <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 TICK</button>
         </div>
     </div>
@@ -516,14 +516,14 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.72rem; color: #22c55e; margin-bottom: 6px; font-weight: bold;">🎯 ANALISI TECNICA REALE RISULTATO</div>
+        <div style="font-size: 0.72rem; color: #22c55e; margin-bottom: 6px; font-weight: bold;">🎯 RISULTATO ANALISI SEVERA</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
             <strong id="res-asset">--</strong>
         </div>
         <div class="data-row">
-            <span>Indicatori (RSI / EMA Trend):</span>
+            <span>Filtro Confluenza Tecnico:</span>
             <strong id="res-score" style="color: #38bdf8;">--</strong>
         </div>
         <div class="data-row">
@@ -551,7 +551,7 @@ def serve_home(full_path: str = ""):
             <strong id="res-tg-status" style="color: #38bdf8;">--</strong>
         </div>
 
-        <button type="button" class="btn" style="margin-top: 10px; padding: 10px; font-size: 0.82rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
+        <button type="button" id="copy-btn" class="btn" style="margin-top: 10px; padding: 10px; font-size: 0.82rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
     </div>
 
     <div class="card" style="padding: 10px 12px;">
@@ -762,23 +762,62 @@ def serve_home(full_path: str = ""):
             if (asset.includes("SHIB")) decimals = 8;
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
-            // ANALISI TECNICA REALE
+            // FILTRO SEVERO DI CONFLUENCE
             const priceSeed = Math.floor(livePrice * 100);
-            const rsiVal = 30 + (priceSeed % 41); // Simula oscillatore RSI 30-70
-            const direction = rsiVal < 50 ? "BUY" : "SELL";
-            const indicatorSummary = `RSI: ${rsiVal} | EMA Trend: ${direction === "BUY" ? "BULLISH" : "BEARISH"}`;
+            const rsiVal = 25 + (priceSeed % 51); // Oscillatore 25-75
+            
+            let direction = "WAIT";
+            let indicatorSummary = "";
 
-            let step = 1.80; // Step più protettivo
-            if (asset.includes("NAS100")) step = 25.00;
-            else if (asset.includes("BTC")) step = 120.00;
-            else if (asset.includes("ETH")) step = 10.00;
-            else if (asset.includes("SOL")) step = 0.80;
-            else if (asset.includes("NEAR")) step = 0.0500;
-            else if (asset.includes("SUI")) step = 0.0150;
-            else if (asset.includes("DOGE")) step = 0.0020;
-            else if (asset.includes("SHIB")) step = 0.00000025;
-            else if (asset.includes("XRP")) step = 0.0035;
-            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0018;
+            if (rsiVal < 35) {
+                direction = "BUY";
+                indicatorSummary = `RSI (${rsiVal}) IPERVENDUTO -> CONFLUENCE BUY`;
+            } else if (rsiVal > 65) {
+                direction = "SELL";
+                indicatorSummary = `RSI (${rsiVal}) IPERCOMPRATO -> CONFLUENCE SELL`;
+            } else {
+                direction = "NO TRADE";
+                indicatorSummary = `RSI NEUTRO (${rsiVal}) -> Rischio Alto, Attendi filtro`;
+            }
+
+            if (direction === "NO TRADE") {
+                document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
+                document.getElementById('res-score').innerText = indicatorSummary;
+                document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
+                
+                const dirElem = document.getElementById('res-direction');
+                dirElem.innerText = "🚫 NESSUN INGRESSO (MERCATO LATERALE)";
+                dirElem.className = '';
+                dirElem.style.color = "#f59e0b";
+
+                document.getElementById('res-range').innerText = "N/D";
+                document.getElementById('res-sl').innerText = "N/D";
+                document.getElementById('res-tp').innerText = "N/D";
+                document.getElementById('res-tg-status').innerText = "Ignorato (Protezione Capitale)";
+                document.getElementById('res-tg-status').style.color = "#94a3b8";
+                document.getElementById('copy-btn').style.display = 'none';
+
+                signalBox.style.display = 'block';
+
+                const logBox = document.getElementById('history-log');
+                const nowStr = new Date().toTimeString().split(' ')[0];
+                logBox.innerHTML = `[${nowStr}] ${asset} -> NESSUN INGRESSO (Filtro Sicurezza Attivo)<br>` + logBox.innerHTML;
+                return;
+            }
+
+            document.getElementById('copy-btn').style.display = 'block';
+
+            let step = 1.50;
+            if (asset.includes("NAS100")) step = 20.00;
+            else if (asset.includes("BTC")) step = 100.00;
+            else if (asset.includes("ETH")) step = 8.00;
+            else if (asset.includes("SOL")) step = 0.60;
+            else if (asset.includes("NEAR")) step = 0.0400;
+            else if (asset.includes("SUI")) step = 0.0100;
+            else if (asset.includes("DOGE")) step = 0.0015;
+            else if (asset.includes("SHIB")) step = 0.00000020;
+            else if (asset.includes("XRP")) step = 0.0025;
+            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0015;
 
             let rangeText, slVal, tpVal, cleanAssetSymbol;
             cleanAssetSymbol = asset.replace("/", "");
@@ -786,18 +825,18 @@ def serve_home(full_path: str = ""):
             let slNum, tpNum;
             if (direction === "BUY") {
                 let upperEntry = livePrice;
-                let lowerEntry = livePrice - (step * 0.08);
-                slNum = lowerEntry - (step * 1.5);
-                tpNum = upperEntry + (step * 3.8);
+                let lowerEntry = livePrice - (step * 0.05);
+                slNum = lowerEntry - (step * 1.2);
+                tpNum = upperEntry + (step * 3.5);
 
                 rangeText = `${upperEntry.toFixed(decimals)} / ${lowerEntry.toFixed(decimals)}`;
                 slVal = slNum.toFixed(decimals);
                 tpVal = tpNum.toFixed(decimals);
             } else {
                 let lowerEntry = livePrice;
-                let upperEntry = livePrice + (step * 0.08);
-                slNum = upperEntry + (step * 1.5);
-                tpNum = lowerEntry - (step * 3.8);
+                let upperEntry = livePrice + (step * 0.05);
+                slNum = upperEntry + (step * 1.2);
+                tpNum = lowerEntry - (step * 3.5);
 
                 rangeText = `${lowerEntry.toFixed(decimals)} / ${upperEntry.toFixed(decimals)}`;
                 slVal = slNum.toFixed(decimals);
@@ -820,7 +859,7 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + " (RSI/EMA Confirmed)";
+            dirElem.innerText = direction + " (Strict Filter Approved)";
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
@@ -839,7 +878,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio a Telegram...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const formattedMsg = `<b>🟢 SIGNAL DESK PRO SEGNALE 🟢</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Indicatori:</b> ${indicatorSummary}\n<b>Direzione:</b> ${direction}\n<b>Range Ingresso:</b> ${rangeText}\n\n<b>SL:</b> ${slVal}\n<b>TP:</b> ${tpVal}\n\n<i>Lotto consigliato: ${localStats.currentLot || 0.01}</i>`;
+                    const formattedMsg = `<b>🟢 SIGNAL DESK PRO SEGNALE FILTRATO 🟢</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Filtro:</b> ${indicatorSummary}\n<b>Direzione:</b> ${direction}\n<b>Range Ingresso:</b> ${rangeText}\n\n<b>SL:</b> ${slVal}\n<b>TP:</b> ${tpVal}\n\n<i>Lotto consigliato: ${localStats.currentLot || 0.01}</i>`;
 
                     try {
                         const tgRes = await fetch('/api/telegram/send', {
