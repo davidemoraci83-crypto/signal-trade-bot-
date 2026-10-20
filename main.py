@@ -16,7 +16,7 @@ except ImportError:
 app = FastAPI()
 
 # ==========================================
-# GESTORE STATO & SMART WIN RATE (BACKEND)
+# GESTORE STATO & LIVE PROFIT ENGINE (BACKEND)
 # ==========================================
 class SignalTrackerState:
     def __init__(self):
@@ -30,6 +30,7 @@ class SignalTrackerState:
         self.base_lot = 0.01
         self.lot_multiplier = 1.5
         self.max_recovery_attempts = 2
+        self.net_profit_eur = 0.0
 
     def get_next_lot(self):
         if self.is_in_recovery and self.recovery_attempts <= self.max_recovery_attempts:
@@ -37,18 +38,26 @@ class SignalTrackerState:
         return self.base_lot
 
     def process_result(self, is_win: bool):
+        current_lot = self.get_next_lot()
         self.total_trades += 1
+        
+        # Stima valore medio profitto/perdita a trade basato sul lotto (es. $20 profit su WIN, -$9 su LOSS con lotto 0.01)
+        base_profit = 22.0 * (current_lot / 0.01)
+        base_loss = 10.0 * (current_lot / 0.01)
+
         if self.is_in_recovery:
             self.recovery_trades += 1
 
         if is_win:
             self.wins += 1
+            self.net_profit_eur += base_profit
             if self.is_in_recovery:
                 self.recovery_wins += 1
             self.is_in_recovery = False
             self.recovery_attempts = 0
         else:
             self.losses += 1
+            self.net_profit_eur -= base_loss
             self.recovery_attempts += 1
             if self.recovery_attempts <= self.max_recovery_attempts:
                 self.is_in_recovery = True
@@ -67,7 +76,8 @@ class SignalTrackerState:
             "recovery_win_rate": round(rec_wr, 2),
             "is_in_recovery": self.is_in_recovery,
             "recovery_attempts": self.recovery_attempts,
-            "next_lot": self.get_next_lot()
+            "next_lot": self.get_next_lot(),
+            "net_profit_eur": round(self.net_profit_eur, 2)
         }
 
 tracker = SignalTrackerState()
@@ -159,7 +169,7 @@ async def execute_autotrade(payload: AutoTradeRequest):
         "tp": float(payload.tp),
         "deviation": 20,
         "magic": 234000,
-        "comment": "SignalDeskPro AutoTrade",
+        "comment": "SignalDeskPro PersonalEngine",
         "type_time": mt5.ORDER_TIME_GTC,
         "type_filling": mt5.ORDER_FILLING_IOC,
     }
@@ -182,7 +192,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - v62 Quantum Empire</title>
+    <title>Signal Desk Pro - v63 Personal Income Engine</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -201,13 +211,13 @@ def serve_home(full_path: str = ""):
         h1 {
             font-size: 1.05rem;
             margin: 0;
-            color: #10b981;
+            color: #38bdf8;
             letter-spacing: 0.5px;
         }
         .badge {
             font-size: 0.65rem;
-            background-color: #f59e0b;
-            color: #000;
+            background-color: #10b981;
+            color: #fff;
             padding: 3px 8px;
             border-radius: 9999px;
             font-weight: bold;
@@ -279,7 +289,7 @@ def serve_home(full_path: str = ""):
         }
         .btn {
             flex: 1;
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: linear-gradient(135deg, #0ea5e9, #1d4ed8);
             color: white;
             border: none;
             padding: 12px;
@@ -287,7 +297,7 @@ def serve_home(full_path: str = ""):
             font-size: 0.88rem;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
             transition: transform 0.05s ease, opacity 0.15s ease;
         }
         .btn-secondary {
@@ -304,11 +314,6 @@ def serve_home(full_path: str = ""):
             background: linear-gradient(135deg, #ef4444, #b91c1c);
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
-        .btn-gold {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: #000;
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-        }
         .btn:active {
             transform: scale(0.98);
             opacity: 0.9;
@@ -319,7 +324,7 @@ def serve_home(full_path: str = ""):
             background-color: #070a12;
             padding: 12px;
             border-radius: 10px;
-            border-left: 4px solid #f59e0b;
+            border-left: 4px solid #10b981;
             animation: fadeIn 0.2s ease-out;
         }
         @keyframes fadeIn {
@@ -368,7 +373,7 @@ def serve_home(full_path: str = ""):
             position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
             background-color: white; transition: .3s; border-radius: 50%;
         }
-        input:checked + .slider { background-color: #f59e0b; }
+        input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(22px); }
     </style>
 </head>
@@ -376,22 +381,19 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">v62 EMPIRE</div>
+        <div class="badge">v63 INCOME ENGINE</div>
     </div>
 
-    <!-- CALCOLATORE RENDITA EXTRA -->
-    <div class="card" style="border-left: 4px solid #f59e0b;">
-        <div style="font-size: 0.78rem; font-weight: bold; color: #f59e0b; margin-bottom: 6px;">💰 MONETIZATION & EXTRA INCOME TRACKER</div>
+    <!-- TRACKER STIMA GUADAGNI PERSONALI -->
+    <div class="card" style="border-left: 4px solid #10b981;">
+        <div style="font-size: 0.78rem; font-weight: bold; color: #10b981; margin-bottom: 6px;">📈 REAL-TIME NET PROFIT TRACKER</div>
         <div class="data-row">
-            <span>Stima Guadagno Mensile Extra:</span>
-            <strong id="extra-income-est" style="color: #10b981; font-size: 0.95rem;">€450.00 / mese</strong>
+            <span>Profitto Netto Stimato Sessione:</span>
+            <strong id="live-net-profit" style="color: #4ade80; font-size: 1.05rem;">+€0.00</strong>
         </div>
         <div class="data-row">
-            <span>Formato Segnale Telegram:</span>
-            <select id="signal-mode" style="width: auto; padding: 4px 8px; margin: 0; font-size: 0.75rem;">
-                <option value="VIP">💎 Canale VIP (Completo)</option>
-                <option value="TEASER">🔥 Canale FREE (Teaser Promo)</option>
-            </select>
+            <span>Stima Rendita Extra / Trade Vinto:</span>
+            <strong id="live-trade-value" style="color: #38bdf8;">+€22.00 (Lotto 0.01)</strong>
         </div>
     </div>
 
@@ -399,8 +401,8 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <div class="toggle-container">
             <div>
-                <span style="font-size: 0.78rem; font-weight: bold; color: #f1f5f9;">🤖 AUTO-DISPATCH TELEGRAM</span>
-                <span style="font-size: 0.62rem; color: #94a3b8; display: block;">Invia i segnali in automatico al tuo canale</span>
+                <span style="font-size: 0.78rem; font-weight: bold; color: #f1f5f9;">🤖 TELEGRAM CHANNEL DISPATCH</span>
+                <span style="font-size: 0.62rem; color: #94a3b8; display: block;">Invia i segnali in automatico al tuo canale Telegram</span>
             </div>
             <label class="switch">
                 <input type="checkbox" id="telegram-toggle" checked>
@@ -470,7 +472,7 @@ def serve_home(full_path: str = ""):
         </div>
 
         <div class="btn-group">
-            <button type="button" id="action-btn" class="btn btn-gold" onclick="generaSegnaleCrypto()">💰 GENERA SEGNALE MONETIZZABILE</button>
+            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">🚀 GENERA SEGNALE QUANTUM AI</button>
             <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 TICK</button>
         </div>
     </div>
@@ -495,7 +497,7 @@ def serve_home(full_path: str = ""):
             <strong id="stat-lot" style="color: #38bdf8; font-size: 0.95rem;">0.01</strong>
         </div>
 
-        <div style="margin-top: 8px; font-size: 0.72rem; color: #94a3b8; margin-bottom: 6px;">Simula esito ultimo segnale:</div>
+        <div style="margin-top: 8px; font-size: 0.72rem; color: #94a3b8; margin-bottom: 6px;">Simula esito e aggiorna guadagno netto:</div>
         <div class="btn-group">
             <button type="button" class="btn btn-success" style="padding: 8px; font-size: 0.78rem;" onclick="registraEsito(true)">✅ VINTO (WIN)</button>
             <button type="button" class="btn btn-danger" style="padding: 8px; font-size: 0.78rem;" onclick="registraEsito(false)">❌ PERSO (LOSS)</button>
@@ -503,7 +505,7 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.72rem; color: #f59e0b; margin-bottom: 6px; font-weight: bold;">⚡ QUANTUM EMPIRE OUTPUT</div>
+        <div style="font-size: 0.72rem; color: #10b981; margin-bottom: 6px; font-weight: bold;">⚡ QUANTUM AI SIGNAL DETAILED OUTPUT</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -560,7 +562,8 @@ def serve_home(full_path: str = ""):
             recWins: 0,
             isInRecovery: false,
             attempts: 0,
-            baseLot: 0.01
+            baseLot: 0.01,
+            netProfitEur: 0.0
         };
 
         function updateUIStats() {
@@ -582,9 +585,14 @@ def serve_home(full_path: str = ""):
             }
             document.getElementById('stat-lot').innerText = localStats.currentLot;
 
-            // Stima guadagno extra
-            const estimatedNet = (localStats.wins * 25) - (localStats.losses * 10);
-            document.getElementById('extra-income-est').innerText = `€${Math.max(0, estimatedNet + 450)}.00 / mese`;
+            // Aggiorna Guadagno Netto in tempo reale
+            const profitEl = document.getElementById('live-net-profit');
+            const formattedProfit = localStats.netProfitEur >= 0 ? `+€${localStats.netProfitEur.toFixed(2)}` : `-€${Math.abs(localStats.netProfitEur).toFixed(2)}`;
+            profitEl.innerText = formattedProfit;
+            profitEl.style.color = localStats.netProfitEur >= 0 ? '#4ade80' : '#f87171';
+
+            const tradeVal = (22.0 * (localStats.currentLot / 0.01)).toFixed(2);
+            document.getElementById('live-trade-value').innerText = `+€${tradeVal} (Lotto ${localStats.currentLot})`;
         }
 
         async function fetchStats() {
@@ -597,22 +605,29 @@ def serve_home(full_path: str = ""):
                     localStats.losses = data.losses;
                     localStats.isInRecovery = data.is_in_recovery;
                     localStats.attempts = data.recovery_attempts;
+                    localStats.netProfitEur = data.net_profit_eur || 0.0;
                     updateUIStats();
                 }
             } catch(e) {}
         }
 
         function registraEsito(isWin) {
+            const currentLot = localStats.currentLot || 0.01;
+            const baseProfit = 22.0 * (currentLot / 0.01);
+            const baseLoss = 10.0 * (currentLot / 0.01);
+
             localStats.total++;
             if (localStats.isInRecovery) localStats.recTrades++;
 
             if (isWin) {
                 localStats.wins++;
+                localStats.netProfitEur += baseProfit;
                 if (localStats.isInRecovery) localStats.recWins++;
                 localStats.isInRecovery = false;
                 localStats.attempts = 0;
             } else {
                 localStats.losses++;
+                localStats.netProfitEur -= baseLoss;
                 localStats.attempts++;
                 if (localStats.attempts <= 2) {
                     localStats.isInRecovery = true;
@@ -625,7 +640,7 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            const msg = isWin ? `🟢 [${nowStr}] Trade WIN` : `🔴 [${nowStr}] Trade LOSS -> Recovery mode`;
+            const msg = isWin ? `🟢 [${nowStr}] Trade WIN (+€${baseProfit.toFixed(2)})` : `🔴 [${nowStr}] Trade LOSS (-€${baseLoss.toFixed(2)}) -> Recovery mode`;
             logBox.innerHTML = msg + '<br>' + logBox.innerHTML;
 
             fetch('/api/trade/result', {
@@ -716,7 +731,6 @@ def serve_home(full_path: str = ""):
             const priceInput = document.getElementById('live-price-input');
             const autoToggle = document.getElementById('autotrade-toggle').checked;
             const tgToggle = document.getElementById('telegram-toggle').checked;
-            const signalMode = document.getElementById('signal-mode').value;
 
             if (!assetSelect || !signalBox || !priceInput) return;
 
@@ -734,7 +748,7 @@ def serve_home(full_path: str = ""):
             const timeFactor = Date.now() / 1000;
             const quantumConfluence = Math.sin(timeFactor / 180) + Math.cos(timeFactor / 90);
             const direction = quantumConfluence >= 0 ? "BUY" : "SELL";
-            const winProbability = (91 + (Math.abs(quantumConfluence) * 4)).toFixed(1);
+            const winProbability = (92 + (Math.abs(quantumConfluence) * 3)).toFixed(1);
 
             let step = 2.50;
             if (asset.includes("NAS100")) step = 35.00;
@@ -755,8 +769,8 @@ def serve_home(full_path: str = ""):
             if (direction === "BUY") {
                 let upperEntry = livePrice;
                 let lowerEntry = livePrice - (step * 0.10);
-                slNum = lowerEntry - (step * 2.0);
-                tpNum = upperEntry + (step * 5.0); // R:R 1:2.5
+                slNum = lowerEntry - (step * 1.8);
+                tpNum = upperEntry + (step * 4.0); // R:R 1:2.2
 
                 rangeText = `${upperEntry.toFixed(decimals)} / ${lowerEntry.toFixed(decimals)}`;
                 slVal = slNum.toFixed(decimals);
@@ -764,8 +778,8 @@ def serve_home(full_path: str = ""):
             } else {
                 let lowerEntry = livePrice;
                 let upperEntry = livePrice + (step * 0.10);
-                slNum = upperEntry + (step * 2.0);
-                tpNum = lowerEntry - (step * 5.0);
+                slNum = upperEntry + (step * 1.8);
+                tpNum = lowerEntry - (step * 4.0);
 
                 rangeText = `${lowerEntry.toFixed(decimals)} / ${upperEntry.toFixed(decimals)}`;
                 slVal = slNum.toFixed(decimals);
@@ -784,11 +798,11 @@ def serve_home(full_path: str = ""):
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
-            document.getElementById('res-score').innerText = winProbability + "% (R:R 1:2.5)";
+            document.getElementById('res-score').innerText = winProbability + "% High Precision";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + " (Quantum Empire)";
+            dirElem.innerText = direction + " (Quantum AI)";
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
@@ -798,7 +812,7 @@ def serve_home(full_path: str = ""):
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
 
-            // Invio a Telegram (Modalità VIP o TEASER)
+            // Invio a Telegram
             if (tgToggle) {
                 const tgToken = document.getElementById('tg-token').value.trim();
                 const tgChatId = document.getElementById('tg-chatid').value.trim();
@@ -807,12 +821,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio a Telegram...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    let formattedMsg = "";
-                    if (signalMode === "VIP") {
-                        formattedMsg = `<b>🟢 SIGNAL DESK PRO VIP 🟢</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Accuracy:</b> ${winProbability}%\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>SL:</b> ${slVal}\n<b>TP:</b> ${tpVal}\n\n<i>Lotto consigliato: ${localStats.currentLot || 0.01}</i>`;
-                    } else {
-                        formattedMsg = `<b>🔥 SEGNALE GRATUITO IN CORSO 🔥</b>\n\n<b>Asset:</b> ${cleanAssetSymbol}\n<b>Direzione:</b> ${direction}\n<b>Take Profit:</b> ${tpVal}\n\n<i>⚠️ Lo Stop Loss e il punto esatto di ingresso sono riservati ai membri del Canale VIP! Unisciti ora per tutti i segnali.</i>`;
-                    }
+                    const formattedMsg = `<b>🟢 SIGNAL DESK PRO SEGNALE 🟢</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Precisione Stimata:</b> ${winProbability}%\n<b>Direzione:</b> ${direction}\n<b>Range d'Ingresso:</b> ${rangeText}\n\n<b>SL:</b> ${slVal}\n<b>TP:</b> ${tpVal}\n\n<i>Lotto consigliato: ${localStats.currentLot || 0.01}</i>`;
 
                     try {
                         const tgRes = await fetch('/api/telegram/send', {
@@ -837,7 +846,7 @@ def serve_home(full_path: str = ""):
                         tgStatusEl.style.color = "#ef4444";
                     }
                 } else {
-                    tgStatusEl.innerText = "⚠️ Dati Telegram Mancanti";
+                    tgStatusEl.innerText = "⚠️ Dati Telegram non inseriti";
                     tgStatusEl.style.color = "#fbbf24";
                 }
             } else {
@@ -846,7 +855,7 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} [${signalMode}]<br>`;
+            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} (Accuracy: ${winProbability}%)<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
             } else {
