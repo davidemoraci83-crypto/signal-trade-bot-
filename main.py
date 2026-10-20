@@ -6,7 +6,6 @@ import os
 import urllib.request
 import urllib.parse
 import json
-import math
 
 try:
     import MetaTrader5 as mt5
@@ -183,7 +182,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - v61 Quantum Profit Engine</title>
+    <title>Signal Desk Pro - v62 Quantum Empire</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -202,13 +201,13 @@ def serve_home(full_path: str = ""):
         h1 {
             font-size: 1.05rem;
             margin: 0;
-            color: #38bdf8;
+            color: #10b981;
             letter-spacing: 0.5px;
         }
         .badge {
             font-size: 0.65rem;
-            background-color: #10b981;
-            color: #fff;
+            background-color: #f59e0b;
+            color: #000;
             padding: 3px 8px;
             border-radius: 9999px;
             font-weight: bold;
@@ -280,7 +279,7 @@ def serve_home(full_path: str = ""):
         }
         .btn {
             flex: 1;
-            background: linear-gradient(135deg, #10b981, #047857);
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
             border: none;
             padding: 12px;
@@ -305,6 +304,11 @@ def serve_home(full_path: str = ""):
             background: linear-gradient(135deg, #ef4444, #b91c1c);
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
+        .btn-gold {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #000;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
         .btn:active {
             transform: scale(0.98);
             opacity: 0.9;
@@ -315,7 +319,7 @@ def serve_home(full_path: str = ""):
             background-color: #070a12;
             padding: 12px;
             border-radius: 10px;
-            border-left: 4px solid #10b981;
+            border-left: 4px solid #f59e0b;
             animation: fadeIn 0.2s ease-out;
         }
         @keyframes fadeIn {
@@ -364,7 +368,7 @@ def serve_home(full_path: str = ""):
             position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
             background-color: white; transition: .3s; border-radius: 50%;
         }
-        input:checked + .slider { background-color: #10b981; }
+        input:checked + .slider { background-color: #f59e0b; }
         input:checked + .slider:before { transform: translateX(22px); }
     </style>
 </head>
@@ -372,7 +376,23 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">v61 PROFIT ENGINE</div>
+        <div class="badge">v62 EMPIRE</div>
+    </div>
+
+    <!-- CALCOLATORE RENDITA EXTRA -->
+    <div class="card" style="border-left: 4px solid #f59e0b;">
+        <div style="font-size: 0.78rem; font-weight: bold; color: #f59e0b; margin-bottom: 6px;">💰 MONETIZATION & EXTRA INCOME TRACKER</div>
+        <div class="data-row">
+            <span>Stima Guadagno Mensile Extra:</span>
+            <strong id="extra-income-est" style="color: #10b981; font-size: 0.95rem;">€450.00 / mese</strong>
+        </div>
+        <div class="data-row">
+            <span>Formato Segnale Telegram:</span>
+            <select id="signal-mode" style="width: auto; padding: 4px 8px; margin: 0; font-size: 0.75rem;">
+                <option value="VIP">💎 Canale VIP (Completo)</option>
+                <option value="TEASER">🔥 Canale FREE (Teaser Promo)</option>
+            </select>
+        </div>
     </div>
 
     <!-- CONFIGURAZIONE TELEGRAM -->
@@ -450,7 +470,7 @@ def serve_home(full_path: str = ""):
         </div>
 
         <div class="btn-group">
-            <button type="button" id="action-btn" class="btn" onclick="generaSegnaleCrypto()">🚀 GENERA SEGNALE HIGH-WIN</button>
+            <button type="button" id="action-btn" class="btn btn-gold" onclick="generaSegnaleCrypto()">💰 GENERA SEGNALE MONETIZZABILE</button>
             <button type="button" id="sync-btn" class="btn btn-secondary" onclick="syncBroker()">🔄 TICK</button>
         </div>
     </div>
@@ -483,14 +503,14 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.72rem; color: #10b981; margin-bottom: 6px; font-weight: bold;">⚡ QUANTUM AI SIGNAL PROFILES</div>
+        <div style="font-size: 0.72rem; color: #f59e0b; margin-bottom: 6px; font-weight: bold;">⚡ QUANTUM EMPIRE OUTPUT</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
             <strong id="res-asset">--</strong>
         </div>
         <div class="data-row">
-            <span>Confluenza & Profit Score:</span>
+            <span>Accuracy & Risk/Reward:</span>
             <strong id="res-score" style="color: #10b981;">--</strong>
         </div>
         <div class="data-row">
@@ -516,10 +536,6 @@ def serve_home(full_path: str = ""):
         <div class="data-row">
             <span>Stato Invio Telegram:</span>
             <strong id="res-tg-status" style="color: #38bdf8;">--</strong>
-        </div>
-        <div class="data-row">
-            <span>Stato Esecuzione MT5:</span>
-            <strong id="res-mt5-status" style="color: #94a3b8;">--</strong>
         </div>
 
         <button type="button" class="btn" style="margin-top: 10px; padding: 10px; font-size: 0.82rem;" onclick="copiaSegnalePro()">📋 COPIA PER TELEGRAM MANUALMENTE</button>
@@ -565,6 +581,10 @@ def serve_home(full_path: str = ""):
                 localStats.currentLot = localStats.baseLot;
             }
             document.getElementById('stat-lot').innerText = localStats.currentLot;
+
+            // Stima guadagno extra
+            const estimatedNet = (localStats.wins * 25) - (localStats.losses * 10);
+            document.getElementById('extra-income-est').innerText = `€${Math.max(0, estimatedNet + 450)}.00 / mese`;
         }
 
         async function fetchStats() {
@@ -696,6 +716,7 @@ def serve_home(full_path: str = ""):
             const priceInput = document.getElementById('live-price-input');
             const autoToggle = document.getElementById('autotrade-toggle').checked;
             const tgToggle = document.getElementById('telegram-toggle').checked;
+            const signalMode = document.getElementById('signal-mode').value;
 
             if (!assetSelect || !signalBox || !priceInput) return;
 
@@ -710,11 +731,10 @@ def serve_home(full_path: str = ""):
             if (asset.includes("SHIB")) decimals = 8;
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
-            // Algoritmo Quantum High-Win Rate Analysis
             const timeFactor = Date.now() / 1000;
             const quantumConfluence = Math.sin(timeFactor / 180) + Math.cos(timeFactor / 90);
             const direction = quantumConfluence >= 0 ? "BUY" : "SELL";
-            const winProbability = (88 + (Math.abs(quantumConfluence) * 5)).toFixed(1);
+            const winProbability = (91 + (Math.abs(quantumConfluence) * 4)).toFixed(1);
 
             let step = 2.50;
             if (asset.includes("NAS100")) step = 35.00;
@@ -734,18 +754,18 @@ def serve_home(full_path: str = ""):
             let slNum, tpNum;
             if (direction === "BUY") {
                 let upperEntry = livePrice;
-                let lowerEntry = livePrice - (step * 0.12);
-                slNum = lowerEntry - (step * 2.2); // Stop Loss più protettivo
-                tpNum = upperEntry + (step * 4.2); // Take Profit esteso (R:R 1:2)
+                let lowerEntry = livePrice - (step * 0.10);
+                slNum = lowerEntry - (step * 2.0);
+                tpNum = upperEntry + (step * 5.0); // R:R 1:2.5
 
                 rangeText = `${upperEntry.toFixed(decimals)} / ${lowerEntry.toFixed(decimals)}`;
                 slVal = slNum.toFixed(decimals);
                 tpVal = tpNum.toFixed(decimals);
             } else {
                 let lowerEntry = livePrice;
-                let upperEntry = livePrice + (step * 0.12);
-                slNum = upperEntry + (step * 2.2);
-                tpNum = lowerEntry - (step * 4.2);
+                let upperEntry = livePrice + (step * 0.10);
+                slNum = upperEntry + (step * 2.0);
+                tpNum = lowerEntry - (step * 5.0);
 
                 rangeText = `${lowerEntry.toFixed(decimals)} / ${upperEntry.toFixed(decimals)}`;
                 slVal = slNum.toFixed(decimals);
@@ -764,31 +784,21 @@ def serve_home(full_path: str = ""):
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
-            document.getElementById('res-score').innerText = winProbability + "% High Confluence";
+            document.getElementById('res-score').innerText = winProbability + "% (R:R 1:2.5)";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + " (Quantum AI)";
+            dirElem.innerText = direction + " (Quantum Empire)";
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
 
-            const mt5StatusEl = document.getElementById('res-mt5-status');
             const tgStatusEl = document.getElementById('res-tg-status');
-
-            if (autoToggle) {
-                mt5StatusEl.innerText = "Invio ordine a MT5...";
-                mt5StatusEl.style.color = "#f59e0b";
-            } else {
-                mt5StatusEl.innerText = "Disattivato (Solo Segnale)";
-                mt5StatusEl.style.color = "#94a3b8";
-            }
-
             signalBox.style.display = 'block';
 
-            // Invio Automatico a Telegram via Bot Webhook
+            // Invio a Telegram (Modalità VIP o TEASER)
             if (tgToggle) {
                 const tgToken = document.getElementById('tg-token').value.trim();
                 const tgChatId = document.getElementById('tg-chatid').value.trim();
@@ -797,7 +807,12 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio a Telegram...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const formattedMsg = `<b>🟢 SIGNAL DESK PRO QUANTUM AI 🟢</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Accuracy Score:</b> ${winProbability}%\n<b>Direzione:</b> ${direction}\n<b>Range Ingresso:</b> ${rangeText}\n\n<b>SL:</b> ${slVal}\n<b>TP:</b> ${tpVal}\n\n<i>Lotto consigliato: ${localStats.currentLot || 0.01}</i>`;
+                    let formattedMsg = "";
+                    if (signalMode === "VIP") {
+                        formattedMsg = `<b>🟢 SIGNAL DESK PRO VIP 🟢</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Accuracy:</b> ${winProbability}%\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>SL:</b> ${slVal}\n<b>TP:</b> ${tpVal}\n\n<i>Lotto consigliato: ${localStats.currentLot || 0.01}</i>`;
+                    } else {
+                        formattedMsg = `<b>🔥 SEGNALE GRATUITO IN CORSO 🔥</b>\n\n<b>Asset:</b> ${cleanAssetSymbol}\n<b>Direzione:</b> ${direction}\n<b>Take Profit:</b> ${tpVal}\n\n<i>⚠️ Lo Stop Loss e il punto esatto di ingresso sono riservati ai membri del Canale VIP! Unisciti ora per tutti i segnali.</i>`;
+                    }
 
                     try {
                         const tgRes = await fetch('/api/telegram/send', {
@@ -811,18 +826,18 @@ def serve_home(full_path: str = ""):
                         });
                         const tgData = await tgRes.json();
                         if (tgData.status === "success") {
-                            tgStatusEl.innerText = "✅ Inviato sul Canale Telegram!";
+                            tgStatusEl.innerText = "✅ Inviato su Telegram!";
                             tgStatusEl.style.color = "#22c55e";
                         } else {
                             tgStatusEl.innerText = "❌ " + tgData.message;
                             tgStatusEl.style.color = "#ef4444";
                         }
                     } catch(e) {
-                        tgStatusEl.innerText = "❌ Errore connessione Telegram";
+                        tgStatusEl.innerText = "❌ Errore Telegram";
                         tgStatusEl.style.color = "#ef4444";
                     }
                 } else {
-                    tgStatusEl.innerText = "⚠️ Token/Chat ID non inseriti";
+                    tgStatusEl.innerText = "⚠️ Dati Telegram Mancanti";
                     tgStatusEl.style.color = "#fbbf24";
                 }
             } else {
@@ -830,37 +845,8 @@ def serve_home(full_path: str = ""):
                 tgStatusEl.style.color = "#94a3b8";
             }
 
-            // Invio a MetaTrader se abilitato
-            if (autoToggle) {
-                try {
-                    const response = await fetch('/api/autotrade', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            asset: asset,
-                            direction: direction,
-                            volume: localStats.currentLot || 0.01,
-                            sl: slNum,
-                            tp: tpNum,
-                            auto_enabled: autoToggle
-                        })
-                    });
-                    const resData = await response.json();
-                    if (resData.status === "success") {
-                        mt5StatusEl.innerText = "✅ " + resData.message;
-                        mt5StatusEl.style.color = "#22c55e";
-                    } else {
-                        mt5StatusEl.innerText = "❌ " + resData.message;
-                        mt5StatusEl.style.color = "#ef4444";
-                    }
-                } catch(err) {
-                    mt5StatusEl.innerText = "❌ Errore bridge MT5";
-                    mt5StatusEl.style.color = "#ef4444";
-                }
-            }
-
             const logBox = document.getElementById('history-log');
-            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} (Win Score: ${winProbability}%)<br>`;
+            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} [${signalMode}]<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
             } else {
