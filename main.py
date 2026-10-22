@@ -85,7 +85,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Micro-Sniper v78</title>
+    <title>Signal Desk Pro - Optimal Swing v79</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -126,12 +126,12 @@ def serve_home(full_path: str = ""):
         }
         .badge {
             font-size: 0.68rem;
-            background: linear-gradient(135deg, var(--accent-purple), #6d28d9);
-            color: #fff;
+            background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
+            color: #04060f;
             padding: 4px 10px;
             border-radius: 9999px;
             font-weight: 800;
-            box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
         }
         .card {
             background-color: var(--card-bg);
@@ -246,7 +246,7 @@ def serve_home(full_path: str = ""):
             background-color: #04060f;
             padding: 14px;
             border-radius: 12px;
-            border-left: 5px solid var(--accent-purple);
+            border-left: 5px solid var(--accent-cyan);
             animation: fadeIn 0.25s ease-out;
         }
         @keyframes fadeIn {
@@ -299,7 +299,7 @@ def serve_home(full_path: str = ""):
             position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
             background-color: white; transition: .3s; border-radius: 50%;
         }
-        input:checked + .slider { background-color: var(--accent-purple); }
+        input:checked + .slider { background-color: var(--accent-cyan); }
         input:checked + .slider:before { transform: translateX(22px); }
     </style>
 </head>
@@ -307,20 +307,20 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">MICRO-SNIPER v78</div>
+        <div class="badge">OPTIMAL SWING v79</div>
     </div>
 
-    <!-- PANNELLO MICRO-SNIPER MONITOR -->
-    <div class="card" style="border-left: 5px solid var(--accent-purple);">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-purple); margin-bottom: 8px;">🎯 MICRO-SNIPER TARGET ENGINE</div>
+    <!-- PANNELLO MONITOR -->
+    <div class="card" style="border-left: 5px solid var(--accent-cyan);">
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-cyan); margin-bottom: 8px;">📊 TARGET DYNAMICS & TIMING MONITOR</div>
         
         <div class="data-row">
-            <span>Modalità Esecuzione:</span>
-            <strong style="color: var(--accent-purple);">Trade Corti & Ultra-Rapidi</strong>
+            <span>Distanza Operativa:</span>
+            <strong style="color: var(--accent-cyan);">Bilanciata (Tempo di inserimento ottimale)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Sessione:</span>
-            <strong id="stat-winrate" style="color: var(--accent-cyan);">0.00% (0 / 0)</strong>
+            <strong id="stat-winrate" style="color: var(--accent-green);">0.00% (0 / 0)</strong>
         </div>
     </div>
 
@@ -352,8 +352,8 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <label for="strategy-mode">Modalità Operativa:</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🎯 Micro-Target Standard (Veloce)</option>
-            <option value="scalp">⚡ Micro-Scalping Lampo (Istantaneo)</option>
+            <option value="standard">🛡️ Standard Swing (Target Spazioso & Sicuro)</option>
+            <option value="scalp">⚡ Scalping Dinamico (Ottimizzato)</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -385,7 +385,7 @@ def serve_home(full_path: str = ""):
             <button type="button" class="btn btn-secondary" style="flex: 0.5; padding: 11px; font-size: 0.78rem;" onclick="azzeraPrezzoLive()">🎯 SYNC</button>
         </div>
 
-        <label>Timeframe (Consigliato M1 / M5):</label>
+        <label>Timeframe:</label>
         <div class="tf-grid">
             <div class="tf-btn active" onclick="setTF(this, 'M1')">M1</div>
             <div class="tf-btn" onclick="setTF(this, 'M5')">M5</div>
@@ -393,7 +393,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-scalp" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleMicroSniper()">⚡ GENERA SEGNALE MICRO-SNIPER</button>
+        <button type="button" id="gen-btn" class="btn" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleOptimal()">🎯 GENERA SEGNALE OPTIMAL</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO -->
@@ -407,7 +407,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-purple); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE MICRO-SNIPER PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-cyan); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE OPTIMAL PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -430,7 +430,7 @@ def serve_home(full_path: str = ""):
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
-            <span id="res-tp-label">Micro-Target (Vittoria Lampo):</span>
+            <span id="res-tp-label">Take Profit:</span>
             <strong id="res-tp" style="color: var(--accent-green); font-weight: 900; font-size: 1rem;">--</strong>
         </div>
         <div class="data-row">
@@ -438,12 +438,12 @@ def serve_home(full_path: str = ""):
             <strong id="res-tg-status" style="color: var(--accent-cyan);">--</strong>
         </div>
 
-        <button type="button" id="copy-action-btn" class="btn btn-scalp" style="margin-top: 12px; padding: 12px; font-size: 0.85rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
+        <button type="button" id="copy-action-btn" class="btn" style="margin-top: 12px; padding: 12px; font-size: 0.85rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
     </div>
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per micro-operazioni vincenti...</div>
+        <div id="history-log" class="history-box">Pronto per operazioni bilanciate...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -465,11 +465,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA SCALPING LAMPO';
+                genBtn.innerText = '⚡ GENERA SCALPING DINAMICO';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'linear-gradient(135deg, #38bdf8, #0284c7)';
-                genBtn.innerText = '🎯 GENERA MICRO-TARGET STANDARD';
+                genBtn.innerText = '🎯 GENERA SEGNALE OPTIMAL';
                 copyBtn.className = 'btn';
             }
         }
@@ -506,7 +506,7 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            const tag = isScalp ? '⚡ [SCALP WIN]' : '🎯 [SNIPER WIN]';
+            const tag = isScalp ? '⚡ [SCALP WIN]' : '🎯 [OPTIMAL WIN]';
             const msg = isWin ? `${tag} [${nowStr}] TARGET PRESO (WIN)` : `${tag} [${nowStr}] LOSS`;
             logBox.innerHTML = msg + '<br>' + logBox.innerHTML;
 
@@ -571,7 +571,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleMicroSniper() {
+        async function generaSegnaleOptimal() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
@@ -593,48 +593,49 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             const nowTime = Date.now();
-            const trendFactor = Math.sin((livePrice * 8) + nowTime / 400);
+            const trendFactor = Math.sin((livePrice * 4) + nowTime / 1000);
             const direction = trendFactor >= 0 ? "BUY" : "SELL";
 
-            let step = 0.50; // Step ultra-stretto per target rapidissimi
-            if (asset.includes("NAS100")) step = 12.00;
-            else if (asset.includes("BTC")) step = 100.00;
-            else if (asset.includes("ETH")) step = 5.00;
-            else if (asset.includes("SOL")) step = 0.40;
-            else if (asset.includes("NEAR")) step = 0.0250;
-            else if (asset.includes("SUI")) step = 0.0060;
-            else if (asset.includes("DOGE")) step = 0.0010;
-            else if (asset.includes("SHIB")) step = 0.00000010;
-            else if (asset.includes("XRP")) step = 0.0020;
-            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0010;
+            // Step calibrato per dare il giusto respiro e tempo di esecuzione
+            let step = 1.80; 
+            if (asset.includes("NAS100")) step = 35.00;
+            else if (asset.includes("BTC")) step = 300.00;
+            else if (asset.includes("ETH")) step = 18.00;
+            else if (asset.includes("SOL")) step = 1.50;
+            else if (asset.includes("NEAR")) step = 0.0900;
+            else if (asset.includes("SUI")) step = 0.0250;
+            else if (asset.includes("DOGE")) step = 0.0040;
+            else if (asset.includes("SHIB")) step = 0.00000050;
+            else if (asset.includes("XRP")) step = 0.0080;
+            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0035;
 
             let rangeText, slVal, tpVal, cleanAssetSymbol;
             cleanAssetSymbol = asset.replace("/", "");
 
             let slNum, tpNum;
             if (isScalp) {
-                let tpMult = 0.5; // Micro-target immediato
-                let slMult = 1.4; 
+                let tpMult = 1.2; 
+                let slMult = 1.8; 
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.005).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.02).toFixed(decimals)}`;
                 } else {
                     tpNum = livePrice - (step * tpMult);
                     slNum = livePrice + (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.005).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.02).toFixed(decimals)}`;
                 }
             } else {
-                let tpMult = 0.8; 
-                let slMult = 1.5;
+                let tpMult = 2.0; // TP più ampio per dare spazio al movimento
+                let slMult = 2.2; // SL proporzionato e sicuro
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.005).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.03).toFixed(decimals)}`;
                 } else {
                     tpNum = livePrice - (step * tpMult);
                     slNum = livePrice + (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.005).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.03).toFixed(decimals)}`;
                 }
             }
 
@@ -657,16 +658,16 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const titleBox = document.getElementById('signal-title-box');
-            titleBox.innerText = isScalp ? "⚡ SCALPING LAMPO (MICRO-SNIPER)" : "🎯 MICRO-TARGET STANDARD (RAPIDO)";
+            titleBox.innerText = isScalp ? "⚡ SCALPING DINAMICO" : "🎯 SEGNALE SWING OPTIMAL";
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (isScalp ? " [SCALP]" : " [SNIPER]");
+            dirElem.innerText = direction + (isScalp ? " [SCALP]" : " [SWING]");
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = isScalp ? "Micro-Target (Istantaneo):" : "Target Ravvicinato:";
+            document.getElementById('res-tp-label').innerText = isScalp ? "Take Profit Scalp:" : "Take Profit (Swing Sicuro):";
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -679,7 +680,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = isScalp ? "⚡ MICRO-SCALPING LAMPO" : "🎯 MICRO-SNIPER SIGNAL";
+                    const headerTag = isScalp ? "⚡ SCALPING DINAMICO" : "🎯 OPTIMAL SWING SIGNAL";
                     const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
@@ -714,7 +715,7 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} (${isScalp ? 'Scalp' : 'Sniper'})<br>`;
+            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} (${isScalp ? 'Scalp' : 'Optimal'})<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
             } else {
@@ -728,7 +729,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isScalp ? "⚡ MICRO-SCALPING" : "🎯 MICRO-SNIPER SIGNAL";
+            const modeTitle = lastSignalData.isScalp ? "⚡ SCALPING DINAMICO" : "🎯 OPTIMAL SWING SIGNAL";
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
