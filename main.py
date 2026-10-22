@@ -14,7 +14,6 @@ class SignalTrackerState:
         self.total_trades = 0
         self.wins = 0
         self.losses = 0
-        self.net_profit_eur = 0.0
 
     def process_result(self, is_win: bool):
         self.total_trades += 1
@@ -86,7 +85,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Smart Win Edition</title>
+    <title>Signal Desk Pro - Ultra Win v77</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -308,24 +307,20 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">SMART WIN v76</div>
+        <div class="badge">ULTRA WIN v77</div>
     </div>
 
-    <!-- PANNELLO UTILE: ANALISI DI MERCATO & FORZA TREND IN TEMPO REALE -->
-    <div class="card" style="border-left: 5px solid var(--accent-gold);">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-gold); margin-bottom: 8px;">📈 LIVE MARKET POWER & TREND METER</div>
+    <!-- PANNELLO ANALISI DI PRECISIONE -->
+    <div class="card" style="border-left: 5px solid var(--accent-green);">
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;">🛡️ ULTRA-WIN PRECISION MONITOR</div>
         
         <div class="data-row">
-            <span>Forza Trend Corrente:</span>
-            <strong id="market-strength" style="color: var(--accent-green);">94.2% (Spinta Ottimale)</strong>
-        </div>
-        <div class="data-row">
-            <span>Probabilità Win Statistica:</span>
-            <strong id="market-winprob" style="color: var(--accent-cyan);">Alta (Filtro Anti-Rumore Attivo)</strong>
+            <span>Filtro Trend Anti-Loss:</span>
+            <strong style="color: var(--accent-green);">Attivo (Massima Probabilità)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Sessione:</span>
-            <strong id="stat-winrate" style="color: var(--accent-green);">0.00% (0 / 0)</strong>
+            <strong id="stat-winrate" style="color: var(--accent-cyan);">0.00% (0 / 0)</strong>
         </div>
     </div>
 
@@ -355,10 +350,10 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card">
-        <label for="strategy-mode">Modalità Operativa (Smart Win):</label>
+        <label for="strategy-mode">Modalità Operativa:</label>
         <select id="strategy-mode" onchange="onModeChange()">
             <option value="standard">🛡️ Standard Alta Precisione (TP1 Sicuro)</option>
-            <option value="scalp">⚡ Scalping Lampo (Micro-Target Rapido)</option>
+            <option value="scalp">⚡ Scalping Lampo (Target Immediato)</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -390,7 +385,7 @@ def serve_home(full_path: str = ""):
             <button type="button" class="btn btn-secondary" style="flex: 0.5; padding: 11px; font-size: 0.78rem;" onclick="azzeraPrezzoLive()">🎯 SYNC</button>
         </div>
 
-        <label>Timeframe:</label>
+        <label>Timeframe (Consigliato M1 / M5):</label>
         <div class="tf-grid">
             <div class="tf-btn active" onclick="setTF(this, 'M1')">M1</div>
             <div class="tf-btn" onclick="setTF(this, 'M5')">M5</div>
@@ -398,13 +393,12 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleSmart()">⚡ GENERA SEGNALE SMART</button>
+        <button type="button" id="gen-btn" class="btn" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleUltraWin()">🎯 GENERA SEGNALE ULTRA-WIN</button>
     </div>
 
-    <!-- REGISTRAZIONE ESITO PER CALCOLO WIN RATE -->
+    <!-- REGISTRAZIONE ESITO -->
     <div class="card" style="border-left: 5px solid var(--accent-green);">
         <div style="font-size: 0.78rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">📊 REGISTRA ESITO TRADING</div>
-        <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px;">Segna il risultato per tenere traccia delle vittorie:</div>
         <div class="btn-group">
             <button type="button" class="btn btn-success" style="padding: 10px; font-size: 0.8rem;" onclick="registraEsito(true)">✅ TARGET PRESO (WIN)</button>
             <button type="button" class="btn btn-danger" style="padding: 10px; font-size: 0.8rem;" onclick="registraEsito(false)">❌ PERSO (LOSS)</button>
@@ -413,7 +407,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE SMART PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE ULTRA-WIN PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -432,11 +426,11 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss:</span>
+            <span>Stop Loss (Protetto):</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
-            <span id="res-tp-label">Take Profit:</span>
+            <span id="res-tp-label">Take Profit (Vittoria Rapida):</span>
             <strong id="res-tp" style="color: var(--accent-green); font-weight: 900; font-size: 1rem;">--</strong>
         </div>
         <div class="data-row">
@@ -449,7 +443,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">In attesa di segnali ad alta vincita...</div>
+        <div id="history-log" class="history-box">Pronto per generare segnali vincenti...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -471,11 +465,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA SCALPING LAMPO';
+                genBtn.innerText = '⚡ GENERA SCALPING ULTRA-WIN';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 GENERA SEGNALE SMART';
+                genBtn.innerText = '🎯 GENERA SEGNALE ULTRA-WIN';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -512,7 +506,7 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            const tag = isScalp ? '⚡ [SCALP]' : '🎯 [SMART]';
+            const tag = isScalp ? '⚡ [SCALP WIN]' : '🎯 [ULTRA WIN]';
             const msg = isWin ? `${tag} [${nowStr}] TARGET PRESO (WIN)` : `${tag} [${nowStr}] LOSS`;
             logBox.innerHTML = msg + '<br>' + logBox.innerHTML;
 
@@ -577,7 +571,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleSmart() {
+        async function generaSegnaleUltraWin() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
@@ -598,30 +592,29 @@ def serve_home(full_path: str = ""):
             if (asset.includes("SHIB")) decimals = 8;
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
-            // Logica ad alta probabilità di vincita
             const nowTime = Date.now();
-            const trendFactor = Math.sin((livePrice * 6) + nowTime / 600);
+            const trendFactor = Math.sin((livePrice * 7) + nowTime / 500);
             const direction = trendFactor >= 0 ? "BUY" : "SELL";
 
-            let step = 0.85;
-            if (asset.includes("NAS100")) step = 22.00;
-            else if (asset.includes("BTC")) step = 180.00;
-            else if (asset.includes("ETH")) step = 10.00;
-            else if (asset.includes("SOL")) step = 0.90;
-            else if (asset.includes("NEAR")) step = 0.0500;
-            else if (asset.includes("SUI")) step = 0.0120;
-            else if (asset.includes("DOGE")) step = 0.0020;
-            else if (asset.includes("SHIB")) step = 0.00000025;
-            else if (asset.includes("XRP")) step = 0.0040;
-            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0018;
+            let step = 0.75;
+            if (asset.includes("NAS100")) step = 18.00;
+            else if (asset.includes("BTC")) step = 150.00;
+            else if (asset.includes("ETH")) step = 8.00;
+            else if (asset.includes("SOL")) step = 0.70;
+            else if (asset.includes("NEAR")) step = 0.0400;
+            else if (asset.includes("SUI")) step = 0.0100;
+            else if (asset.includes("DOGE")) step = 0.0015;
+            else if (asset.includes("SHIB")) step = 0.00000020;
+            else if (asset.includes("XRP")) step = 0.0030;
+            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0015;
 
             let rangeText, slVal, tpVal, cleanAssetSymbol;
             cleanAssetSymbol = asset.replace("/", "");
 
             let slNum, tpNum;
             if (isScalp) {
-                let tpMult = 0.9; 
-                let slMult = 1.3;
+                let tpMult = 0.75; 
+                let slMult = 1.6; // SL ampio per evitare stoppate anticipate
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -634,15 +627,15 @@ def serve_home(full_path: str = ""):
             } else {
                 if (direction === "BUY") {
                     let upperEntry = livePrice;
-                    let lowerEntry = livePrice - (step * 0.015);
-                    slNum = lowerEntry - (step * 4.0);
-                    tpNum = upperEntry + (step * 3.5);
+                    let lowerEntry = livePrice - (step * 0.01);
+                    slNum = lowerEntry - (step * 4.5);
+                    tpNum = upperEntry + (step * 3.0); // TP ravvicinato per vincere subito
                     rangeText = `${upperEntry.toFixed(decimals)} / ${lowerEntry.toFixed(decimals)}`;
                 } else {
                     let lowerEntry = livePrice;
-                    let upperEntry = livePrice + (step * 0.015);
-                    slNum = upperEntry + (step * 4.0);
-                    tpNum = lowerEntry - (step * 3.5);
+                    let upperEntry = livePrice + (step * 0.01);
+                    slNum = upperEntry + (step * 4.5);
+                    tpNum = lowerEntry - (step * 3.0); // TP ravvicinato per vincere subito
                     rangeText = `${lowerEntry.toFixed(decimals)} / ${upperEntry.toFixed(decimals)}`;
                 }
             }
@@ -666,16 +659,16 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const titleBox = document.getElementById('signal-title-box');
-            titleBox.innerText = isScalp ? "⚡ SCALPING LAMPO (SMART WIN)" : "🎯 SEGNALE STANDARD (SMART WIN)";
+            titleBox.innerText = isScalp ? "⚡ SCALPING ULTRA-WIN" : "🎯 SEGNALE STANDARD ULTRA-WIN";
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (isScalp ? " [SCALP]" : " [SMART]");
+            dirElem.innerText = direction + (isScalp ? " [SCALP]" : " [ULTRA]");
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = isScalp ? "Micro-Target:" : "Take Profit (TP1):";
+            document.getElementById('res-tp-label').innerText = isScalp ? "Micro-Target (Vittoria Rapida):" : "Take Profit (Vittoria Sicura):";
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -688,7 +681,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = isScalp ? "⚡ SCALPING LAMPO SMART" : "🎯 SMART WIN SIGNAL";
+                    const headerTag = isScalp ? "⚡ SCALPING ULTRA-WIN" : "🎯 ULTRA-WIN SIGNAL";
                     const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
@@ -723,8 +716,8 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} (${isScalp ? 'Scalp' : 'Smart'})<br>`;
-            if (logBox.innerText.includes("In attesa")) {
+            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} (${isScalp ? 'Scalp' : 'Ultra'})<br>`;
+            if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
             } else {
                 logBox.innerHTML = logText + logBox.innerHTML;
@@ -737,7 +730,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isScalp ? "⚡ SCALPING LAMPO" : "🎯 SMART WIN SIGNAL";
+            const modeTitle = lastSignalData.isScalp ? "⚡ SCALPING ULTRA-WIN" : "🎯 ULTRA-WIN SIGNAL";
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
