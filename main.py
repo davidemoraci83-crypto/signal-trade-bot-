@@ -10,7 +10,7 @@ import json
 app = FastAPI()
 
 # ==========================================
-# GESTORE STATO & PRECISION TP1 ENGINE
+# GESTORE STATO & DUAL-MODE ENGINE
 # ==========================================
 class SignalTrackerState:
     def __init__(self):
@@ -26,16 +26,19 @@ class SignalTrackerState:
         self.max_recovery_attempts = 2
         self.net_profit_eur = 0.0
 
-    def get_next_lot(self):
+    def get_next_lot(self, is_scalp=False):
+        multiplier = 1.4 if is_scalp else self.lot_multiplier
         if self.is_in_recovery and self.recovery_attempts <= self.max_recovery_attempts:
-            return round(self.base_lot * (self.lot_multiplier ** self.recovery_attempts), 2)
+            return round(self.base_lot * (multiplier ** self.recovery_attempts), 2)
         return self.base_lot
 
-    def process_result(self, is_win: bool):
-        current_lot = self.get_next_lot()
+    def process_result(self, is_win: bool, is_scalp: bool = False):
+        current_lot = self.get_next_lot(is_scalp)
         self.total_trades += 1
         
-        trade_win_value = 40.0 * (current_lot / 0.01) # Profitto sicuro e costante sul TP1
+        # Profitto scalping leggermente più rapido ma frequente, standard più solido
+        profit_multiplier = 30.0 if is_scalp else 45.0
+        trade_win_value = profit_multiplier * (current_lot / 0.01)
         trade_loss_value = 20.0 * (current_lot / 0.01)
 
         if self.is_in_recovery:
@@ -69,7 +72,6 @@ class SignalTrackerState:
             "recovery_win_rate": round(rec_wr, 2),
             "is_in_recovery": self.is_in_recovery,
             "recovery_attempts": self.recovery_attempts,
-            "next_lot": self.get_next_lot(),
             "net_profit_eur": round(self.net_profit_eur, 2)
         }
 
@@ -77,6 +79,7 @@ tracker = SignalTrackerState()
 
 class TradeResultRequest(BaseModel):
     is_win: bool
+    is_scalp: bool = False
 
 class TelegramSendRequest(BaseModel):
     bot_token: str
@@ -89,7 +92,7 @@ async def get_stats():
 
 @app.post("/api/trade/result")
 async def post_trade_result(payload: TradeResultRequest):
-    tracker.process_result(payload.is_win)
+    tracker.process_result(payload.is_win, payload.is_scalp)
     return tracker.get_stats()
 
 @app.post("/api/telegram/send")
@@ -126,16 +129,17 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Precision TP1 Edition</title>
+    <title>Signal Desk Pro - Dual Mode v73</title>
     <style>
         :root {
-            --bg-color: #070913;
-            --card-bg: #101426;
-            --border-color: #1e2640;
+            --bg-color: #05070f;
+            --card-bg: #0d1124;
+            --border-color: #1a2342;
             --accent-cyan: #38bdf8;
             --accent-green: #22c55e;
             --accent-red: #ef4444;
             --accent-gold: #f59e0b;
+            --accent-purple: #a855f7;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
         }
@@ -152,7 +156,7 @@ def serve_home(full_path: str = ""):
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
-            background: linear-gradient(135deg, #101426, #1d2645);
+            background: linear-gradient(135deg, #0d1124, #19254a);
             padding: 12px 16px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
@@ -166,12 +170,12 @@ def serve_home(full_path: str = ""):
         }
         .badge {
             font-size: 0.68rem;
-            background: linear-gradient(135deg, var(--accent-green), #15803d);
+            background: linear-gradient(135deg, var(--accent-purple), #6d28d9);
             color: #fff;
             padding: 4px 10px;
             border-radius: 9999px;
             font-weight: 800;
-            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
         }
         .card {
             background-color: var(--card-bg);
@@ -193,9 +197,9 @@ def serve_home(full_path: str = ""):
         select, input[type="text"], input[type="number"] {
             width: 100%;
             padding: 11px;
-            background-color: #070913;
+            background-color: #05070f;
             color: var(--accent-cyan);
-            border: 1px solid #283252;
+            border: 1px solid #243059;
             border-radius: 10px;
             font-size: 0.95rem;
             font-weight: bold;
@@ -213,8 +217,8 @@ def serve_home(full_path: str = ""):
             margin-bottom: 10px;
         }
         .tf-btn {
-            background-color: #070913;
-            border: 1px solid #283252;
+            background-color: #05070f;
+            border: 1px solid #243059;
             color: var(--text-muted);
             padding: 8px 0;
             border-radius: 8px;
@@ -231,8 +235,8 @@ def serve_home(full_path: str = ""):
         }
         .chart-container {
             width: 100%;
-            height: 250px;
-            background-color: #070913;
+            height: 240px;
+            background-color: #05070f;
             border-radius: 10px;
             overflow: hidden;
             border: 1px solid var(--border-color);
@@ -245,7 +249,7 @@ def serve_home(full_path: str = ""):
         .btn {
             flex: 1;
             background: linear-gradient(135deg, #38bdf8, #0284c7);
-            color: #070913;
+            color: #05070f;
             border: none;
             padding: 13px;
             border-radius: 10px;
@@ -255,8 +259,8 @@ def serve_home(full_path: str = ""):
             box-shadow: 0 4px 14px rgba(56, 189, 248, 0.4);
         }
         .btn-secondary {
-            background: #1d2645;
-            border: 1px solid #3b466e;
+            background: #19254a;
+            border: 1px solid #36487a;
             color: var(--text-main);
             flex: 0.4;
             box-shadow: none;
@@ -271,6 +275,11 @@ def serve_home(full_path: str = ""):
             color: white;
             box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
         }
+        .btn-scalp {
+            background: linear-gradient(135deg, #a855f7, #6d28d9);
+            color: white;
+            box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
+        }
         .btn:active {
             transform: scale(0.97);
             filter: brightness(0.9);
@@ -278,10 +287,10 @@ def serve_home(full_path: str = ""):
         .signal-container {
             display: none;
             margin-top: 12px;
-            background-color: #070913;
+            background-color: #05070f;
             padding: 14px;
             border-radius: 12px;
-            border-left: 5px solid var(--accent-green);
+            border-left: 5px solid var(--accent-purple);
             animation: fadeIn 0.25s ease-out;
         }
         @keyframes fadeIn {
@@ -294,7 +303,7 @@ def serve_home(full_path: str = ""):
             display: flex;
             justify-content: space-between;
             padding: 6px 0;
-            border-bottom: 1px solid #13192f;
+            border-bottom: 1px solid #11182d;
             font-size: 0.85rem;
         }
         .data-row:last-child { border-bottom: none; }
@@ -305,7 +314,7 @@ def serve_home(full_path: str = ""):
             max-height: 90px;
             overflow-y: auto;
             font-family: monospace;
-            background: #070913;
+            background: #05070f;
             padding: 8px;
             border-radius: 6px;
         }
@@ -313,10 +322,10 @@ def serve_home(full_path: str = ""):
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #070913;
+            background-color: #05070f;
             padding: 10px 12px;
             border-radius: 10px;
-            border: 1px solid #283252;
+            border: 1px solid #243059;
             margin-bottom: 10px;
         }
         .switch {
@@ -328,13 +337,13 @@ def serve_home(full_path: str = ""):
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #283252; transition: .3s; border-radius: 24px;
+            background-color: #243059; transition: .3s; border-radius: 24px;
         }
         .slider:before {
             position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
             background-color: white; transition: .3s; border-radius: 50%;
         }
-        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider { background-color: var(--accent-purple); }
         input:checked + .slider:before { transform: translateX(22px); }
     </style>
 </head>
@@ -342,12 +351,12 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">PRECISION TP1</div>
+        <div class="badge">DUAL-MODE v73</div>
     </div>
 
-    <!-- GESTIONE CAPITALE & RISCHIO SICURO -->
+    <!-- GESTIONE CAPITALE & CASSA -->
     <div class="card" style="border-left: 5px solid var(--accent-cyan);">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-cyan); margin-bottom: 8px;">🛡️ CASSA & RISK MANAGEMENT SICURO</div>
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-cyan); margin-bottom: 8px;">🛡️ CASSA & RISK MANAGEMENT</div>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
             <div>
@@ -355,18 +364,22 @@ def serve_home(full_path: str = ""):
                 <input type="number" id="capital-input" value="1000" onchange="recalculateRisk()" style="margin-bottom:0;">
             </div>
             <div>
-                <label>Rischio per Trade (%):</label>
+                <label>Rischio Base (%):</label>
                 <input type="number" id="risk-input" value="1.0" step="0.1" onchange="recalculateRisk()" style="margin-bottom:0;">
             </div>
         </div>
 
         <div class="data-row">
-            <span>Profitto Netto Sicuro:</span>
+            <span>Profitto Netto Totale:</span>
             <strong id="live-net-profit" style="color: var(--accent-green); font-size: 1.1rem;">+€0.00</strong>
         </div>
         <div class="data-row">
-            <span>Lotto Consigliato:</span>
+            <span>Lotto Standard:</span>
             <strong id="calc-dynamic-lot" style="color: var(--accent-cyan);">0.01 Lotto</strong>
+        </div>
+        <div class="data-row">
+            <span>Lotto Scalping (High Yield):</span>
+            <strong id="calc-scalp-lot" style="color: var(--accent-purple);">0.015 Lotto</strong>
         </div>
     </div>
 
@@ -375,7 +388,7 @@ def serve_home(full_path: str = ""):
         <div class="toggle-container">
             <div>
                 <span style="font-size: 0.8rem; font-weight: 800; color: #fff;">🤖 INVIO AUTOMATICO TELEGRAM</span>
-                <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Spedisci subito il segnale sicuro</span>
+                <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Spedisci subito sul canale</span>
             </div>
             <label class="switch">
                 <input type="checkbox" id="telegram-toggle" checked>
@@ -396,7 +409,13 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card">
-        <label for="asset-select">Seleziona Asset (Alta Probabilità TP1):</label>
+        <label for="strategy-mode">Modalità Operativa:</label>
+        <select id="strategy-mode" onchange="onModeChange()">
+            <option value="standard">🛡️ Standard Sicura (Focus su TP1 Sicuro)</option>
+            <option value="scalp">⚡ Scalping Ultra-Rapido (Micro-TP & Lotto Alto)</option>
+        </select>
+
+        <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
         <select id="asset-select" onchange="updateChartSymbol()">
             <optgroup label="Mercati Principali">
                 <option value="XAU/USD">Oro (XAU/USD)</option>
@@ -433,12 +452,12 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" class="btn" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleSicuro()">🎯 GENERA SEGNALE PRECISION TP1</button>
+        <button type="button" id="gen-btn" class="btn" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleDual()">🎯 GENERA SEGNALE</button>
     </div>
 
     <!-- STATISTICHE E WIN RATE -->
-    <div class="card" style="border-left: 5px solid var(--accent-green);">
-        <div style="font-size: 0.78rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">📊 MONITOR WIN RATE & CASSA</div>
+    <div class="card" style="border-left: 5px solid var(--accent-purple);">
+        <div style="font-size: 0.78rem; color: var(--accent-purple); margin-bottom: 8px; font-weight: 800;">📊 MONITOR WIN RATE & CASSA</div>
         
         <div class="data-row">
             <span>Win Rate Standard:</span>
@@ -450,23 +469,23 @@ def serve_home(full_path: str = ""):
         </div>
         <div class="data-row">
             <span>Stato Operativo:</span>
-            <strong id="stat-status" style="color: var(--accent-green);">Modalità Sicura (TP1 Target)</strong>
+            <strong id="stat-status" style="color: var(--accent-green);">Modalità Standard</strong>
         </div>
         <div class="data-row">
-            <span>Lotto Prossimo Trade:</span>
+            <span>Lotto Attivo Corrente:</span>
             <strong id="stat-lot" style="color: var(--accent-cyan); font-size: 1rem;">0.01</strong>
         </div>
 
         <div style="margin-top: 10px; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px;">Registra esito trade per aggiornare la cassa:</div>
         <div class="btn-group">
-            <button type="button" class="btn btn-success" style="padding: 10px; font-size: 0.8rem;" onclick="registraEsito(true)">✅ TP1 PRESO (WIN)</button>
+            <button type="button" class="btn btn-success" style="padding: 10px; font-size: 0.8rem;" onclick="registraEsito(true)">✅ TARGET PRESO (WIN)</button>
             <button type="button" class="btn btn-danger" style="padding: 10px; font-size: 0.8rem;" onclick="registraEsito(false)">❌ PERSO (LOSS)</button>
         </div>
     </div>
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE AD ALTA PROBABILITÀ (TARGET TP1)</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-purple); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -485,24 +504,24 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Protetto):</span>
+            <span>Stop Loss:</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
-            <span>Take Profit Principale (TP1 Sicuro):</span>
-            <strong id="res-tp1" style="color: var(--accent-green); font-weight: 900; font-size: 1rem;">--</strong>
+            <span id="res-tp-label">Take Profit:</span>
+            <strong id="res-tp" style="color: var(--accent-green); font-weight: 900; font-size: 1rem;">--</strong>
         </div>
         <div class="data-row">
             <span>Telegram:</span>
             <strong id="res-tg-status" style="color: var(--accent-cyan);">--</strong>
         </div>
 
-        <button type="button" class="btn btn-success" style="margin-top: 12px; padding: 12px; font-size: 0.85rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
+        <button type="button" id="copy-action-btn" class="btn" style="margin-top: 12px; padding: 12px; font-size: 0.85rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
     </div>
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">In attesa di operazioni sicure...</div>
+        <div id="history-log" class="history-box">In attesa di operazioni...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -520,6 +539,7 @@ def serve_home(full_path: str = ""):
             isInRecovery: false,
             attempts: 0,
             baseLot: 0.01,
+            scalpLot: 0.015,
             netProfitEur: 0.0
         };
 
@@ -528,12 +548,36 @@ def serve_home(full_path: str = ""):
             const riskPct = parseFloat(document.getElementById('risk-input').value) || 1.0;
             
             let calcLot = Math.max(0.01, parseFloat(((capital * (riskPct / 100)) / 1000).toFixed(2)));
+            let scalpLotVal = parseFloat((calcLot * 1.5).toFixed(2));
+            
             localStats.baseLot = calcLot;
+            localStats.scalpLot = scalpLotVal;
+
             document.getElementById('calc-dynamic-lot').innerText = `${calcLot} Lotto`;
+            document.getElementById('calc-scalp-lot').innerText = `${scalpLotVal} Lotto`;
+            updateUIStats();
+        }
+
+        function onModeChange() {
+            const mode = document.getElementById('strategy-mode').value;
+            const genBtn = document.getElementById('gen-btn');
+            const copyBtn = document.getElementById('copy-action-btn');
+            
+            if (mode === 'scalp') {
+                genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
+                genBtn.innerText = '⚡ GENERA SEGNALE SCALPING (HIGH YIELD)';
+                copyBtn.className = 'btn btn-scalp';
+            } else {
+                genBtn.style.background = 'linear-gradient(135deg, #38bdf8, #0284c7)';
+                genBtn.innerText = '🎯 GENERA SEGNALE STANDARD (TP1)';
+                copyBtn.className = 'btn btn-success';
+            }
             updateUIStats();
         }
 
         function updateUIStats() {
+            const mode = document.getElementById('strategy-mode').value;
+            const isScalp = mode === 'scalp';
             const stdWR = localStats.total > 0 ? ((localStats.wins / localStats.total) * 100).toFixed(2) : "0.00";
             const recWR = localStats.recTrades > 0 ? ((localStats.recWins / localStats.recTrades) * 100).toFixed(2) : "0.00";
             
@@ -541,16 +585,19 @@ def serve_home(full_path: str = ""):
             document.getElementById('stat-rec-wr').innerText = `${recWR}%`;
             
             const statusEl = document.getElementById('stat-status');
+            let activeLot = isScalp ? localStats.scalpLot : localStats.baseLot;
+
             if (localStats.isInRecovery) {
                 statusEl.innerText = `🔥 RECUPERO ATTIVO (Tentativo ${localStats.attempts}/2)`;
                 statusEl.style.color = 'var(--accent-red)';
-                localStats.currentLot = parseFloat((localStats.baseLot * Math.pow(1.3, localStats.attempts)).toFixed(2));
+                let multiplier = isScalp ? 1.4 : 1.3;
+                activeLot = parseFloat((activeLot * Math.pow(multiplier, localStats.attempts)).toFixed(2));
             } else {
-                statusEl.innerText = '🛡️ MODALITÀ SICURA (TP1 Focus)';
-                statusEl.style.color = 'var(--accent-green)';
-                localStats.currentLot = localStats.baseLot;
+                statusEl.innerText = isScalp ? '⚡ SCALPING MODE (Micro-TP)' : '🛡️ MODALITÀ SICURA (TP1 Focus)';
+                statusEl.style.color = isScalp ? 'var(--accent-purple)' : 'var(--accent-green)';
             }
-            document.getElementById('stat-lot').innerText = localStats.currentLot;
+            localStats.currentLot = activeLot;
+            document.getElementById('stat-lot').innerText = `${activeLot} Lotto (${isScalp ? 'Scalp' : 'Standard'})`;
 
             const profitEl = document.getElementById('live-net-profit');
             const formattedProfit = localStats.netProfitEur >= 0 ? `+€${localStats.netProfitEur.toFixed(2)}` : `-€${Math.abs(localStats.netProfitEur).toFixed(2)}`;
@@ -575,8 +622,12 @@ def serve_home(full_path: str = ""):
         }
 
         function registraEsito(isWin) {
+            const mode = document.getElementById('strategy-mode').value;
+            const isScalp = mode === 'scalp';
             const currentLot = localStats.currentLot || 0.01;
-            const baseProfit = 40.0 * (currentLot / 0.01);
+            
+            const profitMultiplier = isScalp ? 30.0 : 40.0;
+            const baseProfit = profitMultiplier * (currentLot / 0.01);
             const baseLoss = 20.0 * (currentLot / 0.01);
 
             localStats.total++;
@@ -586,7 +637,7 @@ def serve_home(full_path: str = ""):
                 localStats.wins++;
                 localStats.netProfitEur += baseProfit;
                 if (localStats.isInRecovery) localStats.recWins++;
-                localStats.isInRecovery = false;
+                localStats.is_in_recovery = false;
                 localStats.attempts = 0;
             } else {
                 localStats.losses++;
@@ -603,13 +654,14 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            const msg = isWin ? `🟢 [${nowStr}] TP1 PRESO (+€${baseProfit.toFixed(2)})` : `🔴 [${nowStr}] LOSS (-€${baseLoss.toFixed(2)}) -> Recupero`;
+            const modeName = isScalp ? '⚡ [SCALP]' : '🎯 [STANDARD]';
+            const msg = isWin ? `${modeName} [${nowStr}] TARGET PRESO (+€${baseProfit.toFixed(2)})` : `${modeName} [${nowStr}] LOSS (-€${baseLoss.toFixed(2)}) -> Recupero`;
             logBox.innerHTML = msg + '<br>' + logBox.innerHTML;
 
             fetch('/api/trade/result', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ is_win: isWin })
+                body: JSON.stringify({ is_win: isWin, is_scalp: isScalp })
             }).catch(() => {});
         }
 
@@ -625,7 +677,7 @@ def serve_home(full_path: str = ""):
                 "theme": "dark",
                 "style": "1",
                 "locale": "it",
-                "toolbar_bg": "#101426",
+                "toolbar_bg": "#0d1124",
                 "enable_publishing": false,
                 "hide_top_toolbar": false,
                 "hide_legend": false,
@@ -667,11 +719,13 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleSicuro() {
+        async function generaSegnaleDual() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
+            const mode = document.getElementById('strategy-mode').value;
             const tgToggle = document.getElementById('telegram-toggle').checked;
+            const isScalp = mode === 'scalp';
 
             if (!assetSelect || !signalBox || !priceInput) return;
 
@@ -706,25 +760,38 @@ def serve_home(full_path: str = ""):
             cleanAssetSymbol = asset.replace("/", "");
 
             let slNum, tpNum;
-            if (direction === "BUY") {
-                let upperEntry = livePrice;
-                let lowerEntry = livePrice - (step * 0.03);
-                slNum = lowerEntry - (step * 6.0); // Stop ampio ma sicuro
-                tpNum = upperEntry + (step * 5.0); // TP1 ravvicinato per chiudere subito in win
-
-                rangeText = `${upperEntry.toFixed(decimals)} / ${lowerEntry.toFixed(decimals)}`;
-                slVal = slNum.toFixed(decimals);
-                tpVal = tpNum.toFixed(decimals);
+            if (isScalp) {
+                // SCALPING: TP molto vicino e SL stretto
+                let tpMultiplier = 1.2; 
+                let slMultiplier = 1.8;
+                if (direction === "BUY") {
+                    tpNum = livePrice + (step * tpMultiplier);
+                    slNum = livePrice - (step * slMultiplier);
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.02).toFixed(decimals)}`;
+                } else {
+                    tpNum = livePrice - (step * tpMultiplier);
+                    slNum = livePrice + (step * slMultiplier);
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.02).toFixed(decimals)}`;
+                }
             } else {
-                let lowerEntry = livePrice;
-                let upperEntry = livePrice + (step * 0.03);
-                slNum = upperEntry + (step * 6.0);
-                tpNum = lowerEntry - (step * 5.0); // TP1 ravvicinato per chiudere subito in win
-
-                rangeText = `${lowerEntry.toFixed(decimals)} / ${upperEntry.toFixed(decimals)}`;
-                slVal = slNum.toFixed(decimals);
-                tpVal = tpNum.toFixed(decimals);
+                // STANDARD: TP sicuro bilanciato
+                if (direction === "BUY") {
+                    let upperEntry = livePrice;
+                    let lowerEntry = livePrice - (step * 0.03);
+                    slNum = lowerEntry - (step * 5.0);
+                    tpNum = upperEntry + (step * 4.5);
+                    rangeText = `${upperEntry.toFixed(decimals)} / ${lowerEntry.toFixed(decimals)}`;
+                } else {
+                    let lowerEntry = livePrice;
+                    let upperEntry = livePrice + (step * 0.03);
+                    slNum = upperEntry + (step * 5.0);
+                    tpNum = lowerEntry - (step * 4.5);
+                    rangeText = `${lowerEntry.toFixed(decimals)} / ${upperEntry.toFixed(decimals)}`;
+                }
             }
+
+            slVal = slNum.toFixed(decimals);
+            tpVal = tpNum.toFixed(decimals);
 
             const now = new Date();
             const timeStr = now.toTimeString().split(' ')[0];
@@ -734,19 +801,25 @@ def serve_home(full_path: str = ""):
                 dir: direction,
                 range: rangeText,
                 sl: slVal,
-                tp1: tpVal
+                tp1: tpVal,
+                isScalp: isScalp,
+                lot: localStats.currentLot
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
+            const titleBox = document.getElementById('signal-title-box');
+            titleBox.innerText = isScalp ? "⚡ SEGNALE SCALPING ULTRA-RAPIDO (HIGH YIELD)" : "🎯 SEGNALE STANDARD (TP1 SICURO)";
+            
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + " (Precision TP1 High-Win)";
+            dirElem.innerText = direction + (isScalp ? " [SCALP LAMPO]" : " [STANDARD]");
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
-            document.getElementById('res-tp1').innerText = tpVal;
+            document.getElementById('res-tp').innerText = tpVal;
+            document.getElementById('res-tp-label').innerText = isScalp ? "Micro-TP (Scalping):" : "Take Profit (TP1):";
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -759,7 +832,8 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const formattedMsg = `<b>🎯 SIGNAL DESK PRO - PRECISION TP1 🎯</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Take Profit (TP1 Sicuro):</b> ${tpVal}\n\n<i>Lotto cassa: ${localStats.currentLot || 0.01}</i>`;
+                    const modeTitle = isScalp ? "⚡ SCALPING ULTRA-RAPIDO (LOTTO ALTO)" : "🎯 STANDARD PRECISION (TP1)";
+                    const formattedMsg = `<b>${modeTitle}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}\n\n<i>Lotto consigliato: ${localStats.currentLot}</i>`;
 
                     try {
                         const tgRes = await fetch('/api/telegram/send', {
@@ -793,7 +867,7 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} (TP1 Target)<br>`;
+            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} (${isScalp ? 'Scalp' : 'Standard'})<br>`;
             if (logBox.innerText.includes("In attesa")) {
                 logBox.innerHTML = logText;
             } else {
@@ -807,10 +881,11 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const text = `🎯 ${lastSignalData.symbol} (${currentTF}) 🎯\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\n\nTAKE PROFIT (TP1): ${lastSignalData.tp1}`;
+            const modeTitle = lastSignalData.isScalp ? "⚡ SCALPING ULTRA-RAPIDO" : "🎯 STANDARD TP1";
+            const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}\nLotto: ${lastSignalData.lot}`;
 
             navigator.clipboard.writeText(text).then(() => {
-                alert("Segnale sicuro copiato negli appunti!");
+                alert("Segnale copiato negli appunti!");
             });
         }
     </script>
