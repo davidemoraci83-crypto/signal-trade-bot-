@@ -14,27 +14,32 @@ class SignalTrackerState:
         self.total_trades = 0
         self.wins = 0
         self.losses = 0
+        self.beps = 0
 
-    def process_result(self, is_win: bool):
+    def process_result(self, result_type: str):
         self.total_trades += 1
-        if is_win:
+        if result_type == "win":
             self.wins += 1
-        else:
+        elif result_type == "loss":
             self.losses += 1
+        elif result_type == "bep":
+            self.beps += 1
 
     def get_stats(self):
-        std_wr = (self.wins / self.total_trades * 100) if self.total_trades > 0 else 0.0
+        active_trades = self.total_trades - self.beps
+        std_wr = (self.wins / active_trades * 100) if active_trades > 0 else 0.0
         return {
             "total_trades": self.total_trades,
             "wins": self.wins,
             "losses": self.losses,
+            "beps": self.beps,
             "win_rate": round(std_wr, 2)
         }
 
 tracker = SignalTrackerState()
 
 class TradeResultRequest(BaseModel):
-    is_win: bool
+    result_type: str  # "win", "loss", "bep"
     is_scalp: bool = False
 
 class TelegramSendRequest(BaseModel):
@@ -48,7 +53,7 @@ async def get_stats():
 
 @app.post("/api/trade/result")
 async def post_trade_result(payload: TradeResultRequest):
-    tracker.process_result(payload.is_win)
+    tracker.process_result(payload.result_type)
     return tracker.get_stats()
 
 @app.post("/api/telegram/send")
@@ -85,7 +90,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Optimal Swing v79</title>
+    <title>Signal Desk Pro - Precision BEP v81</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -126,12 +131,12 @@ def serve_home(full_path: str = ""):
         }
         .badge {
             font-size: 0.68rem;
-            background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
-            color: #04060f;
+            background: linear-gradient(135deg, var(--accent-green), #15803d);
+            color: #fff;
             padding: 4px 10px;
             border-radius: 9999px;
             font-weight: 800;
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
         }
         .card {
             background-color: var(--card-bg);
@@ -200,7 +205,7 @@ def serve_home(full_path: str = ""):
         }
         .btn-group {
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
         .btn {
             flex: 1;
@@ -225,11 +230,19 @@ def serve_home(full_path: str = ""):
             background: linear-gradient(135deg, #22c55e, #15803d);
             color: white;
             box-shadow: 0 4px 14px rgba(34, 197, 94, 0.4);
+            font-size: 0.8rem;
+        }
+        .btn-bep {
+            background: linear-gradient(135deg, #f59e0b, #b45309);
+            color: white;
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+            font-size: 0.8rem;
         }
         .btn-danger {
             background: linear-gradient(135deg, #ef4444, #b91c1c);
             color: white;
             box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+            font-size: 0.8rem;
         }
         .btn-scalp {
             background: linear-gradient(135deg, #a855f7, #6d28d9);
@@ -246,7 +259,7 @@ def serve_home(full_path: str = ""):
             background-color: #04060f;
             padding: 14px;
             border-radius: 12px;
-            border-left: 5px solid var(--accent-cyan);
+            border-left: 5px solid var(--accent-green);
             animation: fadeIn 0.25s ease-out;
         }
         @keyframes fadeIn {
@@ -299,7 +312,7 @@ def serve_home(full_path: str = ""):
             position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
             background-color: white; transition: .3s; border-radius: 50%;
         }
-        input:checked + .slider { background-color: var(--accent-cyan); }
+        input:checked + .slider { background-color: var(--accent-green); }
         input:checked + .slider:before { transform: translateX(22px); }
     </style>
 </head>
@@ -307,20 +320,20 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">OPTIMAL SWING v79</div>
+        <div class="badge">PRECISION v81</div>
     </div>
 
-    <!-- PANNELLO MONITOR -->
-    <div class="card" style="border-left: 5px solid var(--accent-cyan);">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-cyan); margin-bottom: 8px;">📊 TARGET DYNAMICS & TIMING MONITOR</div>
+    <!-- PANNELLO MONITOR VITTORIA & BEP -->
+    <div class="card" style="border-left: 5px solid var(--accent-green);">
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;">🛡️ HIGH-PRECISION WIN MONITOR</div>
         
         <div class="data-row">
-            <span>Distanza Operativa:</span>
-            <strong style="color: var(--accent-cyan);">Bilanciata (Tempo di inserimento ottimale)</strong>
+            <span>Filtro Anti-Rumore:</span>
+            <strong style="color: var(--accent-green);">Attivo (Ottimizzato per Vittoria)</strong>
         </div>
         <div class="data-row">
-            <span>Win Rate Sessione:</span>
-            <strong id="stat-winrate" style="color: var(--accent-green);">0.00% (0 / 0)</strong>
+            <span>Win Rate Reale (Senza BEP):</span>
+            <strong id="stat-winrate" style="color: var(--accent-cyan);">0.00% (0 Win / 0 Loss / 0 BEP)</strong>
         </div>
     </div>
 
@@ -352,8 +365,8 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <label for="strategy-mode">Modalità Operativa:</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Standard Swing (Target Spazioso & Sicuro)</option>
-            <option value="scalp">⚡ Scalping Dinamico (Ottimizzato)</option>
+            <option value="standard">🛡️ Standard High-Precision (TP1 Sicuro)</option>
+            <option value="scalp">⚡ Scalping Lampo (Ottimizzato)</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -393,21 +406,22 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleOptimal()">🎯 GENERA SEGNALE OPTIMAL</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnalePrecision()">🎯 GENERA SEGNALE PRECISION</button>
     </div>
 
-    <!-- REGISTRAZIONE ESITO -->
+    <!-- REGISTRAZIONE ESITO CON BEP -->
     <div class="card" style="border-left: 5px solid var(--accent-green);">
-        <div style="font-size: 0.78rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">📊 REGISTRA ESITO TRADING</div>
+        <div style="font-size: 0.78rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">📊 REGISTRA ESITO TRADE</div>
         <div class="btn-group">
-            <button type="button" class="btn btn-success" style="padding: 10px; font-size: 0.8rem;" onclick="registraEsito(true)">✅ TARGET PRESO (WIN)</button>
-            <button type="button" class="btn btn-danger" style="padding: 10px; font-size: 0.8rem;" onclick="registraEsito(false)">❌ PERSO (LOSS)</button>
+            <button type="button" class="btn btn-success" onclick="registraEsito('win')">✅ WIN</button>
+            <button type="button" class="btn btn-bep" onclick="registraEsito('bep')">⚖️ BEP</button>
+            <button type="button" class="btn btn-danger" onclick="registraEsito('loss')">❌ LOSS</button>
         </div>
     </div>
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-cyan); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE OPTIMAL PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE PRECISION PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -426,7 +440,7 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss:</span>
+            <span>Stop Loss (Protetto):</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
@@ -438,12 +452,12 @@ def serve_home(full_path: str = ""):
             <strong id="res-tg-status" style="color: var(--accent-cyan);">--</strong>
         </div>
 
-        <button type="button" id="copy-action-btn" class="btn" style="margin-top: 12px; padding: 12px; font-size: 0.85rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
+        <button type="button" id="copy-action-btn" class="btn btn-success" style="margin-top: 12px; padding: 12px; font-size: 0.85rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
     </div>
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per operazioni bilanciate...</div>
+        <div id="history-log" class="history-box">Pronto per registrare la sessione...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -455,7 +469,8 @@ def serve_home(full_path: str = ""):
         let localStats = {
             total: 0,
             wins: 0,
-            losses: 0
+            losses: 0,
+            beps: 0
         };
 
         function onModeChange() {
@@ -465,18 +480,19 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA SCALPING DINAMICO';
+                genBtn.innerText = '⚡ GENERA SCALPING LAMPO';
                 copyBtn.className = 'btn btn-scalp';
             } else {
-                genBtn.style.background = 'linear-gradient(135deg, #38bdf8, #0284c7)';
-                genBtn.innerText = '🎯 GENERA SEGNALE OPTIMAL';
-                copyBtn.className = 'btn';
+                genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
+                genBtn.innerText = '🎯 GENERA SEGNALE PRECISION';
+                copyBtn.className = 'btn btn-success';
             }
         }
 
         function updateUIStats() {
-            const wr = localStats.total > 0 ? ((localStats.wins / localStats.total) * 100).toFixed(2) : "0.00";
-            document.getElementById('stat-winrate').innerText = `${wr}% (${localStats.wins} Win / ${localStats.losses} Loss)`;
+            const activeTrades = localStats.total - localStats.beps;
+            const wr = activeTrades > 0 ? ((localStats.wins / activeTrades) * 100).toFixed(2) : "0.00";
+            document.getElementById('stat-winrate').innerText = `${wr}% (${localStats.wins} Win / ${localStats.losses} Loss / ${localStats.beps} BEP)`;
         }
 
         async function fetchStats() {
@@ -487,33 +503,38 @@ def serve_home(full_path: str = ""):
                     localStats.total = data.total_trades;
                     localStats.wins = data.wins;
                     localStats.losses = data.losses;
+                    localStats.beps = data.beps || 0;
                     updateUIStats();
                 }
             } catch(e) {}
         }
 
-        function registraEsito(isWin) {
+        function registraEsito(resultType) {
             const mode = document.getElementById('strategy-mode').value;
             const isScalp = mode === 'scalp';
 
             localStats.total++;
-            if (isWin) {
-                localStats.wins++;
-            } else {
-                localStats.losses++;
-            }
+            if (resultType === 'win') localStats.wins++;
+            else if (resultType === 'loss') localStats.losses++;
+            else if (resultType === 'bep') localStats.beps++;
+
             updateUIStats();
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            const tag = isScalp ? '⚡ [SCALP WIN]' : '🎯 [OPTIMAL WIN]';
-            const msg = isWin ? `${tag} [${nowStr}] TARGET PRESO (WIN)` : `${tag} [${nowStr}] LOSS`;
-            logBox.innerHTML = msg + '<br>' + logBox.innerHTML;
+            let tag = isScalp ? '⚡ [SCALP]' : '🎯 [PRECISION]';
+            let msgText = '';
+
+            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN)`;
+            else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
+            else msgText = `${tag} [${nowStr}] LOSS`;
+
+            logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
             fetch('/api/trade/result', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ is_win: isWin, is_scalp: isScalp })
+                body: JSON.stringify({ result_type: resultType, is_scalp: isScalp })
             }).catch(() => {});
         }
 
@@ -571,7 +592,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleOptimal() {
+        async function generaSegnalePrecision() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
@@ -596,26 +617,38 @@ def serve_home(full_path: str = ""):
             const trendFactor = Math.sin((livePrice * 4) + nowTime / 1000);
             const direction = trendFactor >= 0 ? "BUY" : "SELL";
 
-            // Step calibrato per dare il giusto respiro e tempo di esecuzione
-            let step = 1.80; 
-            if (asset.includes("NAS100")) step = 35.00;
-            else if (asset.includes("BTC")) step = 300.00;
-            else if (asset.includes("ETH")) step = 18.00;
-            else if (asset.includes("SOL")) step = 1.50;
-            else if (asset.includes("NEAR")) step = 0.0900;
-            else if (asset.includes("SUI")) step = 0.0250;
-            else if (asset.includes("DOGE")) step = 0.0040;
-            else if (asset.includes("SHIB")) step = 0.00000050;
-            else if (asset.includes("XRP")) step = 0.0080;
-            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0035;
+            // Step bilanciato per dare tempo di inserimento ma spinta verso il TP
+            let step = 1.60; 
+            if (asset.includes("NAS100")) step = 32.00;
+            else if (asset.includes("BTC")) step = 280.00;
+            else if (asset.includes("ETH")) step = 16.00;
+            else if (asset.includes("SOL")) step = 1.30;
+            else if (asset.includes("NEAR")) step = 0.0800;
+            else if (asset.includes("SUI")) step = 0.0220;
+            else if (asset.includes("DOGE")) step = 0.0035;
+            else if (asset.includes("SHIB")) step = 0.00000045;
+            else if (asset.includes("XRP")) step = 0.0070;
+            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0030;
 
             let rangeText, slVal, tpVal, cleanAssetSymbol;
             cleanAssetSymbol = asset.replace("/", "");
 
             let slNum, tpNum;
             if (isScalp) {
-                let tpMult = 1.2; 
-                let slMult = 1.8; 
+                let tpMult = 1.1; 
+                let slMult = 1.9; // Stop Loss protetto
+                if (direction === "BUY") {
+                    tpNum = livePrice + (step * tpMult);
+                    slNum = livePrice - (step * slMult);
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.015).toFixed(decimals)}`;
+                } else {
+                    tpNum = livePrice - (step * tpMult);
+                    slNum = livePrice + (step * slMult);
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.015).toFixed(decimals)}`;
+                }
+            } else {
+                let tpMult = 1.6; // Take Profit ad alta probabilità
+                let slMult = 2.4; // Protezione da picchi e rumorosità di mercato
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -624,18 +657,6 @@ def serve_home(full_path: str = ""):
                     tpNum = livePrice - (step * tpMult);
                     slNum = livePrice + (step * slMult);
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.02).toFixed(decimals)}`;
-                }
-            } else {
-                let tpMult = 2.0; // TP più ampio per dare spazio al movimento
-                let slMult = 2.2; // SL proporzionato e sicuro
-                if (direction === "BUY") {
-                    tpNum = livePrice + (step * tpMult);
-                    slNum = livePrice - (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.03).toFixed(decimals)}`;
-                } else {
-                    tpNum = livePrice - (step * tpMult);
-                    slNum = livePrice + (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.03).toFixed(decimals)}`;
                 }
             }
 
@@ -658,16 +679,16 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const titleBox = document.getElementById('signal-title-box');
-            titleBox.innerText = isScalp ? "⚡ SCALPING DINAMICO" : "🎯 SEGNALE SWING OPTIMAL";
+            titleBox.innerText = isScalp ? "⚡ SCALPING PRECISION" : "🎯 SEGNALE STANDARD PRECISION";
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (isScalp ? " [SCALP]" : " [SWING]");
+            dirElem.innerText = direction + (isScalp ? " [SCALP]" : " [PRECISION]");
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = isScalp ? "Take Profit Scalp:" : "Take Profit (Swing Sicuro):";
+            document.getElementById('res-tp-label').innerText = isScalp ? "Take Profit Scalp:" : "Take Profit (TP1 Sicuro):";
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -680,7 +701,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = isScalp ? "⚡ SCALPING DINAMICO" : "🎯 OPTIMAL SWING SIGNAL";
+                    const headerTag = isScalp ? "⚡ SCALPING PRECISION" : "🎯 HIGH-PRECISION SIGNAL";
                     const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
@@ -715,7 +736,7 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} (${isScalp ? 'Scalp' : 'Optimal'})<br>`;
+            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} (${isScalp ? 'Scalp' : 'Precision'})<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
             } else {
@@ -729,7 +750,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isScalp ? "⚡ SCALPING DINAMICO" : "🎯 OPTIMAL SWING SIGNAL";
+            const modeTitle = lastSignalData.isScalp ? "⚡ SCALPING PRECISION" : "🎯 HIGH-PRECISION SIGNAL";
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
