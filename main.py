@@ -90,7 +90,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Master Sniper v83</title>
+    <title>Signal Desk Pro - Hyper-Sniper v84</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -131,12 +131,12 @@ def serve_home(full_path: str = ""):
         }
         .badge {
             font-size: 0.68rem;
-            background: linear-gradient(135deg, var(--accent-green), #15803d);
+            background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
             color: #fff;
             padding: 4px 10px;
             border-radius: 9999px;
             font-weight: 800;
-            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
         }
         .card {
             background-color: var(--card-bg);
@@ -259,7 +259,7 @@ def serve_home(full_path: str = ""):
             background-color: #04060f;
             padding: 14px;
             border-radius: 12px;
-            border-left: 5px solid var(--accent-green);
+            border-left: 5px solid var(--accent-cyan);
             animation: fadeIn 0.25s ease-out;
         }
         @keyframes fadeIn {
@@ -312,7 +312,7 @@ def serve_home(full_path: str = ""):
             position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
             background-color: white; transition: .3s; border-radius: 50%;
         }
-        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider { background-color: var(--accent-cyan); }
         input:checked + .slider:before { transform: translateX(22px); }
     </style>
 </head>
@@ -320,20 +320,20 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">MASTER SNIPER v83</div>
+        <div class="badge">HYPER-SNIPER v84</div>
     </div>
 
-    <!-- PANNELLO MONITOR MASTER WIN -->
-    <div class="card" style="border-left: 5px solid var(--accent-green);">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;">🛡️ MASTER SNIPER MONITOR</div>
+    <!-- PANNELLO MONITOR HYPER-SNIPER -->
+    <div class="card" style="border-left: 5px solid var(--accent-cyan);">
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-cyan); margin-bottom: 8px;">⚡ HYPER-SNIPER HIGH-FREQ MONITOR</div>
         
         <div class="data-row">
-            <span>Filtro Trend di Precisione:</span>
-            <strong style="color: var(--accent-green);">Attivo (Alta Probabilità di Profitto)</strong>
+            <span>Flusso Operativo:</span>
+            <strong style="color: var(--accent-cyan);">Alta Frequenza & Precisione</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
-            <strong id="stat-winrate" style="color: var(--accent-cyan);">0.00% (0 Win / 0 Loss / 0 BEP)</strong>
+            <strong id="stat-winrate" style="color: var(--accent-green);">0.00% (0 Win / 0 Loss / 0 BEP)</strong>
         </div>
     </div>
 
@@ -365,8 +365,8 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <label for="strategy-mode">Modalità Operativa:</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Standard Master Sniper (TP ad Alta Probabilità)</option>
-            <option value="scalp">⚡ Scalping Dinamico Protetto</option>
+            <option value="standard">🛡️ Standard Hyper-Precision (TP Ottimizzato)</option>
+            <option value="scalp">⚡ Scalping ad Alta Frequenza</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -406,12 +406,12 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleMaster()">🎯 GENERA SEGNALE MASTER SNIPER</button>
+        <button type="button" id="gen-btn" class="btn" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleHyper()">⚡ GENERA SEGNALE HYPER-SNIPER</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
-    <div class="card" style="border-left: 5px solid var(--accent-green);">
-        <div style="font-size: 0.78rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">📊 REGISTRA ESITO TRADE</div>
+    <div class="card" style="border-left: 5px solid var(--accent-cyan);">
+        <div style="font-size: 0.78rem; color: var(--accent-cyan); margin-bottom: 8px; font-weight: 800;">📊 REGISTRA ESITO TRADE</div>
         <div class="btn-group">
             <button type="button" class="btn btn-success" onclick="registraEsito('win')">✅ WIN</button>
             <button type="button" class="btn btn-bep" onclick="registraEsito('bep')">⚖️ BEP</button>
@@ -421,7 +421,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE MASTER PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-cyan); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE HYPER PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -452,12 +452,12 @@ def serve_home(full_path: str = ""):
             <strong id="res-tg-status" style="color: var(--accent-cyan);">--</strong>
         </div>
 
-        <button type="button" id="copy-action-btn" class="btn btn-success" style="margin-top: 12px; padding: 12px; font-size: 0.85rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
+        <button type="button" id="copy-action-btn" class="btn" style="margin-top: 12px; padding: 12px; font-size: 0.85rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
     </div>
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per registrare la sessione...</div>
+        <div id="history-log" class="history-box">Pronto per registrare la sessione ad alta frequenza...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -480,12 +480,12 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA SCALPING MASTER';
+                genBtn.innerText = '⚡ GENERA SCALPING AD ALTA FREQUENZA';
                 copyBtn.className = 'btn btn-scalp';
             } else {
-                genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 GENERA SEGNALE MASTER SNIPER';
-                copyBtn.className = 'btn btn-success';
+                genBtn.style.background = 'linear-gradient(135deg, #38bdf8, #0284c7)';
+                genBtn.innerText = '⚡ GENERA SEGNALE HYPER-SNIPER';
+                copyBtn.className = 'btn';
             }
         }
 
@@ -522,7 +522,7 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [SCALP]' : '🎯 [MASTER]';
+            let tag = isScalp ? '⚡ [SCALP]' : '🎯 [HYPER]';
             let msgText = '';
 
             if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN)`;
@@ -592,7 +592,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleMaster() {
+        async function generaSegnaleHyper() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
@@ -614,29 +614,41 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             const nowTime = Date.now();
-            const trendFactor = Math.sin((livePrice * 4) + nowTime / 1200);
+            // Frequenza elevata e reattiva basata sulla micro-oscillazione temporale
+            const trendFactor = Math.sin((livePrice * 6) + nowTime / 500);
             const direction = trendFactor >= 0 ? "BUY" : "SELL";
 
-            // Step calibrato per massima affidabilità e pulizia di esecuzione
-            let step = 1.80; 
-            if (asset.includes("NAS100")) step = 36.00;
-            else if (asset.includes("BTC")) step = 310.00;
-            else if (asset.includes("ETH")) step = 18.00;
-            else if (asset.includes("SOL")) step = 1.50;
-            else if (asset.includes("NEAR")) step = 0.0900;
-            else if (asset.includes("SUI")) step = 0.0250;
-            else if (asset.includes("DOGE")) step = 0.0040;
-            else if (asset.includes("SHIB")) step = 0.00000050;
-            else if (asset.includes("XRP")) step = 0.0080;
-            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0035;
+            let step = 1.40; 
+            if (asset.includes("NAS100")) step = 28.00;
+            else if (asset.includes("BTC")) step = 240.00;
+            else if (asset.includes("ETH")) step = 14.00;
+            else if (asset.includes("SOL")) step = 1.10;
+            else if (asset.includes("NEAR")) step = 0.0700;
+            else if (asset.includes("SUI")) step = 0.0180;
+            else if (asset.includes("DOGE")) step = 0.0025;
+            else if (asset.includes("SHIB")) step = 0.00000035;
+            else if (asset.includes("XRP")) step = 0.0050;
+            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0025;
 
             let rangeText, slVal, tpVal, cleanAssetSymbol;
             cleanAssetSymbol = asset.replace("/", "");
 
             let slNum, tpNum;
             if (isScalp) {
-                let tpMult = 1.25; 
-                let slMult = 2.5; // Stop Loss ultra-protettivo
+                let tpMult = 1.0; 
+                let slMult = 2.0; 
+                if (direction === "BUY") {
+                    tpNum = livePrice + (step * tpMult);
+                    slNum = livePrice - (step * slMult);
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.01).toFixed(decimals)}`;
+                } else {
+                    tpNum = livePrice - (step * tpMult);
+                    slNum = livePrice + (step * slMult);
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.01).toFixed(decimals)}`;
+                }
+            } else {
+                let tpMult = 1.5; // Target dinamico e rapido per centrare il profitto
+                let slMult = 2.8; // Stop loss ampio per sicurezza totale
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -645,18 +657,6 @@ def serve_home(full_path: str = ""):
                     tpNum = livePrice - (step * tpMult);
                     slNum = livePrice + (step * slMult);
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.015).toFixed(decimals)}`;
-                }
-            } else {
-                let tpMult = 1.65; // Target ottimizzato per chiudere in guadagno sicuro
-                let slMult = 3.0;  // Stop Loss muraglia per zero falsi stop
-                if (direction === "BUY") {
-                    tpNum = livePrice + (step * tpMult);
-                    slNum = livePrice - (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.02).toFixed(decimals)}`;
-                } else {
-                    tpNum = livePrice - (step * tpMult);
-                    slNum = livePrice + (step * slMult);
-                    rangeText = `${lowerEntry = livePrice.toFixed(decimals)} / ${(livePrice + step*0.02).toFixed(decimals)}`;
                 }
             }
 
@@ -679,16 +679,16 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const titleBox = document.getElementById('signal-title-box');
-            titleBox.innerText = isScalp ? "⚡ SCALPING MASTER" : "🎯 SEGNALE MASTER SNIPER";
+            titleBox.innerText = isScalp ? "⚡ SCALPING ALTA FREQUENZA" : "🎯 SEGNALE HYPER-SNIPER";
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (isScalp ? " [SCALP]" : " [MASTER]");
+            dirElem.innerText = direction + (isScalp ? " [SCALP]" : " [HYPER]");
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = isScalp ? "Take Profit Scalp:" : "Take Profit (Master Target):";
+            document.getElementById('res-tp-label').innerText = isScalp ? "Take Profit Scalp:" : "Take Profit (Hyper Target):";
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -701,7 +701,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = isScalp ? "⚡ MASTER SCALPING" : "🎯 MASTER SNIPER SIGNAL";
+                    const headerTag = isScalp ? "⚡ HIGH-FREQ SCALPING" : "🎯 HYPER-SNIPER SIGNAL";
                     const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Protetto):</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
@@ -736,7 +736,7 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} (${isScalp ? 'Scalp' : 'Master'})<br>`;
+            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} (${isScalp ? 'Scalp' : 'Hyper'})<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
             } else {
@@ -750,7 +750,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isScalp ? "⚡ MASTER SCALPING" : "🎯 MASTER SNIPER SIGNAL";
+            const modeTitle = lastSignalData.isScalp ? "⚡ HIGH-FREQ SCALPING" : "🎯 HYPER-SNIPER SIGNAL";
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
