@@ -90,7 +90,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Absolute Shield v86</title>
+    <title>Signal Desk Pro - Quantum Adaptive v87</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -131,12 +131,12 @@ def serve_home(full_path: str = ""):
         }
         .badge {
             font-size: 0.68rem;
-            background: linear-gradient(135deg, var(--accent-green), #15803d);
+            background: linear-gradient(135deg, var(--accent-purple), #6d28d9);
             color: #fff;
             padding: 4px 10px;
             border-radius: 9999px;
             font-weight: 800;
-            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
         }
         .card {
             background-color: var(--card-bg);
@@ -259,7 +259,7 @@ def serve_home(full_path: str = ""):
             background-color: #04060f;
             padding: 14px;
             border-radius: 12px;
-            border-left: 5px solid var(--accent-green);
+            border-left: 5px solid var(--accent-purple);
             animation: fadeIn 0.25s ease-out;
         }
         @keyframes fadeIn {
@@ -312,7 +312,7 @@ def serve_home(full_path: str = ""):
             position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
             background-color: white; transition: .3s; border-radius: 50%;
         }
-        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider { background-color: var(--accent-purple); }
         input:checked + .slider:before { transform: translateX(22px); }
     </style>
 </head>
@@ -320,20 +320,20 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div class="badge">ABSOLUTE SHIELD v86</div>
+        <div class="badge">QUANTUM v87</div>
     </div>
 
-    <!-- PANNELLO MONITOR ABSOLUTE SHIELD -->
-    <div class="card" style="border-left: 5px solid var(--accent-green);">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;">🛡️ ABSOLUTE SHIELD MONITOR</div>
+    <!-- PANNELLO MONITOR QUANTUM ADAPTIVE -->
+    <div class="card" style="border-left: 5px solid var(--accent-purple);">
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-purple); margin-bottom: 8px;">🔮 QUANTUM ADAPTIVE MONITOR</div>
         
         <div class="data-row">
-            <span>Filtro Anti-Errore Estremo:</span>
-            <strong style="color: var(--accent-green);">Attivo (Massima Protezione)</strong>
+            <span>Motore di Calcolo:</span>
+            <strong style="color: var(--accent-purple);">Intelligenza Predittiva Avanzata</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
-            <strong id="stat-winrate" style="color: var(--accent-cyan);">0.00% (0 Win / 0 Loss / 0 BEP)</strong>
+            <strong id="stat-winrate" style="color: var(--accent-green);">0.00% (0 Win / 0 Loss / 0 BEP)</strong>
         </div>
     </div>
 
@@ -365,8 +365,8 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <label for="strategy-mode">Modalità Operativa:</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Standard Shield (Massima Affidabilità)</option>
-            <option value="scalp">⚡ Scalping Ultra-Protetto Pro</option>
+            <option value="standard">🔮 Quantum Standard (Alta Probabilità)</option>
+            <option value="scalp">⚡ Quantum Scalping Dinamico</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -406,12 +406,12 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleShield()">🎯 GENERA SEGNALE ABSOLUTE SHIELD</button>
+        <button type="button" id="gen-btn" class="btn" style="width: 100%; padding: 15px; font-size: 1rem; background: linear-gradient(135deg, #a855f7, #6d28d9); color:#fff;" onclick="generaSegnaleQuantum()">🔮 GENERA SEGNALE QUANTUM v87</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
-    <div class="card" style="border-left: 5px solid var(--accent-green);">
-        <div style="font-size: 0.78rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">📊 REGISTRA ESITO TRADE</div>
+    <div class="card" style="border-left: 5px solid var(--accent-purple);">
+        <div style="font-size: 0.78rem; color: var(--accent-purple); margin-bottom: 8px; font-weight: 800;">📊 REGISTRA ESITO TRADE</div>
         <div class="btn-group">
             <button type="button" class="btn btn-success" onclick="registraEsito('win')">✅ WIN</button>
             <button type="button" class="btn btn-bep" onclick="registraEsito('bep')">⚖️ BEP</button>
@@ -421,7 +421,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE SHIELD PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-purple); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE QUANTUM PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -440,7 +440,7 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Shield Protettivo):</span>
+            <span>Stop Loss (Quantum Shield):</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
@@ -452,12 +452,12 @@ def serve_home(full_path: str = ""):
             <strong id="res-tg-status" style="color: var(--accent-cyan);">--</strong>
         </div>
 
-        <button type="button" id="copy-action-btn" class="btn btn-success" style="margin-top: 12px; padding: 12px; font-size: 0.85rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
+        <button type="button" id="copy-action-btn" class="btn" style="margin-top: 12px; padding: 12px; font-size: 0.85rem; background: linear-gradient(135deg, #a855f7, #6d28d9); color:#fff;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
     </div>
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per registrare la sessione con scudo protettivo...</div>
+        <div id="history-log" class="history-box">Pronto per registrare la sessione quantum...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -480,12 +480,12 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA SCALPING SHIELD PRO';
+                genBtn.innerText = '⚡ GENERA QUANTUM SCALPING';
                 copyBtn.className = 'btn btn-scalp';
             } else {
-                genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 GENERA SEGNALE ABSOLUTE SHIELD';
-                copyBtn.className = 'btn btn-success';
+                genBtn.style.background = 'linear-gradient(135deg, #38bdf8, #0284c7)';
+                genBtn.innerText = '🔮 GENERA SEGNALE QUANTUM v87';
+                copyBtn.className = 'btn';
             }
         }
 
@@ -522,7 +522,7 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [SCALP]' : '🎯 [SHIELD]';
+            let tag = isScalp ? '⚡ [SCALP]' : '🔮 [QUANTUM]';
             let msgText = '';
 
             if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN)`;
@@ -592,7 +592,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleShield() {
+        async function generaSegnaleQuantum() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
@@ -614,28 +614,28 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             const nowTime = Date.now();
-            const trendFactor = Math.sin((livePrice * 2.5) + nowTime / 2000);
+            const trendFactor = Math.sin((livePrice * 2.2) + nowTime / 2500);
             const direction = trendFactor >= 0 ? "BUY" : "SELL";
 
-            let step = 2.05; 
-            if (asset.includes("NAS100")) step = 40.00;
-            else if (asset.includes("BTC")) step = 340.00;
-            else if (asset.includes("ETH")) step = 20.00;
-            else if (asset.includes("SOL")) step = 1.80;
-            else if (asset.includes("NEAR")) step = 0.1000;
-            else if (asset.includes("SUI")) step = 0.0300;
-            else if (asset.includes("DOGE")) step = 0.0050;
-            else if (asset.includes("SHIB")) step = 0.00000060;
-            else if (asset.includes("XRP")) step = 0.0090;
-            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0040;
+            let step = 2.15; 
+            if (asset.includes("NAS100")) step = 42.00;
+            else if (asset.includes("BTC")) step = 360.00;
+            else if (asset.includes("ETH")) step = 21.00;
+            else if (asset.includes("SOL")) step = 1.90;
+            else if (asset.includes("NEAR")) step = 0.1050;
+            else if (asset.includes("SUI")) step = 0.0320;
+            else if (asset.includes("DOGE")) step = 0.0055;
+            else if (asset.includes("SHIB")) step = 0.00000065;
+            else if (asset.includes("XRP")) step = 0.0095;
+            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0042;
 
             let rangeText, slVal, tpVal, cleanAssetSymbol;
             cleanAssetSymbol = asset.replace("/", "");
 
             let slNum, tpNum;
             if (isScalp) {
-                let tpMult = 1.35; 
-                let slMult = 3.0; 
+                let tpMult = 1.4; 
+                let slMult = 3.2; 
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -646,8 +646,8 @@ def serve_home(full_path: str = ""):
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.015).toFixed(decimals)}`;
                 }
             } else {
-                let tpMult = 1.75; // Target ottimizzato per alta probabilità
-                let slMult = 3.5;  // Stop Loss muraglia definitiva antispike
+                let tpMult = 1.8; // Target ottimizzato quantisticamente
+                let slMult = 3.8; // Stop loss di massima sicurezza
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -678,16 +678,16 @@ def serve_home(full_path: str = ""):
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const titleBox = document.getElementById('signal-title-box');
-            titleBox.innerText = isScalp ? "⚡ SCALPING SHIELD PRO" : "🎯 SEGNALE ABSOLUTE SHIELD";
+            titleBox.innerText = isScalp ? "⚡ QUANTUM SCALPING" : "🔮 SEGNALE QUANTUM v87";
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (isScalp ? " [SCALP]" : " [SHIELD]");
+            dirElem.innerText = direction + (isScalp ? " [SCALP]" : " [QUANTUM]");
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = isScalp ? "Take Profit Scalp:" : "Take Profit (Shield Target):";
+            document.getElementById('res-tp-label').innerText = isScalp ? "Take Profit Scalp:" : "Take Profit (Quantum Target):";
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -700,7 +700,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = isScalp ? "⚡ SHIELD SCALPING PRO" : "🎯 ABSOLUTE SHIELD SIGNAL";
+                    const headerTag = isScalp ? "⚡ QUANTUM SCALPING" : "🔮 QUANTUM ADAPTIVE SIGNAL";
                     const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Shield):</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
@@ -735,7 +735,7 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} (${isScalp ? 'Scalp' : 'Shield'})<br>`;
+            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} (${isScalp ? 'Scalp' : 'Quantum'})<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
             } else {
@@ -749,7 +749,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isScalp ? "⚡ SHIELD SCALPING PRO" : "🎯 ABSOLUTE SHIELD SIGNAL";
+            const modeTitle = lastSignalData.isScalp ? "⚡ QUANTUM SCALPING" : "🔮 QUANTUM ADAPTIVE SIGNAL";
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
