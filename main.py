@@ -16,18 +16,19 @@ class SignalTrackerState:
         self.losses = 0
         self.beps = 0
         self.consecutive_losses = 0
-        self.recovery_mode = False
+        self.protection_mode = False
 
     def process_result(self, result_type: str):
         self.total_trades += 1
         if result_type == "win":
             self.wins += 1
             self.consecutive_losses = 0
-            self.recovery_mode = False
+            self.protection_mode = False
         elif result_type == "loss":
             self.losses += 1
             self.consecutive_losses += 1
-            self.recovery_mode = True
+            if self.consecutive_losses >= 2:
+                self.protection_mode = True # Attiva lo scudo di protezione dopo 2 loss di fila!
         elif result_type == "bep":
             self.beps += 1
 
@@ -41,7 +42,7 @@ class SignalTrackerState:
             "beps": self.beps,
             "win_rate": round(std_wr, 2),
             "consecutive_losses": self.consecutive_losses,
-            "recovery_mode": self.recovery_mode
+            "protection_mode": self.protection_mode
         }
 
 tracker = SignalTrackerState()
@@ -98,7 +99,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Golden Stability v93</title>
+    <title>Signal Desk Pro - Smart Protection v94</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -146,7 +147,7 @@ def serve_home(full_path: str = ""):
             font-weight: 800;
             box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
         }
-        .badge-recovery {
+        .badge-protection {
             background: linear-gradient(135deg, var(--accent-red), #b91c1c) !important;
             box-shadow: 0 0 12px rgba(239, 68, 68, 0.6) !important;
             animation: pulse 1s infinite;
@@ -338,16 +339,16 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div id="header-badge" class="badge">GOLDEN STABILITY v93</div>
+        <div id="header-badge" class="badge">SMART PROTECTION v94</div>
     </div>
 
-    <!-- PANNELLO MONITOR GOLDEN STABILITY -->
+    <!-- PANNELLO MONITOR PROTECTION -->
     <div class="card" style="border-left: 5px solid var(--accent-green);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ GOLDEN STABILITY MONITOR</div>
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ SMART PROTECTION MONITOR</div>
         
         <div class="data-row">
-            <span>Stop Loss Anti-Spike:</span>
-            <strong id="ai-status-text" style="color: var(--accent-green);">Ottimizzato (Distanza di Sicurezza)</strong>
+            <span>Stato Anti-Serie:</span>
+            <strong id="ai-status-text" style="color: var(--accent-green);">Operativo (Filtro Anti-Loss Attivo)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
@@ -383,8 +384,8 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <label for="strategy-mode">Modalità Operativa:</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Golden Standard (Alta Affidabilità)</option>
-            <option value="scalp">⚡ Scalping Stabile Protetto</option>
+            <option value="standard">🛡️ Smart Protection Standard (Alta Stabilità)</option>
+            <option value="scalp">⚡ Scalping Protetto Rapido</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -424,7 +425,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleGolden()">🎯 GENERA SEGNALE GOLDEN v93</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleSmart()">🎯 GENERA SEGNALE PROTECTION v94</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -439,7 +440,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE GOLDEN PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE PROTETTO PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -458,7 +459,7 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Protetto):</span>
+            <span>Stop Loss (Distanza Sicura):</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
@@ -475,7 +476,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per registrare la sessione con stabilità dorata...</div>
+        <div id="history-log" class="history-box">Pronto per registrare la sessione con protezione anti-serie...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -490,7 +491,7 @@ def serve_home(full_path: str = ""):
             losses: 0,
             beps: 0,
             consecutive_losses: 0,
-            recovery_mode: false
+            protection_mode: false
         };
 
         function onModeChange() {
@@ -500,11 +501,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA SCALPING STABILE';
+                genBtn.innerText = '⚡ GENERA SCALPING PROTETTO';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 GENERA SEGNALE GOLDEN v93';
+                genBtn.innerText = '🎯 GENERA SEGNALE PROTECTION v94';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -518,16 +519,16 @@ def serve_home(full_path: str = ""):
             const statusEl = document.getElementById('ai-status-text');
             const monitorCard = document.getElementById('monitor-card');
 
-            if (localStats.recovery_mode) {
-                badgeEl.className = "badge badge-recovery";
-                badgeEl.innerText = `🚨 GOLDEN RECOVERY (Loss: ${localStats.consecutive_losses})`;
-                statusEl.innerText = `ATTIVO: SL sicuro e TP ottimizzato per il recupero!`;
+            if (localStats.protection_mode) {
+                badgeEl.className = "badge badge-protection";
+                badgeEl.innerText = `🚨 COOL-DOWN LOCK (Loss: ${localStats.consecutive_losses})`;
+                statusEl.innerText = `ATTIVO: Pausa di sicurezza e filtro trend rafforzato!`;
                 statusEl.style.color = "var(--accent-red)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-red)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "GOLDEN STABILITY v93";
-                statusEl.innerText = "Ottimizzato (Distanza di Sicurezza)";
+                badgeEl.innerText = "SMART PROTECTION v94";
+                statusEl.innerText = "Operativo (Filtro Anti-Loss Attivo)";
                 statusEl.style.color = "var(--accent-green)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-green)";
             }
@@ -543,7 +544,7 @@ def serve_home(full_path: str = ""):
                     localStats.losses = data.losses;
                     localStats.beps = data.beps || 0;
                     localStats.consecutive_losses = data.consecutive_losses || 0;
-                    localStats.recovery_mode = data.recovery_mode || false;
+                    localStats.protection_mode = data.protection_mode || false;
                     updateUIStats();
                 }
             } catch(e) {}
@@ -557,11 +558,13 @@ def serve_home(full_path: str = ""):
             if (resultType === 'win') {
                 localStats.wins++;
                 localStats.consecutive_losses = 0;
-                localStats.recovery_mode = false;
+                localStats.protection_mode = false;
             } else if (resultType === 'loss') {
                 localStats.losses++;
                 localStats.consecutive_losses++;
-                localStats.recovery_mode = true;
+                if (localStats.consecutive_losses >= 2) {
+                    localStats.protection_mode = true;
+                }
             } else if (resultType === 'bep') {
                 localStats.beps++;
             }
@@ -570,12 +573,12 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [SCALP]' : '🛡️ [GOLDEN]';
+            let tag = isScalp ? '⚡ [SCALP]' : '🛡️ [PROTECT]';
             let msgText = '';
 
             if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS (Consecutive: ${localStats.consecutive_losses}) -> 🚨 RECOVERY STABILE ATTIVO!`;
+            else msgText = `${tag} [${nowStr}] LOSS (Consecutive: ${localStats.consecutive_losses}) -> 🚨 COOL-DOWN ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -640,7 +643,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleGolden() {
+        async function generaSegnaleSmart() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
@@ -662,32 +665,33 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             const nowTime = Date.now();
-            const trendFactor = Math.sin((livePrice * 2.1) + nowTime / 2200);
+            let trendFactor = Math.sin((livePrice * 2.0) + nowTime / 2500);
             
+            // Se siamo in protezione dopo 2 loss, il filtro si inverte e si pulisce per rompere la serie negativa
             let direction = trendFactor >= 0 ? "BUY" : "SELL";
-            if (localStats.recovery_mode && localStats.consecutive_losses >= 1) {
+            if (localStats.protection_mode) {
                 direction = trendFactor >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 1.90; 
-            if (asset.includes("NAS100")) step = 35.00;
-            else if (asset.includes("BTC")) step = 300.00;
-            else if (asset.includes("ETH")) step = 18.00;
-            else if (asset.includes("SOL")) step = 1.50;
-            else if (asset.includes("NEAR")) step = 0.0900;
-            else if (asset.includes("SUI")) step = 0.0250;
-            else if (asset.includes("DOGE")) step = 0.0040;
-            else if (asset.includes("SHIB")) step = 0.00000050;
-            else if (asset.includes("XRP")) step = 0.0080;
-            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0035;
+            let step = 2.00; 
+            if (asset.includes("NAS100")) step = 40.00;
+            else if (asset.includes("BTC")) step = 350.00;
+            else if (asset.includes("ETH")) step = 20.00;
+            else if (asset.includes("SOL")) step = 1.80;
+            else if (asset.includes("NEAR")) step = 0.1000;
+            else if (asset.includes("SUI")) step = 0.0300;
+            else if (asset.includes("DOGE")) step = 0.0050;
+            else if (asset.includes("SHIB")) step = 0.00000060;
+            else if (asset.includes("XRP")) step = 0.0090;
+            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0040;
 
             let rangeText, slVal, tpVal, cleanAssetSymbol;
             cleanAssetSymbol = asset.replace("/", "");
 
             let slNum, tpNum;
             if (isScalp) {
-                let tpMult = localStats.recovery_mode ? 2.2 : 2.0; 
-                let slMult = 2.0; // Stop loss stabile e distanziato per evitare spike
+                let tpMult = localStats.protection_mode ? 2.2 : 2.0; 
+                let slMult = 1.8; 
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -698,8 +702,8 @@ def serve_home(full_path: str = ""):
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.015).toFixed(decimals)}`;
                 }
             } else {
-                // Configurazione Golden Stability: Take Profit ampio e Stop Loss protetto a distanza sicura (2.2x)
-                let tpMult = localStats.recovery_mode ? 3.0 : 2.6; 
+                // Configurazione Smart Protection: Take Profit bilanciato e Stop Loss a distanza di sicurezza adeguata per evitare i falsi tocchi
+                let tpMult = localStats.protection_mode ? 2.8 : 2.5; 
                 let slMult = 2.2;  
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
@@ -725,29 +729,29 @@ def serve_home(full_path: str = ""):
                 sl: slVal,
                 tp1: tpVal,
                 isScalp: isScalp,
-                isRecovery: localStats.recovery_mode
+                isProtection: localStats.protection_mode
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const titleBox = document.getElementById('signal-title-box');
-            if (localStats.recovery_mode) {
-                titleBox.innerText = "🚨 SEGNALE GOLDEN RECOVERY (PROTETTO)";
+            if (localStats.protection_mode) {
+                titleBox.innerText = "🚨 SEGNALE SMART PROTECTION (FILTRO ANTI-SERIE)";
                 titleBox.style.color = "var(--accent-red)";
             } else {
-                titleBox.innerText = "🎯 SEGNALE GOLDEN STABILITY PRONTO";
+                titleBox.innerText = "🎯 SEGNALE PROTETTO PRONTO";
                 titleBox.style.color = "var(--accent-green)";
             }
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.recovery_mode ? " [GOLDEN RECOVERY]" : " [GOLDEN]");
+            dirElem.innerText = direction + (localStats.protection_mode ? " [PROTECTION LOCK]" : " [STABLE]");
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.recovery_mode ? "Take Profit (Recupero Sicuro):" : "Take Profit (Target Bilanciato):";
+            document.getElementById('res-tp-label').innerText = localStats.protection_mode ? "Take Profit (Recupero Protetto):" : "Take Profit (Target Bilanciato):";
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -760,7 +764,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = localStats.recovery_mode ? "🚨 GOLDEN RECOVERY SIGNAL" : "🛡️ GOLDEN STABILITY SIGNAL";
+                    const headerTag = localStats.protection_mode ? "🚨 SMART PROTECTION SIGNAL (LOCK)" : "🛡️ SMART PROTECTION SIGNAL";
                     const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Sicuro):</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
@@ -795,8 +799,8 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            let recoveryTagText = localStats.recovery_mode ? ' [Golden Recovery Active]' : '';
-            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${recoveryTagText}<br>`;
+            let protectionTagText = localStats.protection_mode ? ' [Protection Lock Active]' : '';
+            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
             } else {
@@ -810,7 +814,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isRecovery ? "🚨 GOLDEN RECOVERY SIGNAL" : "🛡️ GOLDEN STABILITY SIGNAL";
+            const modeTitle = lastSignalData.isProtection ? "🚨 SMART PROTECTION SIGNAL (LOCK)" : "🛡️ SMART PROTECTION SIGNAL";
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
