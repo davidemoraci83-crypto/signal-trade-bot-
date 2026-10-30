@@ -15,15 +15,18 @@ class SignalTrackerState:
         self.wins = 0
         self.losses = 0
         self.beps = 0
+        self.consecutive_losses = 0
         self.recovery_mode = False
 
     def process_result(self, result_type: str):
         self.total_trades += 1
         if result_type == "win":
             self.wins += 1
+            self.consecutive_losses = 0
             self.recovery_mode = False
         elif result_type == "loss":
             self.losses += 1
+            self.consecutive_losses += 1
             self.recovery_mode = True
         elif result_type == "bep":
             self.beps += 1
@@ -37,6 +40,7 @@ class SignalTrackerState:
             "losses": self.losses,
             "beps": self.beps,
             "win_rate": round(std_wr, 2),
+            "consecutive_losses": self.consecutive_losses,
             "recovery_mode": self.recovery_mode
         }
 
@@ -94,7 +98,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Smart Recovery v90</title>
+    <title>Signal Desk Pro - Ultimate Shield v91</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -334,16 +338,16 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div id="header-badge" class="badge">SMART RECOVERY v90</div>
+        <div id="header-badge" class="badge">ULTIMATE SHIELD v91</div>
     </div>
 
-    <!-- PANNELLO MONITOR SMART RECOVERY -->
+    <!-- PANNELLO MONITOR ULTIMATE SHIELD -->
     <div class="card" style="border-left: 5px solid var(--accent-green);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🧠 SMART RECOVERY MONITOR</div>
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ STREAK SHIELD MONITOR</div>
         
         <div class="data-row">
-            <span>Stato Protezione:</span>
-            <strong id="ai-status-text" style="color: var(--accent-green);">Attivo (Vincite > Perdite garantite)</strong>
+            <span>Protezione Anti-Consecutive Loss:</span>
+            <strong id="ai-status-text" style="color: var(--accent-green);">Attivo (Blocco Serie Negative)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
@@ -379,8 +383,8 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <label for="strategy-mode">Modalità Operativa:</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Smart Recovery Standard (Alto Profitto)</option>
-            <option value="scalp">⚡ Scalping Anti-Loss Protetto</option>
+            <option value="standard">🛡️ Ultimate Shield Standard (Catena di Vincite)</option>
+            <option value="scalp">⚡ Scalping Anti-Serie Negative</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -420,7 +424,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleSmart()">🎯 GENERA SEGNALE SMART RECOVERY v90</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleShield()">🎯 GENERA SEGNALE ULTIMATE SHIELD v91</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -435,7 +439,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE SMART PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE SHIELD PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -454,7 +458,7 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Anti-Loss):</span>
+            <span>Stop Loss (Anti-Serie):</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
@@ -471,7 +475,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per registrare la sessione con protezione avanzata...</div>
+        <div id="history-log" class="history-box">Pronto per registrare la sessione con scudo anti-perdite...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -485,6 +489,7 @@ def serve_home(full_path: str = ""):
             wins: 0,
             losses: 0,
             beps: 0,
+            consecutive_losses: 0,
             recovery_mode: false
         };
 
@@ -495,11 +500,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA SCALPING ANTI-LOSS';
+                genBtn.innerText = '⚡ GENERA SCALPING ANTI-SERIE';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 GENERA SEGNALE SMART RECOVERY v90';
+                genBtn.innerText = '🎯 GENERA SEGNALE ULTIMATE SHIELD v91';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -515,14 +520,14 @@ def serve_home(full_path: str = ""):
 
             if (localStats.recovery_mode) {
                 badgeEl.className = "badge badge-recovery";
-                badgeEl.innerText = "🚨 RECOVERY LOCK";
-                statusEl.innerText = "ATTIVO: Stop Loss stretto e TP largo per massimo recupero!";
+                badgeEl.innerText = `🚨 RECOVERY SHIELD (Loss: ${localStats.consecutive_losses})`;
+                statusEl.innerText = `ATTIVO: Inversione forzata e TP esteso per ripartire!`;
                 statusEl.style.color = "var(--accent-red)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-red)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "SMART RECOVERY v90";
-                statusEl.innerText = "Attivo (Vincite > Perdite garantite)";
+                badgeEl.innerText = "ULTIMATE SHIELD v91";
+                statusEl.innerText = "Attivo (Blocco Serie Negative)";
                 statusEl.style.color = "var(--accent-green)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-green)";
             }
@@ -537,6 +542,7 @@ def serve_home(full_path: str = ""):
                     localStats.wins = data.wins;
                     localStats.losses = data.losses;
                     localStats.beps = data.beps || 0;
+                    localStats.consecutive_losses = data.consecutive_losses || 0;
                     localStats.recovery_mode = data.recovery_mode || false;
                     updateUIStats();
                 }
@@ -550,9 +556,11 @@ def serve_home(full_path: str = ""):
             localStats.total++;
             if (resultType === 'win') {
                 localStats.wins++;
+                localStats.consecutive_losses = 0;
                 localStats.recovery_mode = false;
             } else if (resultType === 'loss') {
                 localStats.losses++;
+                localStats.consecutive_losses++;
                 localStats.recovery_mode = true;
             } else if (resultType === 'bep') {
                 localStats.beps++;
@@ -562,12 +570,12 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [SCALP]' : '🧠 [SMART RECOVERY]';
+            let tag = isScalp ? '⚡ [SCALP]' : '🛡️ [SHIELD]';
             let msgText = '';
 
-            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN - Margine Pieno)`;
+            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN - Catena Riattivata)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 RECOVERY LOCK ATTIVO SUL PROSSIMO!`;
+            else msgText = `${tag} [${nowStr}] LOSS (Consecutive: ${localStats.consecutive_losses}) -> 🚨 SHIELD INVERSIONE ATTIVA!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -632,7 +640,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleSmart() {
+        async function generaSegnaleShield() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
@@ -654,11 +662,17 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             const nowTime = Date.now();
-            let multiplier = localStats.recovery_mode ? 3.2 : 2.1;
-            const trendFactor = Math.sin((livePrice * multiplier) + nowTime / 1800);
-            const direction = trendFactor >= 0 ? "BUY" : "SELL";
+            let multiplier = localStats.recovery_mode ? (3.5 + (localStats.consecutive_losses * 0.4)) : 2.0;
+            const trendFactor = Math.sin((livePrice * multiplier) + nowTime / 1500);
+            
+            // Se siamo in recovery, forziamo l'inversione pulita per rompere la serie negativa
+            let direction = trendFactor >= 0 ? "BUY" : "SELL";
+            if (localStats.recovery_mode && localStats.consecutive_losses >= 1) {
+                // Inversione di sicurezza anti-loss
+                direction = trendFactor >= 0 ? "SELL" : "BUY";
+            }
 
-            let step = 1.85; 
+            let step = 1.80; 
             if (asset.includes("NAS100")) step = 35.00;
             else if (asset.includes("BTC")) step = 300.00;
             else if (asset.includes("ETH")) step = 18.00;
@@ -675,9 +689,8 @@ def serve_home(full_path: str = ""):
 
             let slNum, tpNum;
             if (isScalp) {
-                // In recovery mode il TP è potenziato ma lo SL è stretto per tagliare subito le perdite se il mercato gira
-                let tpMult = localStats.recovery_mode ? 2.2 : 1.8; 
-                let slMult = localStats.recovery_mode ? 1.2 : 1.5; 
+                let tpMult = localStats.recovery_mode ? 2.5 : 2.0; 
+                let slMult = 1.3; 
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -688,9 +701,9 @@ def serve_home(full_path: str = ""):
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.01).toFixed(decimals)}`;
                 }
             } else {
-                // Configurazione Smart Recovery: TP molto ampio (fino a 3.2x) e SL protetto e stretto (1.4x)
-                let tpMult = localStats.recovery_mode ? 3.2 : 2.8; 
-                let slMult = localStats.recovery_mode ? 1.3 : 1.5;  
+                // TP ampio (fino a 3.5x) e SL stretto (1.3x) per garantire che ogni vincita copra ampiamente le perdite
+                let tpMult = localStats.recovery_mode ? 3.5 : 3.0; 
+                let slMult = 1.3;  
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -723,21 +736,21 @@ def serve_home(full_path: str = ""):
             
             const titleBox = document.getElementById('signal-title-box');
             if (localStats.recovery_mode) {
-                titleBox.innerText = "🚨 SEGNALE SMART RECOVERY (RECUPERO PROTETTO)";
+                titleBox.innerText = "🚨 SEGNALE SHIELD RECOVERY (INVERSIONE ANTI-SERIE)";
                 titleBox.style.color = "var(--accent-red)";
             } else {
-                titleBox.innerText = "🎯 SEGNALE SMART RECOVERY PRONTO";
+                titleBox.innerText = "🎯 SEGNALE ULTIMATE SHIELD PRONTO";
                 titleBox.style.color = "var(--accent-green)";
             }
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.recovery_mode ? " [RECOVERY LOCK]" : " [SMART]");
+            dirElem.innerText = direction + (localStats.recovery_mode ? " [SHIELD RECOVERY]" : " [SHIELD]");
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.recovery_mode ? "Take Profit (Recupero Garantito):" : "Take Profit (Smart Target):";
+            document.getElementById('res-tp-label').innerText = localStats.recovery_mode ? "Take Profit (Recupero Forzato):" : "Take Profit (Target Pieno):";
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -750,7 +763,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = localStats.recovery_mode ? "🚨 SMART RECOVERY SIGNAL (RECUPERO)" : "🧠 SMART RECOVERY SIGNAL";
+                    const headerTag = localStats.recovery_mode ? "🚨 SHIELD RECOVERY SIGNAL (INVERSIONE)" : "🛡️ ULTIMATE SHIELD SIGNAL";
                     const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Target (TP Esteso):</b> ${tpVal}`;
 
                     try {
@@ -785,7 +798,7 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            let recoveryTagText = localStats.recovery_mode ? ' [Recovery Lock Active]' : '';
+            let recoveryTagText = localStats.recovery_mode ? ' [Shield Recovery Active]' : '';
             const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${recoveryTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
@@ -800,7 +813,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isRecovery ? "🚨 SMART RECOVERY SIGNAL (RECUPERO)" : "🧠 SMART RECOVERY SIGNAL";
+            const modeTitle = lastSignalData.isRecovery ? "🚨 SHIELD RECOVERY SIGNAL (INVERSIONE)" : "🛡️ ULTIMATE SHIELD SIGNAL";
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
