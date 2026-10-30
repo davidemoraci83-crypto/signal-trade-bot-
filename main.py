@@ -98,7 +98,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Absolute Streak Breaker v92</title>
+    <title>Signal Desk Pro - Golden Stability v93</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -338,16 +338,16 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div id="header-badge" class="badge">STREAK BREAKER v92</div>
+        <div id="header-badge" class="badge">GOLDEN STABILITY v93</div>
     </div>
 
-    <!-- PANNELLO MONITOR STREAK BREAKER -->
+    <!-- PANNELLO MONITOR GOLDEN STABILITY -->
     <div class="card" style="border-left: 5px solid var(--accent-green);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ STREAK BREAKER MONITOR</div>
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ GOLDEN STABILITY MONITOR</div>
         
         <div class="data-row">
-            <span>Stato Blocco Serie:</span>
-            <strong id="ai-status-text" style="color: var(--accent-green);">Attivo (Inversione Anti-Loss)</strong>
+            <span>Stop Loss Anti-Spike:</span>
+            <strong id="ai-status-text" style="color: var(--accent-green);">Ottimizzato (Distanza di Sicurezza)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
@@ -383,8 +383,8 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <label for="strategy-mode">Modalità Operativa:</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Streak Breaker Master (Catena di Vincite)</option>
-            <option value="scalp">⚡ Scalping Anti-Loss Istantaneo</option>
+            <option value="standard">🛡️ Golden Standard (Alta Affidabilità)</option>
+            <option value="scalp">⚡ Scalping Stabile Protetto</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -424,7 +424,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleBreaker()">🎯 GENERA SEGNALE STREAK BREAKER v92</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleGolden()">🎯 GENERA SEGNALE GOLDEN v93</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -439,7 +439,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE BREAKER PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE GOLDEN PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -458,7 +458,7 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Blindato):</span>
+            <span>Stop Loss (Protetto):</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
@@ -475,7 +475,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per registrare la sessione con blocco anti-serie...</div>
+        <div id="history-log" class="history-box">Pronto per registrare la sessione con stabilità dorata...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -500,11 +500,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA SCALPING BREAKER';
+                genBtn.innerText = '⚡ GENERA SCALPING STABILE';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 GENERA SEGNALE STREAK BREAKER v92';
+                genBtn.innerText = '🎯 GENERA SEGNALE GOLDEN v93';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -520,14 +520,14 @@ def serve_home(full_path: str = ""):
 
             if (localStats.recovery_mode) {
                 badgeEl.className = "badge badge-recovery";
-                badgeEl.innerText = `🚨 BREAKER LOCK (Loss: ${localStats.consecutive_losses})`;
-                statusEl.innerText = `ATTIVO: Inversione totale forzata per spezzare la serie!`;
+                badgeEl.innerText = `🚨 GOLDEN RECOVERY (Loss: ${localStats.consecutive_losses})`;
+                statusEl.innerText = `ATTIVO: SL sicuro e TP ottimizzato per il recupero!`;
                 statusEl.style.color = "var(--accent-red)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-red)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "STREAK BREAKER v92";
-                statusEl.innerText = "Attivo (Blocco Serie Negative)";
+                badgeEl.innerText = "GOLDEN STABILITY v93";
+                statusEl.innerText = "Ottimizzato (Distanza di Sicurezza)";
                 statusEl.style.color = "var(--accent-green)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-green)";
             }
@@ -570,12 +570,12 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [SCALP]' : '🛡️ [BREAKER]';
+            let tag = isScalp ? '⚡ [SCALP]' : '🛡️ [GOLDEN]';
             let msgText = '';
 
-            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN - Catena Vincite Attiva)`;
+            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS (Consecutive: ${localStats.consecutive_losses}) -> 🚨 INVERSIONE TOTALE FORZATA!`;
+            else msgText = `${tag} [${nowStr}] LOSS (Consecutive: ${localStats.consecutive_losses}) -> 🚨 RECOVERY STABILE ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -640,7 +640,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleBreaker() {
+        async function generaSegnaleGolden() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
@@ -662,54 +662,53 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             const nowTime = Date.now();
-            const trendFactor = Math.sin((livePrice * 2.5) + nowTime / 1200);
+            const trendFactor = Math.sin((livePrice * 2.1) + nowTime / 2200);
             
-            // SE C'È UNA LOSS, IL SISTEMA INVERTE TOTALMENTE LA DIREZIONE PER SPEZZARE LA SERIE NEGATIVA
             let direction = trendFactor >= 0 ? "BUY" : "SELL";
             if (localStats.recovery_mode && localStats.consecutive_losses >= 1) {
                 direction = trendFactor >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 1.70; 
-            if (asset.includes("NAS100")) step = 32.00;
-            else if (asset.includes("BTC")) step = 280.00;
-            else if (asset.includes("ETH")) step = 16.00;
-            else if (asset.includes("SOL")) step = 1.40;
-            else if (asset.includes("NEAR")) step = 0.0800;
-            else if (asset.includes("SUI")) step = 0.0220;
-            else if (asset.includes("DOGE")) step = 0.0035;
-            else if (asset.includes("SHIB")) step = 0.00000045;
-            else if (asset.includes("XRP")) step = 0.0075;
-            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0032;
+            let step = 1.90; 
+            if (asset.includes("NAS100")) step = 35.00;
+            else if (asset.includes("BTC")) step = 300.00;
+            else if (asset.includes("ETH")) step = 18.00;
+            else if (asset.includes("SOL")) step = 1.50;
+            else if (asset.includes("NEAR")) step = 0.0900;
+            else if (asset.includes("SUI")) step = 0.0250;
+            else if (asset.includes("DOGE")) step = 0.0040;
+            else if (asset.includes("SHIB")) step = 0.00000050;
+            else if (asset.includes("XRP")) step = 0.0080;
+            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0035;
 
             let rangeText, slVal, tpVal, cleanAssetSymbol;
             cleanAssetSymbol = asset.replace("/", "");
 
             let slNum, tpNum;
             if (isScalp) {
-                let tpMult = localStats.recovery_mode ? 2.8 : 2.2; 
-                let slMult = 1.1; 
+                let tpMult = localStats.recovery_mode ? 2.2 : 2.0; 
+                let slMult = 2.0; // Stop loss stabile e distanziato per evitare spike
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.01).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.015).toFixed(decimals)}`;
                 } else {
                     tpNum = livePrice - (step * tpMult);
                     slNum = livePrice + (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.01).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.015).toFixed(decimals)}`;
                 }
             } else {
-                // TP estremamente ampio (fino a 3.8x) e SL vicinissimo (1.15x) per vincite pesanti e sicure
-                let tpMult = localStats.recovery_mode ? 3.8 : 3.2; 
-                let slMult = 1.15;  
+                // Configurazione Golden Stability: Take Profit ampio e Stop Loss protetto a distanza sicura (2.2x)
+                let tpMult = localStats.recovery_mode ? 3.0 : 2.6; 
+                let slMult = 2.2;  
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.012).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.02).toFixed(decimals)}`;
                 } else {
                     tpNum = livePrice - (step * tpMult);
                     slNum = livePrice + (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.012).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.02).toFixed(decimals)}`;
                 }
             }
 
@@ -734,21 +733,21 @@ def serve_home(full_path: str = ""):
             
             const titleBox = document.getElementById('signal-title-box');
             if (localStats.recovery_mode) {
-                titleBox.innerText = "🚨 SEGNALE STREAK BREAKER (INVERSIONE ANTI-SERIE ATTIVA)";
+                titleBox.innerText = "🚨 SEGNALE GOLDEN RECOVERY (PROTETTO)";
                 titleBox.style.color = "var(--accent-red)";
             } else {
-                titleBox.innerText = "🎯 SEGNALE STREAK BREAKER PRONTO";
+                titleBox.innerText = "🎯 SEGNALE GOLDEN STABILITY PRONTO";
                 titleBox.style.color = "var(--accent-green)";
             }
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.recovery_mode ? " [BREAKER INVERSION]" : " [BREAKER]");
+            dirElem.innerText = direction + (localStats.recovery_mode ? " [GOLDEN RECOVERY]" : " [GOLDEN]");
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.recovery_mode ? "Take Profit (Recupero Totale):" : "Take Profit (Target Pieno):";
+            document.getElementById('res-tp-label').innerText = localStats.recovery_mode ? "Take Profit (Recupero Sicuro):" : "Take Profit (Target Bilanciato):";
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -761,8 +760,8 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = localStats.recovery_mode ? "🚨 STREAK BREAKER RECOVERY (INVERSIONE)" : "🛡️ STREAK BREAKER SIGNAL";
-                    const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Target (TP Esteso):</b> ${tpVal}`;
+                    const headerTag = localStats.recovery_mode ? "🚨 GOLDEN RECOVERY SIGNAL" : "🛡️ GOLDEN STABILITY SIGNAL";
+                    const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Sicuro):</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
                         const tgRes = await fetch('/api/telegram/send', {
@@ -796,7 +795,7 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            let recoveryTagText = localStats.recovery_mode ? ' [Breaker Inversion Active]' : '';
+            let recoveryTagText = localStats.recovery_mode ? ' [Golden Recovery Active]' : '';
             const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${recoveryTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
@@ -811,7 +810,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isRecovery ? "🚨 STREAK BREAKER RECOVERY (INVERSIONE)" : "🛡️ STREAK BREAKER SIGNAL";
+            const modeTitle = lastSignalData.isRecovery ? "🚨 GOLDEN RECOVERY SIGNAL" : "🛡️ GOLDEN STABILITY SIGNAL";
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
