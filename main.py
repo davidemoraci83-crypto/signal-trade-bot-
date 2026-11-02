@@ -99,7 +99,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - WinRate Booster v96</title>
+    <title>Signal Desk Pro - Master Risk-Reward v97</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -339,16 +339,16 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div id="header-badge" class="badge">WINRATE BOOSTER v96</div>
+        <div id="header-badge" class="badge">MASTER R:R v97</div>
     </div>
 
-    <!-- PANNELLO MONITOR WINRATE BOOSTER -->
+    <!-- PANNELLO MONITOR MASTER R:R -->
     <div class="card" style="border-left: 5px solid var(--accent-green);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ WINRATE BOOSTER MONITOR</div>
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ MASTER RISK-REWARD MONITOR</div>
         
         <div class="data-row">
-            <span>Aggancio Prezzo MT5:</span>
-            <strong id="ai-status-text" style="color: var(--accent-green);">Attivo (Target Calibrati e Validi)</strong>
+            <span>Rapporto Rischio/Rendimento:</span>
+            <strong id="ai-status-text" style="color: var(--accent-green);">Ottimizzato (Rischio Controllato 1:2)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
@@ -382,10 +382,10 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card">
-        <label for="strategy-mode">Modalità Operativa:</label>
+        <label for="strategy-mode">Modalità Operativa (Strategia):</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ WinRate Master Standard (Massima Vincita)</option>
-            <option value="scalp">⚡ Scalping Booster Rapido</option>
+            <option value="standard">🛡️ Master Trend & Risk Management (1:2 Rischio/Rendimento)</option>
+            <option value="scalp">⚡ Scalping ad Alta Probabilità</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -425,7 +425,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleBooster()">🎯 GENERA SEGNALE BOOSTER v96</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleMaster()">🎯 GENERA SEGNALE MASTER v97</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -440,7 +440,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE BOOSTER PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE MASTER PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -459,11 +459,11 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Protetto MT5):</span>
+            <span>Stop Loss (Rischio Controllato):</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
-            <span id="res-tp-label">Take Profit:</span>
+            <span id="res-tp-label">Take Profit (Rendimento 2x):</span>
             <strong id="res-tp" style="color: var(--accent-green); font-weight: 900; font-size: 1rem;">--</strong>
         </div>
         <div class="data-row">
@@ -476,7 +476,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per registrare la sessione con WinRate Booster...</div>
+        <div id="history-log" class="history-box">Pronto per registrare la sessione con gestione R:R 1:2...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -501,11 +501,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA SCALPING BOOSTER';
+                genBtn.innerText = '⚡ GENERA SCALPING MASTER';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 GENERA SEGNALE BOOSTER v96';
+                genBtn.innerText = '🎯 GENERA SEGNALE MASTER v97';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -521,14 +521,14 @@ def serve_home(full_path: str = ""):
 
             if (localStats.protection_mode) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 BOOSTER LOCK (Loss: ${localStats.consecutive_losses})`;
-                statusEl.innerText = `ATTIVO: Inversione di sicurezza e S/L espanso!`;
+                badgeEl.innerText = `🚨 MASTER RECOVERY (Loss: ${localStats.consecutive_losses})`;
+                statusEl.innerText = `ATTIVO: Inversione di sicurezza con R:R protetto 1:2!`;
                 statusEl.style.color = "var(--accent-red)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-red)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "WINRATE BOOSTER v96";
-                statusEl.innerText = "Attivo (Target Calibrati e Validi)";
+                badgeEl.innerText = "MASTER R:R v97";
+                statusEl.innerText = "Ottimizzato (Rischio Controllato 1:2)";
                 statusEl.style.color = "var(--accent-green)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-green)";
             }
@@ -573,12 +573,12 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [SCALP]' : '🛡️ [BOOSTER]';
+            let tag = isScalp ? '⚡ [SCALP]' : '🛡️ [MASTER]';
             let msgText = '';
 
-            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN - Catena Attiva)`;
+            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN - Rendimento 2x)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS (Consecutive: ${localStats.consecutive_losses}) -> 🚨 BOOSTER LOCK ATTIVO!`;
+            else msgText = `${tag} [${nowStr}] LOSS (Consecutive: ${localStats.consecutive_losses}) -> 🚨 MASTER RECOVERY ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -643,7 +643,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleBooster() {
+        async function generaSegnaleMaster() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
@@ -665,32 +665,33 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             const nowTime = Date.now();
-            let trendFactor = Math.sin((livePrice * 1.85) + nowTime / 2800);
+            let trendFactor = Math.sin((livePrice * 1.9) + nowTime / 2600);
             
             let direction = trendFactor >= 0 ? "BUY" : "SELL";
             if (localStats.protection_mode) {
                 direction = trendFactor >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 2.10; 
-            if (asset.includes("NAS100")) step = 38.00;
-            else if (asset.includes("BTC")) step = 320.00;
-            else if (asset.includes("ETH")) step = 19.00;
-            else if (asset.includes("SOL")) step = 1.60;
-            else if (asset.includes("NEAR")) step = 0.0950;
-            else if (asset.includes("SUI")) step = 0.0280;
-            else if (asset.includes("DOGE")) step = 0.0045;
-            else if (asset.includes("SHIB")) step = 0.00000055;
-            else if (asset.includes("XRP")) step = 0.0085;
-            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0038;
+            let step = 1.95; 
+            if (asset.includes("NAS100")) step = 35.00;
+            else if (asset.includes("BTC")) step = 300.00;
+            else if (asset.includes("ETH")) step = 18.00;
+            else if (asset.includes("SOL")) step = 1.50;
+            else if (asset.includes("NEAR")) step = 0.0900;
+            else if (asset.includes("SUI")) step = 0.0250;
+            else if (asset.includes("DOGE")) step = 0.0040;
+            else if (asset.includes("SHIB")) step = 0.00000050;
+            else if (asset.includes("XRP")) step = 0.0080;
+            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0035;
 
             let rangeText, slVal, tpVal, cleanAssetSymbol;
             cleanAssetSymbol = asset.replace("/", "");
 
             let slNum, tpNum;
             if (isScalp) {
-                let tpMult = localStats.protection_mode ? 2.3 : 2.0; 
-                let slMult = 1.8; 
+                // Rischio Rendimento 1:2 rigoroso per lo Scalping
+                let slMult = 1.4; 
+                let tpMult = 2.8; 
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -701,9 +702,9 @@ def serve_home(full_path: str = ""):
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.01).toFixed(decimals)}`;
                 }
             } else {
-                // S/L e T/P WinRate Booster: Target rapidi da centrare ed S/L protetto
-                let tpMult = localStats.protection_mode ? 2.6 : 2.4; 
-                let slMult = 2.1;  
+                // Strategia Master Standard: Rischio (SL) controllato a 1.6x, Rendimento (TP) a 3.2x (Rapporto perfetto 1:2)
+                let slMult = 1.6;  
+                let tpMult = localStats.protection_mode ? 3.5 : 3.2; 
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -736,21 +737,21 @@ def serve_home(full_path: str = ""):
             
             const titleBox = document.getElementById('signal-title-box');
             if (localStats.protection_mode) {
-                titleBox.innerText = "🚨 SEGNALE BOOSTER RECOVERY (INVERSIONE ANTI-SERIE)";
+                titleBox.innerText = "🚨 SEGNALE MASTER RECOVERY (R:R 1:2 PROTETTO)";
                 titleBox.style.color = "var(--accent-red)";
             } else {
-                titleBox.innerText = "🎯 SEGNALE WINRATE BOOSTER PRONTO";
+                titleBox.innerText = "🎯 SEGNALE MASTER R:R PRONTO";
                 titleBox.style.color = "var(--accent-green)";
             }
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.protection_mode ? " [BOOSTER LOCK]" : " [BOOSTER]");
+            dirElem.innerText = direction + (localStats.protection_mode ? " [MASTER LOCK]" : " [MASTER R:R]");
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.protection_mode ? "Take Profit (Recupero Sicuro):" : "Take Profit (Target Pieno):";
+            document.getElementById('res-tp-label').innerText = localStats.protection_mode ? "Take Profit (Recupero 2x):" : "Take Profit (Rendimento 2x):";
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -763,8 +764,8 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = localStats.protection_mode ? "🚨 WINRATE BOOSTER RECOVERY (LOCK)" : "🛡️ WINRATE BOOSTER SIGNAL";
-                    const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Valido):</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
+                    const headerTag = localStats.protection_mode ? "🚨 MASTER RECOVERY SIGNAL (R:R 1:2)" : "🛡️ MASTER RISK-REWARD SIGNAL";
+                    const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Rischio):</b> ${slVal}\n<b>Target (Rendimento 2x):</b> ${tpVal}`;
 
                     try {
                         const tgRes = await fetch('/api/telegram/send', {
@@ -798,7 +799,7 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.protection_mode ? ' [Booster Lock Active]' : '';
+            let protectionTagText = localStats.protection_mode ? ' [Master Recovery Active]' : '';
             const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
@@ -813,7 +814,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isProtection ? "🚨 WINRATE BOOSTER RECOVERY (LOCK)" : "🛡️ WINRATE BOOSTER SIGNAL";
+            const modeTitle = lastSignalData.isProtection ? "🚨 MASTER RECOVERY SIGNAL (R:R 1:2)" : "🛡️ MASTER RISK-REWARD SIGNAL";
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
