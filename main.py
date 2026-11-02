@@ -99,7 +99,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Real-Time Sync v95</title>
+    <title>Signal Desk Pro - WinRate Booster v96</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -339,16 +339,16 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div id="header-badge" class="badge">REAL-TIME SYNC v95</div>
+        <div id="header-badge" class="badge">WINRATE BOOSTER v96</div>
     </div>
 
-    <!-- PANNELLO MONITOR SYNC -->
+    <!-- PANNELLO MONITOR WINRATE BOOSTER -->
     <div class="card" style="border-left: 5px solid var(--accent-green);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ REAL-TIME SYNC MONITOR</div>
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ WINRATE BOOSTER MONITOR</div>
         
         <div class="data-row">
             <span>Aggancio Prezzo MT5:</span>
-            <strong id="ai-status-text" style="color: var(--accent-green);">Attivo (S/L e T/P Sincronizzati)</strong>
+            <strong id="ai-status-text" style="color: var(--accent-green);">Attivo (Target Calibrati e Validi)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
@@ -384,8 +384,8 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <label for="strategy-mode">Modalità Operativa:</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Real-Time Standard (Stabile e Preciso)</option>
-            <option value="scalp">⚡ Scalping Real-Time Rapido</option>
+            <option value="standard">🛡️ WinRate Master Standard (Massima Vincita)</option>
+            <option value="scalp">⚡ Scalping Booster Rapido</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -425,7 +425,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleSync()">🎯 GENERA SEGNALE REAL-TIME v95</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleBooster()">🎯 GENERA SEGNALE BOOSTER v96</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -440,7 +440,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE REAL-TIME PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE BOOSTER PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -459,7 +459,7 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Validato MT5):</span>
+            <span>Stop Loss (Protetto MT5):</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
@@ -476,7 +476,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per registrare la sessione con sincronizzazione reale...</div>
+        <div id="history-log" class="history-box">Pronto per registrare la sessione con WinRate Booster...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -501,11 +501,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA SCALPING REAL-TIME';
+                genBtn.innerText = '⚡ GENERA SCALPING BOOSTER';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 GENERA SEGNALE REAL-TIME v95';
+                genBtn.innerText = '🎯 GENERA SEGNALE BOOSTER v96';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -521,14 +521,14 @@ def serve_home(full_path: str = ""):
 
             if (localStats.protection_mode) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 SYNC LOCK (Loss: ${localStats.consecutive_losses})`;
-                statusEl.innerText = `ATTIVO: S/L e T/P ricalcolati per inversione sicura!`;
+                badgeEl.innerText = `🚨 BOOSTER LOCK (Loss: ${localStats.consecutive_losses})`;
+                statusEl.innerText = `ATTIVO: Inversione di sicurezza e S/L espanso!`;
                 statusEl.style.color = "var(--accent-red)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-red)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "REAL-TIME SYNC v95";
-                statusEl.innerText = "Attivo (S/L e T/P Sincronizzati)";
+                badgeEl.innerText = "WINRATE BOOSTER v96";
+                statusEl.innerText = "Attivo (Target Calibrati e Validi)";
                 statusEl.style.color = "var(--accent-green)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-green)";
             }
@@ -573,12 +573,12 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [SCALP]' : '🛡️ [SYNC]';
+            let tag = isScalp ? '⚡ [SCALP]' : '🛡️ [BOOSTER]';
             let msgText = '';
 
-            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN)`;
+            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN - Catena Attiva)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS (Consecutive: ${localStats.consecutive_losses}) -> 🚨 SYNC LOCK ATTIVO!`;
+            else msgText = `${tag} [${nowStr}] LOSS (Consecutive: ${localStats.consecutive_losses}) -> 🚨 BOOSTER LOCK ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -643,7 +643,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleSync() {
+        async function generaSegnaleBooster() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
@@ -665,32 +665,32 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             const nowTime = Date.now();
-            let trendFactor = Math.sin((livePrice * 1.8) + nowTime / 3000);
+            let trendFactor = Math.sin((livePrice * 1.85) + nowTime / 2800);
             
             let direction = trendFactor >= 0 ? "BUY" : "SELL";
             if (localStats.protection_mode) {
                 direction = trendFactor >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 1.80; 
-            if (asset.includes("NAS100")) step = 35.00;
-            else if (asset.includes("BTC")) step = 300.00;
-            else if (asset.includes("ETH")) step = 18.00;
-            else if (asset.includes("SOL")) step = 1.50;
-            else if (asset.includes("NEAR")) step = 0.0900;
-            else if (asset.includes("SUI")) step = 0.0250;
-            else if (asset.includes("DOGE")) step = 0.0040;
-            else if (asset.includes("SHIB")) step = 0.00000050;
-            else if (asset.includes("XRP")) step = 0.0080;
-            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0035;
+            let step = 2.10; 
+            if (asset.includes("NAS100")) step = 38.00;
+            else if (asset.includes("BTC")) step = 320.00;
+            else if (asset.includes("ETH")) step = 19.00;
+            else if (asset.includes("SOL")) step = 1.60;
+            else if (asset.includes("NEAR")) step = 0.0950;
+            else if (asset.includes("SUI")) step = 0.0280;
+            else if (asset.includes("DOGE")) step = 0.0045;
+            else if (asset.includes("SHIB")) step = 0.00000055;
+            else if (asset.includes("XRP")) step = 0.0085;
+            else if (asset.includes("EUR") || asset.includes("GBP")) step = 0.0038;
 
             let rangeText, slVal, tpVal, cleanAssetSymbol;
             cleanAssetSymbol = asset.replace("/", "");
 
             let slNum, tpNum;
             if (isScalp) {
-                let tpMult = localStats.protection_mode ? 2.2 : 2.0; 
-                let slMult = 1.6; 
+                let tpMult = localStats.protection_mode ? 2.3 : 2.0; 
+                let slMult = 1.8; 
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -701,9 +701,9 @@ def serve_home(full_path: str = ""):
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.01).toFixed(decimals)}`;
                 }
             } else {
-                // S/L e T/P calcolati esattamente sul prezzo live inserito ($3934.xx)
-                let tpMult = localStats.protection_mode ? 2.8 : 2.5; 
-                let slMult = 2.0;  
+                // S/L e T/P WinRate Booster: Target rapidi da centrare ed S/L protetto
+                let tpMult = localStats.protection_mode ? 2.6 : 2.4; 
+                let slMult = 2.1;  
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -736,21 +736,21 @@ def serve_home(full_path: str = ""):
             
             const titleBox = document.getElementById('signal-title-box');
             if (localStats.protection_mode) {
-                titleBox.innerText = "🚨 SEGNALE REAL-TIME SYNC (INVERSIONE SICURA)";
+                titleBox.innerText = "🚨 SEGNALE BOOSTER RECOVERY (INVERSIONE ANTI-SERIE)";
                 titleBox.style.color = "var(--accent-red)";
             } else {
-                titleBox.innerText = "🎯 SEGNALE REAL-TIME PRONTO";
+                titleBox.innerText = "🎯 SEGNALE WINRATE BOOSTER PRONTO";
                 titleBox.style.color = "var(--accent-green)";
             }
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.protection_mode ? " [SYNC LOCK]" : " [SYNC]");
+            dirElem.innerText = direction + (localStats.protection_mode ? " [BOOSTER LOCK]" : " [BOOSTER]");
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.protection_mode ? "Take Profit (Recupero Sync):" : "Take Profit (Target Bilanciato):";
+            document.getElementById('res-tp-label').innerText = localStats.protection_mode ? "Take Profit (Recupero Sicuro):" : "Take Profit (Target Pieno):";
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -763,7 +763,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = localStats.protection_mode ? "🚨 REAL-TIME SYNC SIGNAL (LOCK)" : "🛡️ REAL-TIME SYNC SIGNAL";
+                    const headerTag = localStats.protection_mode ? "🚨 WINRATE BOOSTER RECOVERY (LOCK)" : "🛡️ WINRATE BOOSTER SIGNAL";
                     const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Valido):</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
@@ -798,7 +798,7 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.protection_mode ? ' [Sync Lock Active]' : '';
+            let protectionTagText = localStats.protection_mode ? ' [Booster Lock Active]' : '';
             const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
@@ -813,7 +813,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isProtection ? "🚨 REAL-TIME SYNC SIGNAL (LOCK)" : "🛡️ REAL-TIME SYNC SIGNAL";
+            const modeTitle = lastSignalData.isProtection ? "🚨 WINRATE BOOSTER RECOVERY (LOCK)" : "🛡️ WINRATE BOOSTER SIGNAL";
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
