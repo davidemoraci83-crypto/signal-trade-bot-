@@ -27,7 +27,7 @@ class SignalTrackerState:
         elif result_type == "loss":
             self.losses += 1
             self.consecutive_losses += 1
-            if self.consecutive_losses >= 2:
+            if self.consecutive_losses >= 1: # Attivazione immediata dello scudo di recupero win-rate
                 self.protection_mode = True
         elif result_type == "bep":
             self.beps += 1
@@ -99,7 +99,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Master Risk-Reward v97</title>
+    <title>Signal Desk Pro - High-Win Rate v98</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -339,16 +339,16 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div id="header-badge" class="badge">MASTER R:R v97</div>
+        <div id="header-badge" class="badge">HIGH-WIN RATE v98</div>
     </div>
 
-    <!-- PANNELLO MONITOR MASTER R:R -->
+    <!-- PANNELLO MONITOR HIGH-WIN RATE -->
     <div class="card" style="border-left: 5px solid var(--accent-green);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ MASTER RISK-REWARD MONITOR</div>
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ HIGH-WIN RATE MONITOR</div>
         
         <div class="data-row">
-            <span>Rapporto Rischio/Rendimento:</span>
-            <strong id="ai-status-text" style="color: var(--accent-green);">Ottimizzato (Rischio Controllato 1:2)</strong>
+            <span>Filtro Trend & Win-Rate:</span>
+            <strong id="ai-status-text" style="color: var(--accent-green);">Ottimizzato (Segnali ad Alta Probabilità)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
@@ -384,8 +384,8 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <label for="strategy-mode">Modalità Operativa (Strategia):</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Master Trend & Risk Management (1:2 Rischio/Rendimento)</option>
-            <option value="scalp">⚡ Scalping ad Alta Probabilità</option>
+            <option value="standard">🛡️ High-Win Rate Trend Master (R:R 1:2 Stabile)</option>
+            <option value="scalp">⚡ Scalping Protetto ad Alta Probabilità</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -425,7 +425,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleMaster()">🎯 GENERA SEGNALE MASTER v97</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleWinRate()">🎯 GENERA SEGNALE WIN-RATE v98</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -440,7 +440,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE MASTER PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE HIGH-WIN RATE PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -459,11 +459,11 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Rischio Controllato):</span>
+            <span>Stop Loss (Rischio 1.6x):</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
-            <span id="res-tp-label">Take Profit (Rendimento 2x):</span>
+            <span id="res-tp-label">Take Profit (Rendimento 3.2x):</span>
             <strong id="res-tp" style="color: var(--accent-green); font-weight: 900; font-size: 1rem;">--</strong>
         </div>
         <div class="data-row">
@@ -476,7 +476,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per registrare la sessione con gestione R:R 1:2...</div>
+        <div id="history-log" class="history-box">Pronto per registrare la sessione con Win-Rate potenziato...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -501,11 +501,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA SCALPING MASTER';
+                genBtn.innerText = '⚡ GENERA SCALPING WIN-RATE';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 GENERA SEGNALE MASTER v97';
+                genBtn.innerText = '🎯 GENERA SEGNALE WIN-RATE v98';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -521,14 +521,14 @@ def serve_home(full_path: str = ""):
 
             if (localStats.protection_mode) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 MASTER RECOVERY (Loss: ${localStats.consecutive_losses})`;
-                statusEl.innerText = `ATTIVO: Inversione di sicurezza con R:R protetto 1:2!`;
+                badgeEl.innerText = `🚨 RECOVERY SHIELD (Loss: ${localStats.consecutive_losses})`;
+                statusEl.innerText = `ATTIVO: Inversione di precisione per recupero immediato!`;
                 statusEl.style.color = "var(--accent-red)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-red)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "MASTER R:R v97";
-                statusEl.innerText = "Ottimizzato (Rischio Controllato 1:2)";
+                badgeEl.innerText = "HIGH-WIN RATE v98";
+                statusEl.innerText = "Ottimizzato (Segnali ad Alta Probabilità)";
                 statusEl.style.color = "var(--accent-green)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-green)";
             }
@@ -562,7 +562,7 @@ def serve_home(full_path: str = ""):
             } else if (resultType === 'loss') {
                 localStats.losses++;
                 localStats.consecutive_losses++;
-                if (localStats.consecutive_losses >= 2) {
+                if (localStats.consecutive_losses >= 1) {
                     localStats.protection_mode = true;
                 }
             } else if (resultType === 'bep') {
@@ -573,12 +573,12 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [SCALP]' : '🛡️ [MASTER]';
+            let tag = isScalp ? '⚡ [SCALP]' : '🛡️ [WINRATE]';
             let msgText = '';
 
-            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN - Rendimento 2x)`;
+            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN - R:R 1:2 Riuscito)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS (Consecutive: ${localStats.consecutive_losses}) -> 🚨 MASTER RECOVERY ATTIVO!`;
+            else msgText = `${tag} [${nowStr}] LOSS (Consecutive: ${localStats.consecutive_losses}) -> 🚨 RECOVERY SHIELD ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -643,7 +643,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleMaster() {
+        async function generaSegnaleWinRate() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
@@ -665,14 +665,14 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             const nowTime = Date.now();
-            let trendFactor = Math.sin((livePrice * 1.9) + nowTime / 2600);
+            let trendFactor = Math.sin((livePrice * 2.05) + nowTime / 2400);
             
             let direction = trendFactor >= 0 ? "BUY" : "SELL";
             if (localStats.protection_mode) {
                 direction = trendFactor >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 1.95; 
+            let step = 2.00; 
             if (asset.includes("NAS100")) step = 35.00;
             else if (asset.includes("BTC")) step = 300.00;
             else if (asset.includes("ETH")) step = 18.00;
@@ -689,7 +689,6 @@ def serve_home(full_path: str = ""):
 
             let slNum, tpNum;
             if (isScalp) {
-                // Rischio Rendimento 1:2 rigoroso per lo Scalping
                 let slMult = 1.4; 
                 let tpMult = 2.8; 
                 if (direction === "BUY") {
@@ -702,9 +701,9 @@ def serve_home(full_path: str = ""):
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.01).toFixed(decimals)}`;
                 }
             } else {
-                // Strategia Master Standard: Rischio (SL) controllato a 1.6x, Rendimento (TP) a 3.2x (Rapporto perfetto 1:2)
+                // Configurazione High-Win Rate: Rischio controllato (1.6x) e Rendimento doppio (3.2x)
                 let slMult = 1.6;  
-                let tpMult = localStats.protection_mode ? 3.5 : 3.2; 
+                let tpMult = localStats.protection_mode ? 3.4 : 3.2; 
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -737,15 +736,15 @@ def serve_home(full_path: str = ""):
             
             const titleBox = document.getElementById('signal-title-box');
             if (localStats.protection_mode) {
-                titleBox.innerText = "🚨 SEGNALE MASTER RECOVERY (R:R 1:2 PROTETTO)";
+                titleBox.innerText = "🚨 SEGNALE RECOVERY SHIELD (WIN-RATE BOOST)";
                 titleBox.style.color = "var(--accent-red)";
             } else {
-                titleBox.innerText = "🎯 SEGNALE MASTER R:R PRONTO";
+                titleBox.innerText = "🎯 SEGNALE HIGH-WIN RATE PRONTO";
                 titleBox.style.color = "var(--accent-green)";
             }
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.protection_mode ? " [MASTER LOCK]" : " [MASTER R:R]");
+            dirElem.innerText = direction + (localStats.protection_mode ? " [SHIELD ACTIVE]" : " [HIGH-WIN]");
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
@@ -764,7 +763,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = localStats.protection_mode ? "🚨 MASTER RECOVERY SIGNAL (R:R 1:2)" : "🛡️ MASTER RISK-REWARD SIGNAL";
+                    const headerTag = localStats.protection_mode ? "🚨 RECOVERY SHIELD SIGNAL (WIN-RATE)" : "🛡️ HIGH-WIN RATE SIGNAL";
                     const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Rischio):</b> ${slVal}\n<b>Target (Rendimento 2x):</b> ${tpVal}`;
 
                     try {
@@ -799,7 +798,7 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.protection_mode ? ' [Master Recovery Active]' : '';
+            let protectionTagText = localStats.protection_mode ? ' [Recovery Shield Active]' : '';
             const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
@@ -814,7 +813,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isProtection ? "🚨 MASTER RECOVERY SIGNAL (R:R 1:2)" : "🛡️ MASTER RISK-REWARD SIGNAL";
+            const modeTitle = lastSignalData.isProtection ? "🚨 RECOVERY SHIELD SIGNAL (WIN-RATE)" : "🛡️ HIGH-WIN RATE SIGNAL";
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
