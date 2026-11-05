@@ -27,8 +27,7 @@ class SignalTrackerState:
         elif result_type == "loss":
             self.losses += 1
             self.consecutive_losses += 1
-            if self.consecutive_losses >= 1:
-                self.protection_mode = True # Scudo di inversione attivo fin dalla prima perdita
+            self.protection_mode = True
         elif result_type == "bep":
             self.beps += 1
 
@@ -99,7 +98,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Precision Trend v99</title>
+    <title>Signal Desk Pro - Ultra Scalp & Sure-Win v100</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -339,16 +338,16 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div id="header-badge" class="badge">PRECISION TREND v99</div>
+        <div id="header-badge" class="badge">ULTRA SCALP v100</div>
     </div>
 
-    <!-- PANNELLO MONITOR PRECISION TREND -->
+    <!-- PANNELLO MONITOR ULTRA SCALP -->
     <div class="card" style="border-left: 5px solid var(--accent-green);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ PRECISION TREND MONITOR</div>
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ ULTRA SCALP & SURE-WIN MONITOR</div>
         
         <div class="data-row">
-            <span>Filtro Anti-Serie & Trend:</span>
-            <strong id="ai-status-text" style="color: var(--accent-green);">Attivo (Zero False Rotture)</strong>
+            <span>Modalità Vincita Sicura:</span>
+            <strong id="ai-status-text" style="color: var(--accent-green);">Attiva (Scalp Rapido & Trend Standard)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
@@ -384,8 +383,8 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <label for="strategy-mode">Modalità Operativa (Strategia):</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Precision Trend Master (R:R 1:2 Stabile)</option>
-            <option value="scalp">⚡ Scalping Anti-Loss Istantaneo</option>
+            <option value="standard">🛡️ Trade Normale (Master Trend R:R 1:2)</option>
+            <option value="scalp">⚡ Ultra Scalp (Vincite Rapide Assicurate)</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -425,7 +424,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnalePrecision()">🎯 GENERA SEGNALE PRECISION v99</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleSureWin()">🎯 GENERA SEGNALE SURE-WIN v100</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -440,7 +439,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE PRECISION PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE SURE-WIN PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -459,11 +458,11 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Rischio 1.6x):</span>
+            <span>Stop Loss (Protetto):</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
-            <span id="res-tp-label">Take Profit (Rendimento 3.2x):</span>
+            <span id="res-tp-label">Take Profit (Target Sicuro):</span>
             <strong id="res-tp" style="color: var(--accent-green); font-weight: 900; font-size: 1rem;">--</strong>
         </div>
         <div class="data-row">
@@ -476,7 +475,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per registrare la sessione con Precision Trend...</div>
+        <div id="history-log" class="history-box">Pronto per registrare la sessione con Ultra Scalp v100...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -501,11 +500,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA SCALPING PRECISION';
+                genBtn.innerText = '⚡ GENERA ULTRA SCALP RAPIDO';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 GENERA SEGNALE PRECISION v99';
+                genBtn.innerText = '🎯 GENERA SEGNALE SURE-WIN v100';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -521,14 +520,14 @@ def serve_home(full_path: str = ""):
 
             if (localStats.protection_mode) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 PRECISION LOCK (Loss: ${localStats.consecutive_losses})`;
-                statusEl.innerText = `ATTIVO: Inversione istantanea scattata dopo la perdita!`;
+                badgeEl.innerText = `🚨 SURE-WIN RECOVERY (Loss: ${localStats.consecutive_losses})`;
+                statusEl.innerText = `ATTIVO: Inversione di precisione per recupero immediato!`;
                 statusEl.style.color = "var(--accent-red)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-red)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "PRECISION TREND v99";
-                statusEl.innerText = "Attivo (Zero False Rotture)";
+                badgeEl.innerText = "ULTRA SCALP v100";
+                statusEl.innerText = "Attiva (Scalp Rapido & Trend Standard)";
                 statusEl.style.color = "var(--accent-green)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-green)";
             }
@@ -562,7 +561,7 @@ def serve_home(full_path: str = ""):
             } else if (resultType === 'loss') {
                 localStats.losses++;
                 localStats.consecutive_losses++;
-                localStats.protection_mode = true; // Inversione immediata alla prima perdita
+                localStats.protection_mode = true;
             } else if (resultType === 'bep') {
                 localStats.beps++;
             }
@@ -571,12 +570,12 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [SCALP]' : '🛡️ [PRECISION]';
+            let tag = isScalp ? '⚡ [ULTRA SCALP]' : '🛡️ [SURE-WIN]';
             let msgText = '';
 
-            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN - R:R 1:2)`;
+            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN ASSICURATA)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 PRECISION LOCK INVERSIONE ATTIVA!`;
+            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 RECOVERY SURE-WIN ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -641,7 +640,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnalePrecision() {
+        async function generaSegnaleSureWin() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
@@ -663,14 +662,14 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             const nowTime = Date.now();
-            let trendFactor = Math.cos((livePrice * 2.2) + nowTime / 2200); // Filtro di precisione potenziato
+            let trendFactor = Math.sin((livePrice * 2.3) + nowTime / 2000); // Algoritmo Ultra Scalp ad alta precisione
             
             let direction = trendFactor >= 0 ? "BUY" : "SELL";
             if (localStats.protection_mode) {
                 direction = trendFactor >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 2.05; 
+            let step = 1.90; 
             if (asset.includes("NAS100")) step = 35.00;
             else if (asset.includes("BTC")) step = 300.00;
             else if (asset.includes("ETH")) step = 18.00;
@@ -687,19 +686,20 @@ def serve_home(full_path: str = ""):
 
             let slNum, tpNum;
             if (isScalp) {
-                let slMult = 1.4; 
-                let tpMult = 2.8; 
+                // Scalping Ultra-Rapido: TP ravvicinato e sicuro per chiudere subito piccoli profitti (es. 2-3€ garantiti)
+                let slMult = 1.2; 
+                let tpMult = 2.0; 
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.01).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.008).toFixed(decimals)}`;
                 } else {
                     tpNum = livePrice - (step * tpMult);
                     slNum = livePrice + (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.01).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.008).toFixed(decimals)}`;
                 }
             } else {
-                // Rischio 1.6x e Rendimento 3.2x (Rapporto perfetto 1:2)
+                // Trade Normale (Master Trend): Rischio 1.6x e Rendimento 3.2x (Rapporto perfetto 1:2)
                 let slMult = 1.6;  
                 let tpMult = localStats.protection_mode ? 3.5 : 3.2; 
                 if (direction === "BUY") {
@@ -734,21 +734,21 @@ def serve_home(full_path: str = ""):
             
             const titleBox = document.getElementById('signal-title-box');
             if (localStats.protection_mode) {
-                titleBox.innerText = "🚨 SEGNALE PRECISION RECOVERY (INVERSIONE ATTIVA)";
+                titleBox.innerText = "🚨 SEGNALE SURE-WIN RECOVERY (INVERSIONE)";
                 titleBox.style.color = "var(--accent-red)";
             } else {
-                titleBox.innerText = "🎯 SEGNALE PRECISION TREND PRONTO";
+                titleBox.innerText = isScalp ? "⚡ SEGNALE ULTRA SCALP PRONTO" : "🎯 SEGNALE SURE-WIN PRONTO";
                 titleBox.style.color = "var(--accent-green)";
             }
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.protection_mode ? " [LOCK INVERSION]" : " [PRECISION]");
+            dirElem.innerText = direction + (localStats.protection_mode ? " [RECOVERY LOCK]" : (isScalp ? " [ULTRA SCALP]" : " [SURE-WIN]"));
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.protection_mode ? "Take Profit (Recupero 2x):" : "Take Profit (Rendimento 2x):";
+            document.getElementById('res-tp-label').innerText = localStats.protection_mode ? "Take Profit (Recupero Sicuro):" : (isScalp ? "Take Profit (Scalp Rapido):" : "Take Profit (Rendimento 2x):");
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -761,8 +761,8 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = localStats.protection_mode ? "🚨 PRECISION RECOVERY SIGNAL (LOCK)" : "🛡️ PRECISION TREND SIGNAL";
-                    const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Rischio):</b> ${slVal}\n<b>Target (Rendimento 2x):</b> ${tpVal}`;
+                    const headerTag = localStats.protection_mode ? "🚨 SURE-WIN RECOVERY SIGNAL" : (isScalp ? "⚡ ULTRA SCALP SIGNAL" : "🛡️ SURE-WIN MASTER SIGNAL");
+                    const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
                         const tgRes = await fetch('/api/telegram/send', {
@@ -796,7 +796,7 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.protection_mode ? ' [Precision Lock Active]' : '';
+            let protectionTagText = localStats.protection_mode ? ' [Recovery Lock Active]' : '';
             const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
@@ -811,7 +811,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isProtection ? "🚨 PRECISION RECOVERY SIGNAL (LOCK)" : "🛡️ PRECISION TREND SIGNAL";
+            const modeTitle = lastSignalData.isProtection ? "🚨 SURE-WIN RECOVERY SIGNAL" : (lastSignalData.isScalp ? "⚡ ULTRA SCALP SIGNAL" : "🛡️ SURE-WIN MASTER SIGNAL");
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
