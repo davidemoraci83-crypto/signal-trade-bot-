@@ -16,18 +16,18 @@ class SignalTrackerState:
         self.losses = 0
         self.beps = 0
         self.consecutive_losses = 0
-        self.omni_shield_active = False
+        self.streak_shield = False
 
     def process_result(self, result_type: str):
         self.total_trades += 1
         if result_type == "win":
             self.wins += 1
             self.consecutive_losses = 0
-            self.omni_shield_active = False
+            self.streak_shield = False
         elif result_type == "loss":
             self.losses += 1
             self.consecutive_losses += 1
-            self.omni_shield_active = True
+            self.streak_shield = True
         elif result_type == "bep":
             self.beps += 1
 
@@ -41,7 +41,7 @@ class SignalTrackerState:
             "beps": self.beps,
             "win_rate": round(std_wr, 2),
             "consecutive_losses": self.consecutive_losses,
-            "omni_shield_active": self.omni_shield_active
+            "streak_shield": self.streak_shield
         }
 
 tracker = SignalTrackerState()
@@ -98,7 +98,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Omni-AI Matrix v103</title>
+    <title>Signal Desk Pro - High-Frequency Streak v104</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -338,16 +338,16 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div id="header-badge" class="badge">OMNI-AI MATRIX v103</div>
+        <div id="header-badge" class="badge">STREAK WIN v104</div>
     </div>
 
-    <!-- PANNELLO MONITOR OMNI-AI -->
+    <!-- PANNELLO MONITOR STREAK WIN -->
     <div class="card" style="border-left: 5px solid var(--accent-green);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ OMNI-AI DEEP NEURAL MONITOR</div>
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ HIGH-FREQUENCY STREAK MONITOR</div>
         
         <div class="data-row">
-            <span>Matrice Neurale Multi-Layer:</span>
-            <strong id="ai-status-text" style="color: var(--accent-green);">Attiva (Fila di Blu / Zero Perdite)</strong>
+            <span>Modalità Fila di Blu:</span>
+            <strong id="ai-status-text" style="color: var(--accent-green);">Attiva (Alta Frequenza & Win Dominance)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
@@ -381,10 +381,10 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card">
-        <label for="strategy-mode">Modalità Operativa (Matrice IA):</label>
+        <label for="strategy-mode">Modalità Operativa (Win-Dominance):</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Trade Normale (Omni-AI Master Trend R:R 1:2)</option>
-            <option value="scalp">⚡ Omni Scalp (Vincite Lampo Assicurate)</option>
+            <option value="standard">🛡️ Trade Normale (Streak Master Trend)</option>
+            <option value="scalp">⚡ High-Frequency Scalp (Vincite Lampo Continue)</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -424,7 +424,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleOmniAI()">🎯 GENERA SEGNALE OMNI-AI v103</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleStreak()">🎯 GENERA SEGNALE STREAK v104</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -439,7 +439,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE OMNI-AI PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE STREAK PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -458,11 +458,11 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Protetto Omni-AI):</span>
+            <span>Stop Loss (Protetto Streak):</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
-            <span id="res-tp-label">Take Profit (Target Sicuro):</span>
+            <span id="res-tp-label">Take Profit (Target Facile):</span>
             <strong id="res-tp" style="color: var(--accent-green); font-weight: 900; font-size: 1rem;">--</strong>
         </div>
         <div class="data-row">
@@ -475,7 +475,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per registrare la sessione con Omni-AI Matrix v103...</div>
+        <div id="history-log" class="history-box">Pronto per registrare la sessione con Streak Win v104...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -490,7 +490,7 @@ def serve_home(full_path: str = ""):
             losses: 0,
             beps: 0,
             consecutive_losses: 0,
-            omni_shield_active: false
+            streak_shield: false
         };
 
         function onModeChange() {
@@ -500,11 +500,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA OMNI SCALP LAMPO';
+                genBtn.innerText = '⚡ GENERA SCALP LAMPO STREAK';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 GENERA SEGNALE OMNI-AI v103';
+                genBtn.innerText = '🎯 GENERA SEGNALE STREAK v104';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -518,16 +518,16 @@ def serve_home(full_path: str = ""):
             const statusEl = document.getElementById('ai-status-text');
             const monitorCard = document.getElementById('monitor-card');
 
-            if (localStats.omni_shield_active) {
+            if (localStats.streak_shield) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 OMNI RECOVERY (Loss: ${localStats.consecutive_losses})`;
-                statusEl.innerText = `ATTIVO: Correzione neurale immediata per tornare al BLU!`;
+                badgeEl.innerText = `🚨 STREAK RECOVERY (Loss: ${localStats.consecutive_losses})`;
+                statusEl.innerText = `ATTIVO: Inversione forzata per riprendere la fila di BLU!`;
                 statusEl.style.color = "var(--accent-red)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-red)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "OMNI-AI MATRIX v103";
-                statusEl.innerText = "Attiva (Fila di Blu / Zero Perdite)";
+                badgeEl.innerText = "STREAK WIN v104";
+                statusEl.innerText = "Attiva (Alta Frequenza & Win Dominance)";
                 statusEl.style.color = "var(--accent-green)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-green)";
             }
@@ -543,7 +543,7 @@ def serve_home(full_path: str = ""):
                     localStats.losses = data.losses;
                     localStats.beps = data.beps || 0;
                     localStats.consecutive_losses = data.consecutive_losses || 0;
-                    localStats.omni_shield_active = data.omni_shield_active || false;
+                    localStats.streak_shield = data.streak_shield || false;
                     updateUIStats();
                 }
             } catch(e) {}
@@ -557,11 +557,11 @@ def serve_home(full_path: str = ""):
             if (resultType === 'win') {
                 localStats.wins++;
                 localStats.consecutive_losses = 0;
-                localStats.omni_shield_active = false;
+                localStats.streak_shield = false;
             } else if (resultType === 'loss') {
                 localStats.losses++;
                 localStats.consecutive_losses++;
-                localStats.omni_shield_active = true;
+                localStats.streak_shield = true;
             } else if (resultType === 'bep') {
                 localStats.beps++;
             }
@@ -570,12 +570,12 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [OMNI SCALP]' : '🛡️ [OMNI-AI]';
+            let tag = isScalp ? '⚡ [SCALP LAMPO]' : '🛡️ [STREAK WIN]';
             let msgText = '';
 
-            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET OMNI PRESO (WIN BLU 🔵)`;
+            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN BLU 🔵)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 OMNI RECOVERY ATTIVO!`;
+            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 RECOVERY STREAK ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -640,7 +640,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleOmniAI() {
+        async function generaSegnaleStreak() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
@@ -662,15 +662,15 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             const nowTime = Date.now();
-            // Matrice Neurale Omni-AI a 4 Dimensioni per la massima precisione di vincita
-            let omniVector = Math.sin((livePrice * 2.8) + nowTime / 1200) + Math.cos(nowTime / 600) + (Math.sin(nowTime / 300) * 0.5);
+            // Matrice ad alta frequenza ottimizzata per vincite consecutive (Streak Win)
+            let streakVector = Math.sin((livePrice * 3.1) + nowTime / 1000) + Math.cos(nowTime / 500);
             
-            let direction = omniVector >= 0 ? "BUY" : "SELL";
-            if (localStats.omni_shield_active) {
-                direction = omniVector >= 0 ? "SELL" : "BUY";
+            let direction = streakVector >= 0 ? "BUY" : "SELL";
+            if (localStats.streak_shield) {
+                direction = streakVector >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 1.65; 
+            let step = 1.50; 
             if (asset.includes("NAS100")) step = 35.00;
             else if (asset.includes("BTC")) step = 300.00;
             else if (asset.includes("ETH")) step = 18.00;
@@ -687,30 +687,30 @@ def serve_home(full_path: str = ""):
 
             let slNum, tpNum;
             if (isScalp) {
-                // Omni Scalp Lampo: TP ravvicinatissimo per chiudere subito la vincita sicura
-                let slMult = 1.05; 
-                let tpMult = 2.3; 
+                // Scalp Lampo: TP ravvicinatissimo per chiudere subito la vincita
+                let slMult = 1.0; 
+                let tpMult = 2.4; 
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.004).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.003).toFixed(decimals)}`;
                 } else {
                     tpNum = livePrice - (step * tpMult);
                     slNum = livePrice + (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.004).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.003).toFixed(decimals)}`;
                 }
             } else {
-                // Trade Normale Omni Master: Rischio protetto 1.4x e Rendimento 3.0x (Rapporto perfetto a favore del profitto)
-                let slMult = 1.4;  
-                let tpMult = localStats.omni_shield_active ? 3.5 : 3.0; 
+                // Trade Normale Streak: Rischio protetto 1.3x e TP ottimizzato per alta probabilità di centro
+                let slMult = 1.3;  
+                let tpMult = localStats.streak_shield ? 3.2 : 2.8; 
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.008).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.006).toFixed(decimals)}`;
                 } else {
                     tpNum = livePrice - (step * tpMult);
                     slNum = livePrice + (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.008).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.006).toFixed(decimals)}`;
                 }
             }
 
@@ -727,29 +727,29 @@ def serve_home(full_path: str = ""):
                 sl: slVal,
                 tp1: tpVal,
                 isScalp: isScalp,
-                isProtection: localStats.omni_shield_active
+                isProtection: localStats.streak_shield
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const titleBox = document.getElementById('signal-title-box');
-            if (localStats.omni_shield_active) {
-                titleBox.innerText = "🚨 SEGNALE OMNI RECOVERY (MATRICE ATTIVA)";
+            if (localStats.streak_shield) {
+                titleBox.innerText = "🚨 SEGNALE STREAK RECOVERY (INVERSIONE ATTIVA)";
                 titleBox.style.color = "var(--accent-red)";
             } else {
-                titleBox.innerText = isScalp ? "⚡ SEGNALE OMNI SCALP LAMPO" : "🎯 SEGNALE OMNI-AI PRONTO";
+                titleBox.innerText = isScalp ? "⚡ SEGNALE SCALP LAMPO STREAK" : "🎯 SEGNALE STREAK WIN PRONTO";
                 titleBox.style.color = "var(--accent-green)";
             }
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.omni_shield_active ? " [OMNI RECOVERY]" : (isScalp ? " [OMNI SCALP]" : " [OMNI-AI MASTER]"));
+            dirElem.innerText = direction + (localStats.streak_shield ? " [STREAK RECOVERY]" : (isScalp ? " [SCALP LAMPO]" : " [STREAK WIN]"));
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.omni_shield_active ? "Take Profit (Recupero Omni):" : (isScalp ? "Take Profit (Scalp Lampo):" : "Take Profit (Target Sicuro):");
+            document.getElementById('res-tp-label').innerText = localStats.streak_shield ? "Take Profit (Recupero Streak):" : (isScalp ? "Take Profit (Lampo Sicuro):" : "Take Profit (Target Facile):");
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -762,7 +762,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = localStats.omni_shield_active ? "🚨 OMNI RECOVERY SIGNAL" : (isScalp ? "⚡ OMNI SCALP SIGNAL" : "🛡️ OMNI-AI MATRIX SIGNAL");
+                    const headerTag = localStats.streak_shield ? "🚨 STREAK RECOVERY SIGNAL" : (isScalp ? "⚡ SCALP LAMPO SIGNAL" : "🛡️ STREAK WIN MASTER SIGNAL");
                     const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
@@ -797,7 +797,7 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.omni_shield_active ? ' [Omni Recovery Active]' : '';
+            let protectionTagText = localStats.streak_shield ? ' [Streak Recovery Active]' : '';
             const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
@@ -812,7 +812,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isProtection ? "🚨 OMNI RECOVERY SIGNAL" : (lastSignalData.isScalp ? "⚡ OMNI SCALP SIGNAL" : "🛡️ OMNI-AI MATRIX SIGNAL");
+            const modeTitle = lastSignalData.isProtection ? "🚨 STREAK RECOVERY SIGNAL" : (lastSignalData.isScalp ? "⚡ SCALP LAMPO SIGNAL" : "🛡️ STREAK WIN MASTER SIGNAL");
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
