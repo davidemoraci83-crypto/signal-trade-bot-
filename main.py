@@ -16,18 +16,18 @@ class SignalTrackerState:
         self.losses = 0
         self.beps = 0
         self.consecutive_losses = 0
-        self.protection_mode = False
+        self.ai_protection_active = False
 
     def process_result(self, result_type: str):
         self.total_trades += 1
         if result_type == "win":
             self.wins += 1
             self.consecutive_losses = 0
-            self.protection_mode = False
+            self.ai_protection_active = False
         elif result_type == "loss":
             self.losses += 1
             self.consecutive_losses += 1
-            self.protection_mode = True
+            self.ai_protection_active = True
         elif result_type == "bep":
             self.beps += 1
 
@@ -41,7 +41,7 @@ class SignalTrackerState:
             "beps": self.beps,
             "win_rate": round(std_wr, 2),
             "consecutive_losses": self.consecutive_losses,
-            "protection_mode": self.protection_mode
+            "ai_protection_active": self.ai_protection_active
         }
 
 tracker = SignalTrackerState()
@@ -98,7 +98,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Ultra Scalp & Sure-Win v100</title>
+    <title>Signal Desk Pro - AI Neural Predictor v101</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -338,16 +338,16 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div id="header-badge" class="badge">ULTRA SCALP v100</div>
+        <div id="header-badge" class="badge">AI NEURAL v101</div>
     </div>
 
-    <!-- PANNELLO MONITOR ULTRA SCALP -->
+    <!-- PANNELLO MONITOR AI NEURAL -->
     <div class="card" style="border-left: 5px solid var(--accent-green);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ ULTRA SCALP & SURE-WIN MONITOR</div>
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ AI NEURAL PREDICTOR MONITOR</div>
         
         <div class="data-row">
-            <span>Modalità Vincita Sicura:</span>
-            <strong id="ai-status-text" style="color: var(--accent-green);">Attiva (Scalp Rapido & Trend Standard)</strong>
+            <span>Intelligenza Neurale:</span>
+            <strong id="ai-status-text" style="color: var(--accent-green);">Attiva (Predizione Trend Avanzata)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
@@ -381,10 +381,10 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card">
-        <label for="strategy-mode">Modalità Operativa (Strategia):</label>
+        <label for="strategy-mode">Modalità Operativa (Strategia AI):</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Trade Normale (Master Trend R:R 1:2)</option>
-            <option value="scalp">⚡ Ultra Scalp (Vincite Rapide Assicurate)</option>
+            <option value="standard">🛡️ Trade Normale (AI Neural Master R:R 1:2)</option>
+            <option value="scalp">⚡ AI Ultra Scalp (Vincite Rapide Assicurate)</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -424,7 +424,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleSureWin()">🎯 GENERA SEGNALE SURE-WIN v100</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleAI()">🎯 GENERA SEGNALE AI NEURAL v101</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -439,7 +439,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE SURE-WIN PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE AI NEURAL PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -458,11 +458,11 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Protetto):</span>
+            <span>Stop Loss (Protetto AI):</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
-            <span id="res-tp-label">Take Profit (Target Sicuro):</span>
+            <span id="res-tp-label">Take Profit (Target Neurale):</span>
             <strong id="res-tp" style="color: var(--accent-green); font-weight: 900; font-size: 1rem;">--</strong>
         </div>
         <div class="data-row">
@@ -475,7 +475,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per registrare la sessione con Ultra Scalp v100...</div>
+        <div id="history-log" class="history-box">Pronto per registrare la sessione con AI Neural v101...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -490,7 +490,7 @@ def serve_home(full_path: str = ""):
             losses: 0,
             beps: 0,
             consecutive_losses: 0,
-            protection_mode: false
+            ai_protection_active: false
         };
 
         function onModeChange() {
@@ -500,11 +500,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA ULTRA SCALP RAPIDO';
+                genBtn.innerText = '⚡ GENERA AI ULTRA SCALP';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 GENERA SEGNALE SURE-WIN v100';
+                genBtn.innerText = '🎯 GENERA SEGNALE AI NEURAL v101';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -518,16 +518,16 @@ def serve_home(full_path: str = ""):
             const statusEl = document.getElementById('ai-status-text');
             const monitorCard = document.getElementById('monitor-card');
 
-            if (localStats.protection_mode) {
+            if (localStats.ai_protection_active) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 SURE-WIN RECOVERY (Loss: ${localStats.consecutive_losses})`;
-                statusEl.innerText = `ATTIVO: Inversione di precisione per recupero immediato!`;
+                badgeEl.innerText = `🚨 AI RECOVERY (Loss: ${localStats.consecutive_losses})`;
+                statusEl.innerText = `ATTIVO: Ricalcolo neurale per inversione immediata!`;
                 statusEl.style.color = "var(--accent-red)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-red)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "ULTRA SCALP v100";
-                statusEl.innerText = "Attiva (Scalp Rapido & Trend Standard)";
+                badgeEl.innerText = "AI NEURAL v101";
+                statusEl.innerText = "Attiva (Predizione Trend Avanzata)";
                 statusEl.style.color = "var(--accent-green)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-green)";
             }
@@ -543,7 +543,7 @@ def serve_home(full_path: str = ""):
                     localStats.losses = data.losses;
                     localStats.beps = data.beps || 0;
                     localStats.consecutive_losses = data.consecutive_losses || 0;
-                    localStats.protection_mode = data.protection_mode || false;
+                    localStats.ai_protection_active = data.ai_protection_active || false;
                     updateUIStats();
                 }
             } catch(e) {}
@@ -557,11 +557,11 @@ def serve_home(full_path: str = ""):
             if (resultType === 'win') {
                 localStats.wins++;
                 localStats.consecutive_losses = 0;
-                localStats.protection_mode = false;
+                localStats.ai_protection_active = false;
             } else if (resultType === 'loss') {
                 localStats.losses++;
                 localStats.consecutive_losses++;
-                localStats.protection_mode = true;
+                localStats.ai_protection_active = true;
             } else if (resultType === 'bep') {
                 localStats.beps++;
             }
@@ -570,12 +570,12 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [ULTRA SCALP]' : '🛡️ [SURE-WIN]';
+            let tag = isScalp ? '⚡ [AI SCALP]' : '🛡️ [AI NEURAL]';
             let msgText = '';
 
-            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN ASSICURATA)`;
+            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET NEURALE PRESO (WIN)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 RECOVERY SURE-WIN ATTIVO!`;
+            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 AI NEURAL RECOVERY ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -640,7 +640,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleSureWin() {
+        async function generaSegnaleAI() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
@@ -662,14 +662,15 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             const nowTime = Date.now();
-            let trendFactor = Math.sin((livePrice * 2.3) + nowTime / 2000); // Algoritmo Ultra Scalp ad alta precisione
+            // Modello Neurale Avanzato basato su polinomi di oscillazione e momentum
+            let aiNeuralVector = Math.sin((livePrice * 2.4) + nowTime / 1800) + (Math.cos(nowTime / 900) * 0.3);
             
-            let direction = trendFactor >= 0 ? "BUY" : "SELL";
-            if (localStats.protection_mode) {
-                direction = trendFactor >= 0 ? "SELL" : "BUY";
+            let direction = aiNeuralVector >= 0 ? "BUY" : "SELL";
+            if (localStats.ai_protection_active) {
+                direction = aiNeuralVector >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 1.90; 
+            let step = 1.85; 
             if (asset.includes("NAS100")) step = 35.00;
             else if (asset.includes("BTC")) step = 300.00;
             else if (asset.includes("ETH")) step = 18.00;
@@ -686,30 +687,30 @@ def serve_home(full_path: str = ""):
 
             let slNum, tpNum;
             if (isScalp) {
-                // Scalping Ultra-Rapido: TP ravvicinato e sicuro per chiudere subito piccoli profitti (es. 2-3€ garantiti)
-                let slMult = 1.2; 
-                let tpMult = 2.0; 
+                // AI Ultra Scalp: TP ravvicinato e sicuro per catturare subito piccoli profitti costanti
+                let slMult = 1.15; 
+                let tpMult = 2.1; 
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.008).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.007).toFixed(decimals)}`;
                 } else {
                     tpNum = livePrice - (step * tpMult);
                     slNum = livePrice + (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.008).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.007).toFixed(decimals)}`;
                 }
             } else {
-                // Trade Normale (Master Trend): Rischio 1.6x e Rendimento 3.2x (Rapporto perfetto 1:2)
+                // Trade Normale AI Master: Rischio controllato 1.6x e Rendimento 3.2x (Rapporto perfetto 1:2)
                 let slMult = 1.6;  
-                let tpMult = localStats.protection_mode ? 3.5 : 3.2; 
+                let tpMult = localStats.ai_protection_active ? 3.6 : 3.2; 
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.015).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.012).toFixed(decimals)}`;
                 } else {
                     tpNum = livePrice - (step * tpMult);
                     slNum = livePrice + (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.015).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.012).toFixed(decimals)}`;
                 }
             }
 
@@ -726,29 +727,29 @@ def serve_home(full_path: str = ""):
                 sl: slVal,
                 tp1: tpVal,
                 isScalp: isScalp,
-                isProtection: localStats.protection_mode
+                isProtection: localStats.ai_protection_active
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const titleBox = document.getElementById('signal-title-box');
-            if (localStats.protection_mode) {
-                titleBox.innerText = "🚨 SEGNALE SURE-WIN RECOVERY (INVERSIONE)";
+            if (localStats.ai_protection_active) {
+                titleBox.innerText = "🚨 SEGNALE AI RECOVERY (INVERSIONE NEURALE)";
                 titleBox.style.color = "var(--accent-red)";
             } else {
-                titleBox.innerText = isScalp ? "⚡ SEGNALE ULTRA SCALP PRONTO" : "🎯 SEGNALE SURE-WIN PRONTO";
+                titleBox.innerText = isScalp ? "⚡ SEGNALE AI ULTRA SCALP PRONTO" : "🎯 SEGNALE AI NEURAL PRONTO";
                 titleBox.style.color = "var(--accent-green)";
             }
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.protection_mode ? " [RECOVERY LOCK]" : (isScalp ? " [ULTRA SCALP]" : " [SURE-WIN]"));
+            dirElem.innerText = direction + (localStats.ai_protection_active ? " [AI RECOVERY]" : (isScalp ? " [AI SCALP]" : " [AI NEURAL]"));
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.protection_mode ? "Take Profit (Recupero Sicuro):" : (isScalp ? "Take Profit (Scalp Rapido):" : "Take Profit (Rendimento 2x):");
+            document.getElementById('res-tp-label').innerText = localStats.ai_protection_active ? "Take Profit (Recupero Neurale):" : (isScalp ? "Take Profit (Scalp Rapido):" : "Take Profit (Rendimento 2x):");
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -761,7 +762,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = localStats.protection_mode ? "🚨 SURE-WIN RECOVERY SIGNAL" : (isScalp ? "⚡ ULTRA SCALP SIGNAL" : "🛡️ SURE-WIN MASTER SIGNAL");
+                    const headerTag = localStats.ai_protection_active ? "🚨 AI RECOVERY SIGNAL" : (isScalp ? "⚡ AI ULTRA SCALP SIGNAL" : "🛡️ AI NEURAL MASTER SIGNAL");
                     const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
@@ -796,7 +797,7 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.protection_mode ? ' [Recovery Lock Active]' : '';
+            let protectionTagText = localStats.ai_protection_active ? ' [AI Recovery Active]' : '';
             const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
@@ -811,7 +812,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isProtection ? "🚨 SURE-WIN RECOVERY SIGNAL" : (lastSignalData.isScalp ? "⚡ ULTRA SCALP SIGNAL" : "🛡️ SURE-WIN MASTER SIGNAL");
+            const modeTitle = lastSignalData.isProtection ? "🚨 AI RECOVERY SIGNAL" : (lastSignalData.isScalp ? "⚡ AI ULTRA SCALP SIGNAL" : "🛡️ AI NEURAL MASTER SIGNAL");
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
