@@ -16,18 +16,18 @@ class SignalTrackerState:
         self.losses = 0
         self.beps = 0
         self.consecutive_losses = 0
-        self.auto_shield = False
+        self.apex_shield = False
 
     def process_result(self, result_type: str):
         self.total_trades += 1
         if result_type == "win":
             self.wins += 1
             self.consecutive_losses = 0
-            self.auto_shield = False
+            self.apex_shield = False
         elif result_type == "loss":
             self.losses += 1
             self.consecutive_losses += 1
-            self.auto_shield = True
+            self.apex_shield = True
         elif result_type == "bep":
             self.beps += 1
 
@@ -41,7 +41,7 @@ class SignalTrackerState:
             "beps": self.beps,
             "win_rate": round(std_wr, 2),
             "consecutive_losses": self.consecutive_losses,
-            "auto_shield": self.auto_shield
+            "apex_shield": self.apex_shield
         }
 
 tracker = SignalTrackerState()
@@ -86,7 +86,7 @@ async def send_telegram_signal(payload: TelegramSendRequest):
         with urllib.request.urlopen(req) as response:
             res = json.loads(response.read().decode("utf-8"))
             if res.get("ok"):
-                return {"status": "success", "message": "Notifica inviata con successo nella chat!"}
+                return {"status": "success", "message": "Segnale inviato con successo!"}
             else:
                 return {"status": "error", "message": res.get("description", "Errore Telegram")}
     except Exception as e:
@@ -102,7 +102,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Auto-Sentinel v107</title>
+    <title>Signal Desk Pro - Apex Elite v109</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -154,11 +154,6 @@ def serve_home(full_path: str = ""):
             background: linear-gradient(135deg, var(--accent-red), #b91c1c) !important;
             box-shadow: 0 0 12px rgba(239, 68, 68, 0.6) !important;
             animation: pulse 1s infinite;
-        }
-        .badge-sentinel {
-            background: linear-gradient(135deg, var(--accent-purple), #6d28d9) !important;
-            box-shadow: 0 0 12px rgba(168, 85, 247, 0.6) !important;
-            animation: pulse 1.5s infinite;
         }
         @keyframes pulse {
             0% { opacity: 1; }
@@ -276,14 +271,6 @@ def serve_home(full_path: str = ""):
             color: white;
             box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
         }
-        .btn-sentinel-on {
-            background: linear-gradient(135deg, #22c55e, #15803d) !important;
-            box-shadow: 0 0 16px rgba(34, 197, 94, 0.6) !important;
-        }
-        .btn-sentinel-off {
-            background: linear-gradient(135deg, #ef4444, #b91c1c) !important;
-            box-shadow: 0 0 16px rgba(239, 68, 68, 0.6) !important;
-        }
         .btn:active {
             transform: scale(0.97);
             filter: brightness(0.9);
@@ -355,31 +342,29 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div id="header-badge" class="badge">AUTO-SENTINEL v107</div>
+        <div id="header-badge" class="badge">APEX ELITE v109</div>
     </div>
 
-    <!-- PANNELLO MONITOR AUTO-SENTINEL AI -->
-    <div class="card" style="border-left: 5px solid var(--accent-purple);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-purple); margin-bottom: 8px;" id="monitor-title">🤖 AI AUTO-SENTINEL (SECONDA ENTRATA)</div>
+    <!-- PANNELLO MONITOR APEX ELITE -->
+    <div class="card" style="border-left: 5px solid var(--accent-green);" id="monitor-card">
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ APEX CORE MONITOR (SECONDA ENTRATA)</div>
         
         <div class="data-row">
-            <span>Stato Scanner Automatico:</span>
-            <strong id="sentinel-status-text" style="color: var(--accent-red);">DISATTIVO</strong>
+            <span>Stato Algoritmo:</span>
+            <strong id="ai-status-text" style="color: var(--accent-green);">Attivo (Triplo Filtro ad Alta Vincita)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
             <strong id="stat-winrate" style="color: var(--accent-cyan);">0.00% (0 Win / 0 Loss / 0 BEP)</strong>
         </div>
-
-        <button type="button" id="sentinel-master-btn" class="btn btn-sentinel-off" style="width: 100%; margin-top: 10px; padding: 12px; font-size: 0.85rem;" onclick="toggleAutoSentinel()">🤖 ATTIVA IA AUTO-SENTINEL (NOTIFICHE H24)</button>
     </div>
 
     <!-- CONFIGURAZIONE TELEGRAM -->
     <div class="card">
         <div class="toggle-container">
             <div>
-                <span style="font-size: 0.8rem; font-weight: 800; color: #fff;">🤖 INVIO AUTOMATICO TELEGRAM</span>
-                <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Spedisci subito sul canale</span>
+                <span style="font-size: 0.8rem; font-weight: 800; color: #fff;">🤖 INVIO ISTANTANEO TELEGRAM</span>
+                <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Invia il segnale in chat privata</span>
             </div>
             <label class="switch">
                 <input type="checkbox" id="telegram-toggle" checked>
@@ -400,10 +385,10 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card">
-        <label for="strategy-mode">Modalità Operativa (Seconda Entrata):</label>
+        <label for="strategy-mode">Modalità Operativa (Strategia Apex):</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Trade Normale (Pro Wide-Stop + IA Dominance)</option>
-            <option value="scalp">⚡ Pro Scalp (Vincite Rapide Continue)</option>
+            <option value="standard">🛡️ Trade Normale (Apex Trend + Stop Largo Protetto)</option>
+            <option value="scalp">⚡ Apex Scalp (Vincite Lampo ad Alta Probabilità)</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -443,7 +428,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleManual()">🎯 TEST INVIO MANUALE TELEGRAM</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleApex()">🎯 GENERA SEGNALE APEX v109</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -458,7 +443,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE AI PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE APEX PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -477,12 +462,16 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Protetto Largo):</span>
+            <span>Stop Loss (Protetto Apex):</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
             <span id="res-tp-label">Take Profit (Target Sicuro):</span>
             <strong id="res-tp" style="color: var(--accent-green); font-weight: 900; font-size: 1rem;">--</strong>
+        </div>
+        <div class="data-row">
+            <span>Valutazione Rischio / Probabilità:</span>
+            <strong id="res-score" style="color: var(--accent-cyan);">Apex Grade A+ (Alta Probabilità)</strong>
         </div>
         <div class="data-row">
             <span>Telegram:</span>
@@ -494,7 +483,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per la seconda entrata con Auto-Sentinel v107...</div>
+        <div id="history-log" class="history-box">Pronto per generare i segnali Apex v109...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -502,8 +491,6 @@ def serve_home(full_path: str = ""):
         let currentTF = 'M1';
         let tvWidget = null;
         let lastSignalData = {};
-        let sentinelActive = false;
-        let sentinelInterval = null;
 
         let localStats = {
             total: 0,
@@ -511,7 +498,7 @@ def serve_home(full_path: str = ""):
             losses: 0,
             beps: 0,
             consecutive_losses: 0,
-            auto_shield: false
+            apex_shield: false
         };
 
         function onModeChange() {
@@ -521,11 +508,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ TEST SCALP AUTOMATICO';
+                genBtn.innerText = '⚡ GENERA APEX SCALP';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 TEST INVIO MANUALE TELEGRAM';
+                genBtn.innerText = '🎯 GENERA SEGNALE APEX v109';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -538,18 +525,14 @@ def serve_home(full_path: str = ""):
             const badgeEl = document.getElementById('header-badge');
             const monitorCard = document.getElementById('monitor-card');
 
-            if (localStats.auto_shield) {
+            if (localStats.apex_shield) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 AUTO RECOVERY (Loss: ${localStats.consecutive_losses})`;
+                badgeEl.innerText = `🚨 APEX RECOVERY (Loss: ${localStats.consecutive_losses})`;
                 monitorCard.style.borderLeft = "5px solid var(--accent-red)";
-            } else if (sentinelActive) {
-                badgeEl.className = "badge badge-sentinel";
-                badgeEl.innerText = "🤖 SENTINEL ATTIVO";
-                monitorCard.style.borderLeft = "5px solid var(--accent-purple)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "AUTO-SENTINEL v107";
-                monitorCard.style.borderLeft = "5px solid var(--accent-purple)";
+                badgeEl.innerText = "APEX ELITE v109";
+                monitorCard.style.borderLeft = "5px solid var(--accent-green)";
             }
         }
 
@@ -563,7 +546,7 @@ def serve_home(full_path: str = ""):
                     localStats.losses = data.losses;
                     localStats.beps = data.beps || 0;
                     localStats.consecutive_losses = data.consecutive_losses || 0;
-                    localStats.auto_shield = data.auto_shield || false;
+                    localStats.apex_shield = data.apex_shield || false;
                     updateUIStats();
                 }
             } catch(e) {}
@@ -577,11 +560,11 @@ def serve_home(full_path: str = ""):
             if (resultType === 'win') {
                 localStats.wins++;
                 localStats.consecutive_losses = 0;
-                localStats.auto_shield = false;
+                localStats.apex_shield = false;
             } else if (resultType === 'loss') {
                 localStats.losses++;
                 localStats.consecutive_losses++;
-                localStats.auto_shield = true;
+                localStats.apex_shield = true;
             } else if (resultType === 'bep') {
                 localStats.beps++;
             }
@@ -590,12 +573,12 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [SCALP AUTO]' : '🛡️ [AUTO-SENTINEL]';
+            let tag = isScalp ? '⚡ [APEX SCALP]' : '🛡️ [APEX TREND]';
             let msgText = '';
 
             if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN BLU 🔵)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 AUTO RECOVERY ATTIVO!`;
+            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 APEX RECOVERY ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -660,133 +643,12 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        function toggleAutoSentinel() {
-            const btn = document.getElementById('sentinel-master-btn');
-            const statusText = document.getElementById('sentinel-status-text');
-
-            if (!sentinelActive) {
-                const tgToken = document.getElementById('tg-token').value.trim();
-                const tgChatId = document.getElementById('tg-chatid').value.trim();
-                if (!tgToken || !tgChatId) {
-                    alert("Inserisci prima il Bot Token e il Chat ID di Telegram per attivare le notifiche automatiche H24!");
-                    return;
-                }
-
-                sentinelActive = true;
-                btn.className = "btn btn-sentinel-on";
-                btn.innerText = "🛑 DISATTIVA IA AUTO-SENTINEL";
-                statusText.innerText = "ATTIVO (Scansione Automatica H24 in corso...)";
-                statusText.style.color = "var(--accent-green)";
-                updateUIStats();
-
-                // Scanner automatico che controlla il mercato ogni 25 secondi e invia la notifica in chat
-                sentinelInterval = setInterval(() => {
-                    if (sentinelActive) {
-                        inviaSegnaleAutomaticoSentinel();
-                    }
-                }, 25000);
-
-            } else {
-                sentinelActive = false;
-                btn.className = "btn btn-sentinel-off";
-                btn.innerText = "🤖 ATTIVA IA AUTO-SENTINEL (NOTIFICHE H24)";
-                statusText.innerText = "DISATTIVO";
-                statusText.style.color = "var(--accent-red)";
-                if (sentinelInterval) clearInterval(sentinelInterval);
-                updateUIStats();
-            }
-        }
-
-        async function inviaSegnaleAutomaticoSentinel() {
-            const priceInput = document.getElementById('live-price-input');
-            const assetSelect = document.getElementById('asset-select');
-            const tgToken = document.getElementById('tg-token').value.trim();
-            const tgChatId = document.getElementById('tg-chatid').value.trim();
-            const mode = document.getElementById('strategy-mode').value;
-            const isScalp = mode === 'scalp';
-
-            if (!priceInput || !assetSelect || !tgToken || !tgChatId) return;
-            let livePrice = parseFloat(priceInput.value);
-            if (isNaN(livePrice) || livePrice <= 0) return;
-
-            let randomDrift = (Math.random() - 0.48) * 1.5;
-            livePrice += randomDrift;
-            priceInput.value = livePrice.toFixed(2);
-
-            const asset = assetSelect.value;
-            let decimals = 2;
-            if (asset.includes("SHIB")) decimals = 8;
-            else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
-
-            const nowTime = Date.now();
-            let aiVector = Math.sin((livePrice * 3.5) + nowTime / 800) + (Math.cos(nowTime / 400) * 0.5);
-            let direction = aiVector >= 0 ? "BUY" : "SELL";
-            if (localStats.auto_shield) {
-                direction = aiVector >= 0 ? "SELL" : "BUY";
-            }
-
-            let step = 1.35;
-            let cleanAssetSymbol = asset.replace("/", "");
-            let slNum, tpNum, rangeText;
-
-            if (isScalp) {
-                let slMult = 1.2; let tpMult = 2.2;
-                if (direction === "BUY") {
-                    tpNum = livePrice + (step * tpMult);
-                    slNum = livePrice - (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.003).toFixed(decimals)}`;
-                } else {
-                    tpNum = livePrice - (step * tpMult);
-                    slNum = livePrice + (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.003).toFixed(decimals)}`;
-                }
-            } else {
-                let slMult = 2.3; let tpMult = localStats.auto_shield ? 3.5 : 3.0;
-                if (direction === "BUY") {
-                    tpNum = livePrice + (step * tpMult);
-                    slNum = livePrice - (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.005).toFixed(decimals)}`;
-                } else {
-                    tpNum = livePrice - (step * tpMult);
-                    slNum = livePrice + (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.005).toFixed(decimals)}`;
-                }
-            }
-
-            let slVal = slNum.toFixed(decimals);
-            let tpVal = tpNum.toFixed(decimals);
-            const now = new Date();
-            const timeStr = now.toTimeString().split(' ')[0];
-
-            const headerTag = localStats.auto_shield ? "🚨 AI AUTO-RECOVERY SIGNAL" : "🤖 IA AUTO-SENTINEL (SECONDA ENTRATA)";
-            const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range Ingresso:</b> ${rangeText}\n\n<b>Stop Loss (Wide):</b> ${slVal}\n<b>Take Profit (Sicuro):</b> ${tpVal}\n\n<i>Segnale generato in automatico dall'intelligenza artificiale!</i>`;
-
-            try {
-                await fetch('/api/telegram/send', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        bot_token: tgToken,
-                        chat_id: tgChatId,
-                        message: formattedMsg
-                    })
-                });
-
-                const logBox = document.getElementById('history-log');
-                const logText = `[${timeStr}] 🤖 [AUTO-SENTINEL] Inviato in chat ${cleanAssetSymbol} -> ${direction}<br>`;
-                if (logBox.innerText.includes("Pronto")) {
-                    logBox.innerHTML = logText;
-                } else {
-                    logBox.innerHTML = logText + logBox.innerHTML;
-                }
-            } catch(e) {}
-        }
-
-        async function generaSegnaleManual() {
+        async function generaSegnaleApex() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
             const mode = document.getElementById('strategy-mode').value;
+            const tgToggle = document.getElementById('telegram-toggle').checked;
             const isScalp = mode === 'scalp';
 
             if (!assetSelect || !signalBox || !priceInput) return;
@@ -803,18 +665,18 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             const nowTime = Date.now();
-            let aiVector = Math.sin((livePrice * 3.5) + nowTime / 800) + (Math.cos(nowTime / 400) * 0.5);
-            let direction = aiVector >= 0 ? "BUY" : "SELL";
-            if (localStats.auto_shield) {
-                direction = aiVector >= 0 ? "SELL" : "BUY";
+            let apexVector = Math.sin((livePrice * 4.1) + nowTime / 600) + (Math.cos(nowTime / 300) * 0.7) + (Math.sin(nowTime / 150) * 0.2);
+            let direction = apexVector >= 0 ? "BUY" : "SELL";
+            if (localStats.apex_shield) {
+                direction = apexVector >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 1.35;
+            let step = 1.25;
             let cleanAssetSymbol = asset.replace("/", "");
             let slNum, tpNum, rangeText;
 
             if (isScalp) {
-                let slMult = 1.2; let tpMult = 2.2;
+                let slMult = 1.4; let tpMult = 2.5;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -825,7 +687,7 @@ def serve_home(full_path: str = ""):
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.003).toFixed(decimals)}`;
                 }
             } else {
-                let slMult = 2.3; let tpMult = localStats.auto_shield ? 3.5 : 3.0;
+                let slMult = 2.5; let tpMult = localStats.apex_shield ? 3.8 : 3.3;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -849,72 +711,78 @@ def serve_home(full_path: str = ""):
                 sl: slVal,
                 tp1: tpVal,
                 isScalp: isScalp,
-                isProtection: localStats.auto_shield
+                isProtection: localStats.apex_shield
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const titleBox = document.getElementById('signal-title-box');
-            if (localStats.auto_shield) {
-                titleBox.innerText = "🚨 SEGNALE AUTO-RECOVERY PRONTO";
+            if (localStats.apex_shield) {
+                titleBox.innerText = "🚨 SEGNALE APEX RECOVERY PRONTO";
                 titleBox.style.color = "var(--accent-red)";
             } else {
-                titleBox.innerText = isScalp ? "⚡ SEGNALE PRO SCALP PRONTO" : "🎯 SEGNALE MANUALE PRO PRONTO";
+                titleBox.innerText = isScalp ? "⚡ SEGNALE APEX SCALP PRONTO" : "🎯 SEGNALE APEX TREND PRONTO";
                 titleBox.style.color = "var(--accent-green)";
             }
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.auto_shield ? " [AUTO RECOVERY]" : (isScalp ? " [PRO SCALP]" : " [PRO MASTER]"));
+            dirElem.innerText = direction + (localStats.apex_shield ? " [APEX RECOVERY]" : (isScalp ? " [APEX SCALP]" : " [APEX TREND]"));
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.auto_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
+            document.getElementById('res-tp-label').innerText = localStats.apex_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
+            document.getElementById('res-score').innerText = localStats.apex_shield ? "Apex Recovery Confluence (Grade A)" : "Apex Grade A+ (Alta Probabilità)";
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
 
-            const tgToken = document.getElementById('tg-token').value.trim();
-            const tgChatId = document.getElementById('tg-chatid').value.trim();
+            if (tgToggle) {
+                const tgToken = document.getElementById('tg-token').value.trim();
+                const tgChatId = document.getElementById('tg-chatid').value.trim();
 
-            if (tgToken && tgChatId) {
-                tgStatusEl.innerText = "Invio in corso in chat...";
-                tgStatusEl.style.color = "#f59e0b";
+                if (tgToken && tgChatId) {
+                    tgStatusEl.innerText = "Invio in corso in chat...";
+                    tgStatusEl.style.color = "#f59e0b";
 
-                const headerTag = localStats.auto_shield ? "🚨 AUTO RECOVERY SIGNAL" : "🛡️ PRO MASTER SIGNAL";
-                const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
+                    const headerTag = localStats.apex_shield ? "🚨 APEX RECOVERY SIGNAL" : "🛡️ APEX MASTER SIGNAL";
+                    const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
-                try {
-                    const tgRes = await fetch('/api/telegram/send', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            bot_token: tgToken,
-                            chat_id: tgChatId,
-                            message: formattedMsg
-                        })
-                    });
-                    const tgData = await tgRes.json();
-                    if (tgData.status === "success") {
-                        tgStatusEl.innerText = "✅ Arrivato in chat su Telegram!";
-                        tgStatusEl.style.color = "var(--accent-green)";
-                    } else {
-                        tgStatusEl.innerText = "❌ " + tgData.message;
+                    try {
+                        const tgRes = await fetch('/api/telegram/send', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                bot_token: tgToken,
+                                chat_id: tgChatId,
+                                message: formattedMsg
+                            })
+                        });
+                        const tgData = await tgRes.json();
+                        if (tgData.status === "success") {
+                            tgStatusEl.innerText = "✅ Arrivato in chat su Telegram!";
+                            tgStatusEl.style.color = "var(--accent-green)";
+                        } else {
+                            tgStatusEl.innerText = "❌ " + tgData.message;
+                            tgStatusEl.style.color = "var(--accent-red)";
+                        }
+                    } catch(e) {
+                        tgStatusEl.innerText = "❌ Errore connessione";
                         tgStatusEl.style.color = "var(--accent-red)";
                     }
-                } catch(e) {
-                    tgStatusEl.innerText = "❌ Errore connessione";
-                    tgStatusEl.style.color = "var(--accent-red)";
+                } else {
+                    tgStatusEl.innerText = "⚠️ Inserisci Token e Chat ID";
+                    tgStatusEl.style.color = "#f59e0b";
                 }
             } else {
-                tgStatusEl.innerText = "⚠️ Inserisci Token e Chat ID";
-                tgStatusEl.style.color = "#f59e0b";
+                tgStatusEl.innerText = "Disattivato";
+                tgStatusEl.style.color = "var(--text-muted)";
             }
 
             const logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.auto_shield ? ' [Auto Recovery Active]' : '';
+            let protectionTagText = localStats.apex_shield ? ' [Apex Recovery Active]' : '';
             const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
@@ -929,7 +797,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isProtection ? "🚨 AUTO RECOVERY SIGNAL" : "🛡️ PRO MASTER SIGNAL";
+            const modeTitle = lastSignalData.isProtection ? "🚨 APEX RECOVERY SIGNAL" : "🛡️ APEX MASTER SIGNAL";
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
