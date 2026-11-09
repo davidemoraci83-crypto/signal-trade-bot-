@@ -69,24 +69,28 @@ async def send_telegram_signal(payload: TelegramSendRequest):
     if not payload.bot_token or not payload.chat_id:
         return {"status": "error", "message": "Token o Chat ID Telegram mancanti."}
     
-    url = f"https://api.telegram.org/bot{payload.bot_token}/sendMessage"
-    params = {
-        "chat_id": payload.chat_id,
+    url = f"https://api.telegram.org/bot{payload.bot_token.strip()}/sendMessage"
+    payload_data = {
+        "chat_id": payload.chat_id.strip(),
         "text": payload.message,
         "parse_mode": "HTML"
     }
     
     try:
-        data = urllib.parse.urlencode(params).encode("utf-8")
-        req = urllib.request.Request(url, data=data)
+        data = json.dumps(payload_data).encode("utf-8")
+        req = urllib.request.Request(
+            url, 
+            data=data, 
+            headers={"Content-Type": "application/json"}
+        )
         with urllib.request.urlopen(req) as response:
             res = json.loads(response.read().decode("utf-8"))
             if res.get("ok"):
-                return {"status": "success", "message": "Notifica automatica inviata su Telegram!"}
+                return {"status": "success", "message": "Notifica inviata con successo nella chat!"}
             else:
                 return {"status": "error", "message": res.get("description", "Errore Telegram")}
     except Exception as e:
-        return {"status": "error", "message": f"Impossibile inviare a Telegram: {str(e)}"}
+        return {"status": "error", "message": f"Errore di rete: {str(e)}"}
 
 @app.get("/", response_class=HTMLResponse)
 @app.get("/signals", response_class=HTMLResponse)
@@ -98,7 +102,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Auto-Sentinel AI v106</title>
+    <title>Signal Desk Pro - Auto-Sentinel v107</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -351,7 +355,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div id="header-badge" class="badge">AUTO-SENTINEL v106</div>
+        <div id="header-badge" class="badge">AUTO-SENTINEL v107</div>
     </div>
 
     <!-- PANNELLO MONITOR AUTO-SENTINEL AI -->
@@ -439,7 +443,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleManual()">🎯 GENERA SEGNALE MANUALE v106</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleManual()">🎯 TEST INVIO MANUALE TELEGRAM</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -490,7 +494,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per la seconda entrata con Auto-Sentinel v106...</div>
+        <div id="history-log" class="history-box">Pronto per la seconda entrata con Auto-Sentinel v107...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -517,11 +521,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA PRO SCALP AUTOMATICO';
+                genBtn.innerText = '⚡ TEST SCALP AUTOMATICO';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 GENERA SEGNALE MANUALE v106';
+                genBtn.innerText = '🎯 TEST INVIO MANUALE TELEGRAM';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -544,7 +548,7 @@ def serve_home(full_path: str = ""):
                 monitorCard.style.borderLeft = "5px solid var(--accent-purple)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "AUTO-SENTINEL v106";
+                badgeEl.innerText = "AUTO-SENTINEL v107";
                 monitorCard.style.borderLeft = "5px solid var(--accent-purple)";
             }
         }
@@ -675,7 +679,7 @@ def serve_home(full_path: str = ""):
                 statusText.style.color = "var(--accent-green)";
                 updateUIStats();
 
-                // Scanner automatico che controlla il mercato ogni 25 secondi e invia la notifica se rileva il momento ideale
+                // Scanner automatico che controlla il mercato ogni 25 secondi e invia la notifica in chat
                 sentinelInterval = setInterval(() => {
                     if (sentinelActive) {
                         inviaSegnaleAutomaticoSentinel();
@@ -701,11 +705,10 @@ def serve_home(full_path: str = ""):
             const mode = document.getElementById('strategy-mode').value;
             const isScalp = mode === 'scalp';
 
-            if (!priceInput || !assetSelect) return;
+            if (!priceInput || !assetSelect || !tgToken || !tgChatId) return;
             let livePrice = parseFloat(priceInput.value);
             if (isNaN(livePrice) || livePrice <= 0) return;
 
-            // Simula fluttuazione live di mercato per l'IA
             let randomDrift = (Math.random() - 0.48) * 1.5;
             livePrice += randomDrift;
             priceInput.value = livePrice.toFixed(2);
@@ -755,7 +758,6 @@ def serve_home(full_path: str = ""):
             const now = new Date();
             const timeStr = now.toTimeString().split(' ')[0];
 
-            // Invia notifica automatica Telegram
             const headerTag = localStats.auto_shield ? "🚨 AI AUTO-RECOVERY SIGNAL" : "🤖 IA AUTO-SENTINEL (SECONDA ENTRATA)";
             const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range Ingresso:</b> ${rangeText}\n\n<b>Stop Loss (Wide):</b> ${slVal}\n<b>Take Profit (Sicuro):</b> ${tpVal}\n\n<i>Segnale generato in automatico dall'intelligenza artificiale!</i>`;
 
@@ -771,7 +773,7 @@ def serve_home(full_path: str = ""):
                 });
 
                 const logBox = document.getElementById('history-log');
-                const logText = `[${timeStr}] 🤖 [AUTO-SENTINEL] Notificata ${cleanAssetSymbol} -> ${direction}<br>`;
+                const logText = `[${timeStr}] 🤖 [AUTO-SENTINEL] Inviato in chat ${cleanAssetSymbol} -> ${direction}<br>`;
                 if (logBox.innerText.includes("Pronto")) {
                     logBox.innerHTML = logText;
                 } else {
@@ -785,7 +787,6 @@ def serve_home(full_path: str = ""):
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
             const mode = document.getElementById('strategy-mode').value;
-            const tgToggle = document.getElementById('telegram-toggle').checked;
             const isScalp = mode === 'scalp';
 
             if (!assetSelect || !signalBox || !priceInput) return;
@@ -875,46 +876,41 @@ def serve_home(full_path: str = ""):
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
 
-            if (tgToggle) {
-                const tgToken = document.getElementById('tg-token').value.trim();
-                const tgChatId = document.getElementById('tg-chatid').value.trim();
+            const tgToken = document.getElementById('tg-token').value.trim();
+            const tgChatId = document.getElementById('tg-chatid').value.trim();
 
-                if (tgToken && tgChatId) {
-                    tgStatusEl.innerText = "Invio in corso...";
-                    tgStatusEl.style.color = "#f59e0b";
+            if (tgToken && tgChatId) {
+                tgStatusEl.innerText = "Invio in corso in chat...";
+                tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = localStats.auto_shield ? "🚨 AUTO RECOVERY SIGNAL" : "🛡️ PRO MASTER SIGNAL";
-                    const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
+                const headerTag = localStats.auto_shield ? "🚨 AUTO RECOVERY SIGNAL" : "🛡️ PRO MASTER SIGNAL";
+                const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
-                    try {
-                        const tgRes = await fetch('/api/telegram/send', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                bot_token: tgToken,
-                                chat_id: tgChatId,
-                                message: formattedMsg
-                            })
-                        });
-                        const tgData = await tgRes.json();
-                        if (tgData.status === "success") {
-                            tgStatusEl.innerText = "✅ Inviato su Telegram!";
-                            tgStatusEl.style.color = "var(--accent-green)";
-                        } else {
-                            tgStatusEl.innerText = "❌ " + tgData.message;
-                            tgStatusEl.style.color = "var(--accent-red)";
-                        }
-                    } catch(e) {
-                        tgStatusEl.innerText = "❌ Errore connessione";
+                try {
+                    const tgRes = await fetch('/api/telegram/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            bot_token: tgToken,
+                            chat_id: tgChatId,
+                            message: formattedMsg
+                        })
+                    });
+                    const tgData = await tgRes.json();
+                    if (tgData.status === "success") {
+                        tgStatusEl.innerText = "✅ Arrivato in chat su Telegram!";
+                        tgStatusEl.style.color = "var(--accent-green)";
+                    } else {
+                        tgStatusEl.innerText = "❌ " + tgData.message;
                         tgStatusEl.style.color = "var(--accent-red)";
                     }
-                } else {
-                    tgStatusEl.innerText = "⚠️ Inserisci Token e Chat ID";
-                    tgStatusEl.style.color = "#f59e0b";
+                } catch(e) {
+                    tgStatusEl.innerText = "❌ Errore connessione";
+                    tgStatusEl.style.color = "var(--accent-red)";
                 }
             } else {
-                tgStatusEl.innerText = "Disattivato";
-                tgStatusEl.style.color = "var(--text-muted)";
+                tgStatusEl.innerText = "⚠️ Inserisci Token e Chat ID";
+                tgStatusEl.style.color = "#f59e0b";
             }
 
             const logBox = document.getElementById('history-log');
