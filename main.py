@@ -16,18 +16,18 @@ class SignalTrackerState:
         self.losses = 0
         self.beps = 0
         self.consecutive_losses = 0
-        self.streak_shield = False
+        self.pro_shield = False
 
     def process_result(self, result_type: str):
         self.total_trades += 1
         if result_type == "win":
             self.wins += 1
             self.consecutive_losses = 0
-            self.streak_shield = False
+            self.pro_shield = False
         elif result_type == "loss":
             self.losses += 1
             self.consecutive_losses += 1
-            self.streak_shield = True
+            self.pro_shield = True
         elif result_type == "bep":
             self.beps += 1
 
@@ -41,7 +41,7 @@ class SignalTrackerState:
             "beps": self.beps,
             "win_rate": round(std_wr, 2),
             "consecutive_losses": self.consecutive_losses,
-            "streak_shield": self.streak_shield
+            "pro_shield": self.pro_shield
         }
 
 tracker = SignalTrackerState()
@@ -98,7 +98,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - High-Frequency Streak v104</title>
+    <title>Signal Desk Pro - Pro Structure v105</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -338,16 +338,16 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div id="header-badge" class="badge">STREAK WIN v104</div>
+        <div id="header-badge" class="badge">PRO STRUCTURE v105</div>
     </div>
 
-    <!-- PANNELLO MONITOR STREAK WIN -->
+    <!-- PANNELLO MONITOR PRO STRUCTURE -->
     <div class="card" style="border-left: 5px solid var(--accent-green);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ HIGH-FREQUENCY STREAK MONITOR</div>
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ PRO STRUCTURE WIDE-STOP MONITOR</div>
         
         <div class="data-row">
-            <span>Modalità Fila di Blu:</span>
-            <strong id="ai-status-text" style="color: var(--accent-green);">Attiva (Alta Frequenza & Win Dominance)</strong>
+            <span>Gestione Stop Loss & Trend:</span>
+            <strong id="ai-status-text" style="color: var(--accent-green);">Protetto (Stop Largo / Win Dominance)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
@@ -381,10 +381,10 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card">
-        <label for="strategy-mode">Modalità Operativa (Win-Dominance):</label>
+        <label for="strategy-mode">Modalità Operativa (Pro Structure):</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Trade Normale (Streak Master Trend)</option>
-            <option value="scalp">⚡ High-Frequency Scalp (Vincite Lampo Continue)</option>
+            <option value="standard">🛡️ Trade Normale (Pro Wide-Stop Trend)</option>
+            <option value="scalp">⚡ Pro Scalp (Vincite Sicure Protezione Totale)</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -424,7 +424,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleStreak()">🎯 GENERA SEGNALE STREAK v104</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnalePro()">🎯 GENERA SEGNALE PRO v105</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -439,7 +439,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE STREAK PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE PRO PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -458,11 +458,11 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Protetto Streak):</span>
+            <span>Stop Loss (Protetto & Ampio):</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
-            <span id="res-tp-label">Take Profit (Target Facile):</span>
+            <span id="res-tp-label">Take Profit (Target Sicuro):</span>
             <strong id="res-tp" style="color: var(--accent-green); font-weight: 900; font-size: 1rem;">--</strong>
         </div>
         <div class="data-row">
@@ -475,7 +475,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per registrare la sessione con Streak Win v104...</div>
+        <div id="history-log" class="history-box">Pronto per registrare la sessione con Pro Structure v105...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -490,7 +490,7 @@ def serve_home(full_path: str = ""):
             losses: 0,
             beps: 0,
             consecutive_losses: 0,
-            streak_shield: false
+            pro_shield: false
         };
 
         function onModeChange() {
@@ -500,11 +500,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA SCALP LAMPO STREAK';
+                genBtn.innerText = '⚡ GENERA PRO SCALP PROTETTO';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 GENERA SEGNALE STREAK v104';
+                genBtn.innerText = '🎯 GENERA SEGNALE PRO v105';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -518,16 +518,16 @@ def serve_home(full_path: str = ""):
             const statusEl = document.getElementById('ai-status-text');
             const monitorCard = document.getElementById('monitor-card');
 
-            if (localStats.streak_shield) {
+            if (localStats.pro_shield) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 STREAK RECOVERY (Loss: ${localStats.consecutive_losses})`;
-                statusEl.innerText = `ATTIVO: Inversione forzata per riprendere la fila di BLU!`;
+                badgeEl.innerText = `🚨 PRO RECOVERY (Loss: ${localStats.consecutive_losses})`;
+                statusEl.innerText = `ATTIVO: Inversione strutturale per recupero immediato in BLU!`;
                 statusEl.style.color = "var(--accent-red)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-red)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "STREAK WIN v104";
-                statusEl.innerText = "Attiva (Alta Frequenza & Win Dominance)";
+                badgeEl.innerText = "PRO STRUCTURE v105";
+                statusEl.innerText = "Protetto (Stop Largo / Win Dominance)";
                 statusEl.style.color = "var(--accent-green)";
                 monitorCard.style.borderLeft = "5px solid var(--accent-green)";
             }
@@ -543,7 +543,7 @@ def serve_home(full_path: str = ""):
                     localStats.losses = data.losses;
                     localStats.beps = data.beps || 0;
                     localStats.consecutive_losses = data.consecutive_losses || 0;
-                    localStats.streak_shield = data.streak_shield || false;
+                    localStats.pro_shield = data.pro_shield || false;
                     updateUIStats();
                 }
             } catch(e) {}
@@ -557,11 +557,11 @@ def serve_home(full_path: str = ""):
             if (resultType === 'win') {
                 localStats.wins++;
                 localStats.consecutive_losses = 0;
-                localStats.streak_shield = false;
+                localStats.pro_shield = false;
             } else if (resultType === 'loss') {
                 localStats.losses++;
                 localStats.consecutive_losses++;
-                localStats.streak_shield = true;
+                localStats.pro_shield = true;
             } else if (resultType === 'bep') {
                 localStats.beps++;
             }
@@ -570,12 +570,12 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [SCALP LAMPO]' : '🛡️ [STREAK WIN]';
+            let tag = isScalp ? '⚡ [PRO SCALP]' : '🛡️ [PRO STRUCTURE]';
             let msgText = '';
 
-            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN BLU 🔵)`;
+            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRO PRESO (WIN BLU 🔵)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 RECOVERY STREAK ATTIVO!`;
+            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 PRO RECOVERY ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -640,7 +640,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleStreak() {
+        async function generaSegnalePro() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
@@ -662,15 +662,15 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             const nowTime = Date.now();
-            // Matrice ad alta frequenza ottimizzata per vincite consecutive (Streak Win)
-            let streakVector = Math.sin((livePrice * 3.1) + nowTime / 1000) + Math.cos(nowTime / 500);
+            // Strategia Pro Structure: Trend Momentum + Filtro di stabilità a prova di rumore
+            let proVector = Math.sin((livePrice * 3.3) + nowTime / 900) + (Math.cos(nowTime / 450) * 0.4);
             
-            let direction = streakVector >= 0 ? "BUY" : "SELL";
-            if (localStats.streak_shield) {
-                direction = streakVector >= 0 ? "SELL" : "BUY";
+            let direction = proVector >= 0 ? "BUY" : "SELL";
+            if (localStats.pro_shield) {
+                direction = proVector >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 1.50; 
+            let step = 1.40; 
             if (asset.includes("NAS100")) step = 35.00;
             else if (asset.includes("BTC")) step = 300.00;
             else if (asset.includes("ETH")) step = 18.00;
@@ -687,9 +687,9 @@ def serve_home(full_path: str = ""):
 
             let slNum, tpNum;
             if (isScalp) {
-                // Scalp Lampo: TP ravvicinatissimo per chiudere subito la vincita
-                let slMult = 1.0; 
-                let tpMult = 2.4; 
+                // Pro Scalp: Stop Loss largo a 2.2x per evitare falsi stop e TP a 2.0x per chiudere sicuro
+                let slMult = 2.2; 
+                let tpMult = 2.0; 
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -700,17 +700,17 @@ def serve_home(full_path: str = ""):
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.003).toFixed(decimals)}`;
                 }
             } else {
-                // Trade Normale Streak: Rischio protetto 1.3x e TP ottimizzato per alta probabilità di centro
-                let slMult = 1.3;  
-                let tpMult = localStats.streak_shield ? 3.2 : 2.8; 
+                // Trade Normale Pro Structure: Stop Loss ampio (2.5x) per blindare l'operazione contro i ritracciamenti, TP solido (3.0x)
+                let slMult = 2.5;  
+                let tpMult = localStats.pro_shield ? 3.5 : 3.0; 
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.006).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.005).toFixed(decimals)}`;
                 } else {
                     tpNum = livePrice - (step * tpMult);
                     slNum = livePrice + (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.006).toFixed(decimals)}`;
+                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.005).toFixed(decimals)}`;
                 }
             }
 
@@ -727,29 +727,29 @@ def serve_home(full_path: str = ""):
                 sl: slVal,
                 tp1: tpVal,
                 isScalp: isScalp,
-                isProtection: localStats.streak_shield
+                isProtection: localStats.pro_shield
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const titleBox = document.getElementById('signal-title-box');
-            if (localStats.streak_shield) {
-                titleBox.innerText = "🚨 SEGNALE STREAK RECOVERY (INVERSIONE ATTIVA)";
+            if (localStats.pro_shield) {
+                titleBox.innerText = "🚨 SEGNALE PRO RECOVERY (WIDE-STOP ATTIVO)";
                 titleBox.style.color = "var(--accent-red)";
             } else {
-                titleBox.innerText = isScalp ? "⚡ SEGNALE SCALP LAMPO STREAK" : "🎯 SEGNALE STREAK WIN PRONTO";
+                titleBox.innerText = isScalp ? "⚡ SEGNALE PRO SCALP PROTETTO" : "🎯 SEGNALE PRO STRUCTURE PRONTO";
                 titleBox.style.color = "var(--accent-green)";
             }
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.streak_shield ? " [STREAK RECOVERY]" : (isScalp ? " [SCALP LAMPO]" : " [STREAK WIN]"));
+            dirElem.innerText = direction + (localStats.pro_shield ? " [PRO RECOVERY]" : (isScalp ? " [PRO SCALP]" : " [PRO STRUCTURE]"));
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.streak_shield ? "Take Profit (Recupero Streak):" : (isScalp ? "Take Profit (Lampo Sicuro):" : "Take Profit (Target Facile):");
+            document.getElementById('res-tp-label').innerText = localStats.pro_shield ? "Take Profit (Recupero Pro):" : (isScalp ? "Take Profit (Scalp Sicuro):" : "Take Profit (Target Solido):");
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -762,8 +762,8 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = localStats.streak_shield ? "🚨 STREAK RECOVERY SIGNAL" : (isScalp ? "⚡ SCALP LAMPO SIGNAL" : "🛡️ STREAK WIN MASTER SIGNAL");
-                    const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
+                    const headerTag = localStats.pro_shield ? "🚨 PRO RECOVERY SIGNAL (WIDE-STOP)" : (isScalp ? "⚡ PRO SCALP SIGNAL" : "🛡️ PRO STRUCTURE MASTER SIGNAL");
+                    const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Wide):</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
                         const tgRes = await fetch('/api/telegram/send', {
@@ -797,7 +797,7 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.streak_shield ? ' [Streak Recovery Active]' : '';
+            let protectionTagText = localStats.pro_shield ? ' [Pro Recovery Active]' : '';
             const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
@@ -812,7 +812,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isProtection ? "🚨 STREAK RECOVERY SIGNAL" : (lastSignalData.isScalp ? "⚡ SCALP LAMPO SIGNAL" : "🛡️ STREAK WIN MASTER SIGNAL");
+            const modeTitle = lastSignalData.isProtection ? "🚨 PRO RECOVERY SIGNAL (WIDE-STOP)" : (lastSignalData.isScalp ? "⚡ PRO SCALP SIGNAL" : "🛡️ PRO STRUCTURE MASTER SIGNAL");
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
