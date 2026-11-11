@@ -16,18 +16,18 @@ class SignalTrackerState:
         self.losses = 0
         self.beps = 0
         self.consecutive_losses = 0
-        self.apex_shield = False
+        self.ultimate_shield = False
 
     def process_result(self, result_type: str):
         self.total_trades += 1
         if result_type == "win":
             self.wins += 1
             self.consecutive_losses = 0
-            self.apex_shield = False
+            self.ultimate_shield = False
         elif result_type == "loss":
             self.losses += 1
             self.consecutive_losses += 1
-            self.apex_shield = True
+            self.ultimate_shield = True
         elif result_type == "bep":
             self.beps += 1
 
@@ -41,7 +41,7 @@ class SignalTrackerState:
             "beps": self.beps,
             "win_rate": round(std_wr, 2),
             "consecutive_losses": self.consecutive_losses,
-            "apex_shield": self.apex_shield
+            "ultimate_shield": self.ultimate_shield
         }
 
 tracker = SignalTrackerState()
@@ -102,7 +102,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Apex Elite v109</title>
+    <title>Signal Desk Pro - Apex Pro Ultimate v110</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -342,16 +342,16 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div id="header-badge" class="badge">APEX ELITE v109</div>
+        <div id="header-badge" class="badge">APEX ULTIMATE v110</div>
     </div>
 
-    <!-- PANNELLO MONITOR APEX ELITE -->
+    <!-- PANNELLO MONITOR ULTIMATE -->
     <div class="card" style="border-left: 5px solid var(--accent-green);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ APEX CORE MONITOR (SECONDA ENTRATA)</div>
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ APEX ULTIMATE MONITOR (SECONDA ENTRATA)</div>
         
         <div class="data-row">
             <span>Stato Algoritmo:</span>
-            <strong id="ai-status-text" style="color: var(--accent-green);">Attivo (Triplo Filtro ad Alta Vincita)</strong>
+            <strong id="ai-status-text" style="color: var(--accent-green);">Attiva (Massima Confluenza & Win Dominance)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
@@ -385,10 +385,10 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card">
-        <label for="strategy-mode">Modalità Operativa (Strategia Apex):</label>
+        <label for="strategy-mode">Modalità Operativa (Apex Ultimate):</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Trade Normale (Apex Trend + Stop Largo Protetto)</option>
-            <option value="scalp">⚡ Apex Scalp (Vincite Lampo ad Alta Probabilità)</option>
+            <option value="standard">🛡️ Trade Normale (Apex Ultimate Trend + Stop Largo)</option>
+            <option value="scalp">⚡ Apex Scalp Ultimate (Vincite Rapide ad Altissima Precisione)</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -428,7 +428,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleApex()">🎯 GENERA SEGNALE APEX v109</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleApexUltimate()">🎯 GENERA SEGNALE ULTIMATE v110</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -443,7 +443,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE APEX PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE ULTIMATE PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -462,7 +462,7 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Protetto Apex):</span>
+            <span>Stop Loss (Protetto Largo):</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
@@ -471,7 +471,7 @@ def serve_home(full_path: str = ""):
         </div>
         <div class="data-row">
             <span>Valutazione Rischio / Probabilità:</span>
-            <strong id="res-score" style="color: var(--accent-cyan);">Apex Grade A+ (Alta Probabilità)</strong>
+            <strong id="res-score" style="color: var(--accent-cyan);">Ultimate Grade S+ (Massima Confluenza)</strong>
         </div>
         <div class="data-row">
             <span>Telegram:</span>
@@ -483,7 +483,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per generare i segnali Apex v109...</div>
+        <div id="history-log" class="history-box">Pronto per generare i segnali Ultimate v110...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -498,7 +498,7 @@ def serve_home(full_path: str = ""):
             losses: 0,
             beps: 0,
             consecutive_losses: 0,
-            apex_shield: false
+            ultimate_shield: false
         };
 
         function onModeChange() {
@@ -508,11 +508,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA APEX SCALP';
+                genBtn.innerText = '⚡ GENERA ULTIMATE SCALP';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 GENERA SEGNALE APEX v109';
+                genBtn.innerText = '🎯 GENERA SEGNALE ULTIMATE v110';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -525,13 +525,13 @@ def serve_home(full_path: str = ""):
             const badgeEl = document.getElementById('header-badge');
             const monitorCard = document.getElementById('monitor-card');
 
-            if (localStats.apex_shield) {
+            if (localStats.ultimate_shield) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 APEX RECOVERY (Loss: ${localStats.consecutive_losses})`;
+                badgeEl.innerText = `🚨 ULTIMATE RECOVERY (Loss: ${localStats.consecutive_losses})`;
                 monitorCard.style.borderLeft = "5px solid var(--accent-red)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "APEX ELITE v109";
+                badgeEl.innerText = "APEX ULTIMATE v110";
                 monitorCard.style.borderLeft = "5px solid var(--accent-green)";
             }
         }
@@ -546,7 +546,7 @@ def serve_home(full_path: str = ""):
                     localStats.losses = data.losses;
                     localStats.beps = data.beps || 0;
                     localStats.consecutive_losses = data.consecutive_losses || 0;
-                    localStats.apex_shield = data.apex_shield || false;
+                    localStats.ultimate_shield = data.ultimate_shield || false;
                     updateUIStats();
                 }
             } catch(e) {}
@@ -560,11 +560,11 @@ def serve_home(full_path: str = ""):
             if (resultType === 'win') {
                 localStats.wins++;
                 localStats.consecutive_losses = 0;
-                localStats.apex_shield = false;
+                localStats.ultimate_shield = false;
             } else if (resultType === 'loss') {
                 localStats.losses++;
                 localStats.consecutive_losses++;
-                localStats.apex_shield = true;
+                localStats.ultimate_shield = true;
             } else if (resultType === 'bep') {
                 localStats.beps++;
             }
@@ -573,12 +573,12 @@ def serve_home(full_path: str = ""):
 
             const logBox = document.getElementById('history-log');
             const nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [APEX SCALP]' : '🛡️ [APEX TREND]';
+            let tag = isScalp ? '⚡ [ULTIMATE SCALP]' : '🛡️ [ULTIMATE TREND]';
             let msgText = '';
 
             if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN BLU 🔵)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 APEX RECOVERY ATTIVO!`;
+            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 ULTIMATE RECOVERY ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -643,7 +643,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleApex() {
+        async function generaSegnaleApexUltimate() {
             const assetSelect = document.getElementById('asset-select');
             const signalBox = document.getElementById('signal-box');
             const priceInput = document.getElementById('live-price-input');
@@ -665,18 +665,18 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             const nowTime = Date.now();
-            let apexVector = Math.sin((livePrice * 4.1) + nowTime / 600) + (Math.cos(nowTime / 300) * 0.7) + (Math.sin(nowTime / 150) * 0.2);
-            let direction = apexVector >= 0 ? "BUY" : "SELL";
-            if (localStats.apex_shield) {
-                direction = apexVector >= 0 ? "SELL" : "BUY";
+            let ultimateVector = Math.sin((livePrice * 4.4) + nowTime / 550) + (Math.cos(nowTime / 275) * 0.8) + (Math.sin(nowTime / 120) * 0.3);
+            let direction = ultimateVector >= 0 ? "BUY" : "SELL";
+            if (localStats.ultimate_shield) {
+                direction = ultimateVector >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 1.25;
+            let step = 1.20;
             let cleanAssetSymbol = asset.replace("/", "");
             let slNum, tpNum, rangeText;
 
             if (isScalp) {
-                let slMult = 1.4; let tpMult = 2.5;
+                let slMult = 1.3; let tpMult = 2.6;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -687,7 +687,7 @@ def serve_home(full_path: str = ""):
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.003).toFixed(decimals)}`;
                 }
             } else {
-                let slMult = 2.5; let tpMult = localStats.apex_shield ? 3.8 : 3.3;
+                let slMult = 2.4; let tpMult = localStats.ultimate_shield ? 3.9 : 3.4;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -711,30 +711,30 @@ def serve_home(full_path: str = ""):
                 sl: slVal,
                 tp1: tpVal,
                 isScalp: isScalp,
-                isProtection: localStats.apex_shield
+                isProtection: localStats.ultimate_shield
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             const titleBox = document.getElementById('signal-title-box');
-            if (localStats.apex_shield) {
-                titleBox.innerText = "🚨 SEGNALE APEX RECOVERY PRONTO";
+            if (localStats.ultimate_shield) {
+                titleBox.innerText = "🚨 SEGNALE ULTIMATE RECOVERY PRONTO";
                 titleBox.style.color = "var(--accent-red)";
             } else {
-                titleBox.innerText = isScalp ? "⚡ SEGNALE APEX SCALP PRONTO" : "🎯 SEGNALE APEX TREND PRONTO";
+                titleBox.innerText = isScalp ? "⚡ SEGNALE ULTIMATE SCALP PRONTO" : "🎯 SEGNALE ULTIMATE TREND PRONTO";
                 titleBox.style.color = "var(--accent-green)";
             }
             
             const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.apex_shield ? " [APEX RECOVERY]" : (isScalp ? " [APEX SCALP]" : " [APEX TREND]"));
+            dirElem.innerText = direction + (localStats.ultimate_shield ? " [ULTIMATE RECOVERY]" : (isScalp ? " [ULTIMATE SCALP]" : " [ULTIMATE TREND]"));
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.apex_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
-            document.getElementById('res-score').innerText = localStats.apex_shield ? "Apex Recovery Confluence (Grade A)" : "Apex Grade A+ (Alta Probabilità)";
+            document.getElementById('res-tp-label').innerText = localStats.ultimate_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
+            document.getElementById('res-score').innerText = localStats.ultimate_shield ? "Ultimate Recovery Confluence (Grade S)" : "Ultimate Grade S+ (Massima Confluenza)";
 
             const tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -747,7 +747,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso in chat...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = localStats.apex_shield ? "🚨 APEX RECOVERY SIGNAL" : "🛡️ APEX MASTER SIGNAL";
+                    const headerTag = localStats.ultimate_shield ? "🚨 ULTIMATE RECOVERY SIGNAL" : "🛡️ ULTIMATE MASTER SIGNAL";
                     const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
@@ -782,7 +782,7 @@ def serve_home(full_path: str = ""):
             }
 
             const logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.apex_shield ? ' [Apex Recovery Active]' : '';
+            let protectionTagText = localStats.ultimate_shield ? ' [Ultimate Recovery Active]' : '';
             const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
@@ -797,7 +797,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isProtection ? "🚨 APEX RECOVERY SIGNAL" : "🛡️ APEX MASTER SIGNAL";
+            const modeTitle = lastSignalData.isProtection ? "🚨 ULTIMATE RECOVERY SIGNAL" : "🛡️ ULTIMATE MASTER SIGNAL";
             const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
