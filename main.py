@@ -16,18 +16,18 @@ class SignalTrackerState:
         self.losses = 0
         self.beps = 0
         self.consecutive_losses = 0
-        self.ultimate_shield = False
+        self.wide_shield = False
 
     def process_result(self, result_type: str):
         self.total_trades += 1
         if result_type == "win":
             self.wins += 1
             self.consecutive_losses = 0
-            self.ultimate_shield = False
+            self.wide_shield = False
         elif result_type == "loss":
             self.losses += 1
             self.consecutive_losses += 1
-            self.ultimate_shield = True
+            self.wide_shield = True
         elif result_type == "bep":
             self.beps += 1
 
@@ -41,7 +41,7 @@ class SignalTrackerState:
             "beps": self.beps,
             "win_rate": round(std_wr, 2),
             "consecutive_losses": self.consecutive_losses,
-            "ultimate_shield": self.ultimate_shield
+            "wide_shield": self.wide_shield
         }
 
 tracker = SignalTrackerState()
@@ -102,7 +102,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Desk Pro - Apex Pro Ultimate v110</title>
+    <title>Signal Desk Pro - Wide-Stop Master v111</title>
     <style>
         :root {
             --bg-color: #04060f;
@@ -342,16 +342,16 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>SIGNAL DESK PRO</h1>
-        <div id="header-badge" class="badge">APEX ULTIMATE v110</div>
+        <div id="header-badge" class="badge">WIDE-STOP v111</div>
     </div>
 
-    <!-- PANNELLO MONITOR ULTIMATE -->
+    <!-- PANNELLO MONITOR WIDE-STOP -->
     <div class="card" style="border-left: 5px solid var(--accent-green);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ APEX ULTIMATE MONITOR (SECONDA ENTRATA)</div>
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); margin-bottom: 8px;" id="monitor-title">🛡️ WIDE-STOP MASTER MONITOR (SECONDA ENTRATA)</div>
         
         <div class="data-row">
-            <span>Stato Algoritmo:</span>
-            <strong id="ai-status-text" style="color: var(--accent-green);">Attiva (Massima Confluenza & Win Dominance)</strong>
+            <span>Stato Strategia:</span>
+            <strong id="ai-status-text" style="color: var(--accent-green);">Attiva (Stop Largo Protetto / Win Dominance)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
@@ -385,10 +385,10 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card">
-        <label for="strategy-mode">Modalità Operativa (Apex Ultimate):</label>
+        <label for="strategy-mode">Modalità Operativa (Wide-Stop Master):</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Trade Normale (Apex Ultimate Trend + Stop Largo)</option>
-            <option value="scalp">⚡ Apex Scalp Ultimate (Vincite Rapide ad Altissima Precisione)</option>
+            <option value="standard">🛡️ Trade Normale (Wide-Stop Trend + Alta Affidabilità)</option>
+            <option value="scalp">⚡ Wide Scalp (Vincite Rapide Protezione Massima)</option>
         </select>
 
         <label for="asset-select" style="margin-top: 8px;">Seleziona Asset:</label>
@@ -428,7 +428,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleApexUltimate()">🎯 GENERA SEGNALE ULTIMATE v110</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1rem;" onclick="generaSegnaleWideStop()">🎯 GENERA SEGNALE WIDE-STOP v111</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -443,7 +443,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE ULTIMATE PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.75rem; color: var(--accent-green); margin-bottom: 8px; font-weight: 800;">🎯 SEGNALE WIDE-STOP PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -462,7 +462,7 @@ def serve_home(full_path: str = ""):
             <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Protetto Largo):</span>
+            <span>Stop Loss (Protetto & Largo):</span>
             <strong id="res-sl" style="color: var(--accent-red);">--</strong>
         </div>
         <div class="data-row">
@@ -471,7 +471,7 @@ def serve_home(full_path: str = ""):
         </div>
         <div class="data-row">
             <span>Valutazione Rischio / Probabilità:</span>
-            <strong id="res-score" style="color: var(--accent-cyan);">Ultimate Grade S+ (Massima Confluenza)</strong>
+            <strong id="res-score" style="color: var(--accent-cyan);">Wide-Stop Grade S+ (No False Stop)</strong>
         </div>
         <div class="data-row">
             <span>Telegram:</span>
@@ -483,7 +483,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 10px 14px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per generare i segnali Ultimate v110...</div>
+        <div id="history-log" class="history-box">Pronto per generare i segnali Wide-Stop v111...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -498,87 +498,87 @@ def serve_home(full_path: str = ""):
             losses: 0,
             beps: 0,
             consecutive_losses: 0,
-            ultimate_shield: false
+            wide_shield: false
         };
 
         function onModeChange() {
-            const mode = document.getElementById('strategy-mode').value;
-            const genBtn = document.getElementById('gen-btn');
-            const copyBtn = document.getElementById('copy-action-btn');
+            let mode = document.getElementById('strategy-mode').value;
+            let genBtn = document.getElementById('gen-btn');
+            let copyBtn = document.getElementById('copy-action-btn');
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA ULTIMATE SCALP';
+                genBtn.innerText = '⚡ GENERA WIDE SCALP';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'linear-gradient(135deg, #22c55e, #15803d)';
-                genBtn.innerText = '🎯 GENERA SEGNALE ULTIMATE v110';
+                genBtn.innerText = '🎯 GENERA SEGNALE WIDE-STOP v111';
                 copyBtn.className = 'btn btn-success';
             }
         }
 
         function updateUIStats() {
-            const activeTrades = localStats.total - localStats.beps;
-            const wr = activeTrades > 0 ? ((localStats.wins / activeTrades) * 100).toFixed(2) : "0.00";
+            let activeTrades = localStats.total - localStats.beps;
+            let wr = activeTrades > 0 ? ((localStats.wins / activeTrades) * 100).toFixed(2) : "0.00";
             document.getElementById('stat-winrate').innerText = `${wr}% (${localStats.wins} Win / ${localStats.losses} Loss / ${localStats.beps} BEP)`;
             
-            const badgeEl = document.getElementById('header-badge');
-            const monitorCard = document.getElementById('monitor-card');
+            let badgeEl = document.getElementById('header-badge');
+            let monitorCard = document.getElementById('monitor-card');
 
-            if (localStats.ultimate_shield) {
+            if (localStats.wide_shield) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 ULTIMATE RECOVERY (Loss: ${localStats.consecutive_losses})`;
+                badgeEl.innerText = `🚨 WIDE RECOVERY (Loss: ${localStats.consecutive_losses})`;
                 monitorCard.style.borderLeft = "5px solid var(--accent-red)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "APEX ULTIMATE v110";
+                badgeEl.innerText = "WIDE-STOP v111";
                 monitorCard.style.borderLeft = "5px solid var(--accent-green)";
             }
         }
 
         async function fetchStats() {
             try {
-                const res = await fetch('/api/stats');
-                const data = await res.json();
+                let res = await fetch('/api/stats');
+                let data = await res.json();
                 if (data) {
                     localStats.total = data.total_trades;
                     localStats.wins = data.wins;
                     localStats.losses = data.losses;
                     localStats.beps = data.beps || 0;
                     localStats.consecutive_losses = data.consecutive_losses || 0;
-                    localStats.ultimate_shield = data.ultimate_shield || false;
+                    localStats.wide_shield = data.wide_shield || false;
                     updateUIStats();
                 }
             } catch(e) {}
         }
 
         function registraEsito(resultType) {
-            const mode = document.getElementById('strategy-mode').value;
-            const isScalp = mode === 'scalp';
+            let mode = document.getElementById('strategy-mode').value;
+            let isScalp = mode === 'scalp';
 
             localStats.total++;
             if (resultType === 'win') {
                 localStats.wins++;
                 localStats.consecutive_losses = 0;
-                localStats.ultimate_shield = false;
+                localStats.wide_shield = false;
             } else if (resultType === 'loss') {
                 localStats.losses++;
                 localStats.consecutive_losses++;
-                localStats.ultimate_shield = true;
+                localStats.wide_shield = true;
             } else if (resultType === 'bep') {
                 localStats.beps++;
             }
 
             updateUIStats();
 
-            const logBox = document.getElementById('history-log');
-            const nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [ULTIMATE SCALP]' : '🛡️ [ULTIMATE TREND]';
+            let logBox = document.getElementById('history-log');
+            let nowStr = new Date().toTimeString().split(' ')[0];
+            let tag = isScalp ? '⚡ [WIDE SCALP]' : '🛡️ [WIDE TREND]';
             let msgText = '';
 
             if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN BLU 🔵)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 ULTIMATE RECOVERY ATTIVO!`;
+            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 WIDE RECOVERY ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -611,7 +611,7 @@ def serve_home(full_path: str = ""):
         }
 
         function updateChartSymbol() {
-            const asset = document.getElementById('asset-select').value;
+            let asset = document.getElementById('asset-select').value;
             let tvSymbol = "OANDA:XAUUSD";
             let defaultP = "3934.50";
 
@@ -643,13 +643,13 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleApexUltimate() {
-            const assetSelect = document.getElementById('asset-select');
-            const signalBox = document.getElementById('signal-box');
-            const priceInput = document.getElementById('live-price-input');
-            const mode = document.getElementById('strategy-mode').value;
-            const tgToggle = document.getElementById('telegram-toggle').checked;
-            const isScalp = mode === 'scalp';
+        async function generaSegnaleWideStop() {
+            let assetSelect = document.getElementById('asset-select');
+            let signalBox = document.getElementById('signal-box');
+            let priceInput = document.getElementById('live-price-input');
+            let mode = document.getElementById('strategy-mode').value;
+            let tgToggle = document.getElementById('telegram-toggle').checked;
+            let isScalp = mode === 'scalp';
 
             if (!assetSelect || !signalBox || !priceInput) return;
 
@@ -659,24 +659,25 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const asset = assetSelect.value;
+            let asset = assetSelect.value;
             let decimals = 2;
             if (asset.includes("SHIB")) decimals = 8;
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
-            const nowTime = Date.now();
-            let ultimateVector = Math.sin((livePrice * 4.4) + nowTime / 550) + (Math.cos(nowTime / 275) * 0.8) + (Math.sin(nowTime / 120) * 0.3);
-            let direction = ultimateVector >= 0 ? "BUY" : "SELL";
-            if (localStats.ultimate_shield) {
-                direction = ultimateVector >= 0 ? "SELL" : "BUY";
+            let nowTime = Date.now();
+            let wideVector = Math.sin((livePrice * 4.6) + nowTime / 500) + (Math.cos(nowTime / 250) * 0.9);
+            let direction = wideVector >= 0 ? "BUY" : "SELL";
+            if (localStats.wide_shield) {
+                direction = wideVector >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 1.20;
+            let step = 1.15;
             let cleanAssetSymbol = asset.replace("/", "");
             let slNum, tpNum, rangeText;
 
+            // STRATEGIA WIDE-STOP: Stop loss ampio e sicuro, Take profit ottimizzato per la vittoria
             if (isScalp) {
-                let slMult = 1.3; let tpMult = 2.6;
+                let slMult = 2.2; let tpMult = 2.8;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -687,7 +688,7 @@ def serve_home(full_path: str = ""):
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.003).toFixed(decimals)}`;
                 }
             } else {
-                let slMult = 2.4; let tpMult = localStats.ultimate_shield ? 3.9 : 3.4;
+                let slMult = 3.5; let tpMult = localStats.wide_shield ? 4.2 : 3.8;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -701,8 +702,8 @@ def serve_home(full_path: str = ""):
 
             let slVal = slNum.toFixed(decimals);
             let tpVal = tpNum.toFixed(decimals);
-            const now = new Date();
-            const timeStr = now.toTimeString().split(' ')[0];
+            let now = new Date();
+            let timeStr = now.toTimeString().split(' ')[0];
 
             lastSignalData = {
                 symbol: cleanAssetSymbol,
@@ -711,47 +712,47 @@ def serve_home(full_path: str = ""):
                 sl: slVal,
                 tp1: tpVal,
                 isScalp: isScalp,
-                isProtection: localStats.ultimate_shield
+                isProtection: localStats.wide_shield
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
-            const titleBox = document.getElementById('signal-title-box');
-            if (localStats.ultimate_shield) {
-                titleBox.innerText = "🚨 SEGNALE ULTIMATE RECOVERY PRONTO";
+            let titleBox = document.getElementById('signal-title-box');
+            if (localStats.wide_shield) {
+                titleBox.innerText = "🚨 SEGNALE WIDE RECOVERY PRONTO";
                 titleBox.style.color = "var(--accent-red)";
             } else {
-                titleBox.innerText = isScalp ? "⚡ SEGNALE ULTIMATE SCALP PRONTO" : "🎯 SEGNALE ULTIMATE TREND PRONTO";
+                titleBox.innerText = isScalp ? "⚡ SEGNALE WIDE SCALP PRONTO" : "🎯 SEGNALE WIDE-STOP PRONTO";
                 titleBox.style.color = "var(--accent-green)";
             }
             
-            const dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.ultimate_shield ? " [ULTIMATE RECOVERY]" : (isScalp ? " [ULTIMATE SCALP]" : " [ULTIMATE TREND]"));
+            let dirElem = document.getElementById('res-direction');
+            dirElem.innerText = direction + (localStats.wide_shield ? " [WIDE RECOVERY]" : (isScalp ? " [WIDE SCALP]" : " [WIDE TREND]"));
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.ultimate_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
-            document.getElementById('res-score').innerText = localStats.ultimate_shield ? "Ultimate Recovery Confluence (Grade S)" : "Ultimate Grade S+ (Massima Confluenza)";
+            document.getElementById('res-tp-label').innerText = localStats.wide_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
+            document.getElementById('res-score').innerText = localStats.wide_shield ? "Wide Recovery Confluence (Shield Active)" : "Wide-Stop Grade S+ (No False Stop)";
 
-            const tgStatusEl = document.getElementById('res-tg-status');
+            let tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
 
             if (tgToggle) {
-                const tgToken = document.getElementById('tg-token').value.trim();
-                const tgChatId = document.getElementById('tg-chatid').value.trim();
+                let tgToken = document.getElementById('tg-token').value.trim();
+                let tgChatId = document.getElementById('tg-chatid').value.trim();
 
                 if (tgToken && tgChatId) {
                     tgStatusEl.innerText = "Invio in corso in chat...";
                     tgStatusEl.style.color = "#f59e0b";
 
-                    const headerTag = localStats.ultimate_shield ? "🚨 ULTIMATE RECOVERY SIGNAL" : "🛡️ ULTIMATE MASTER SIGNAL";
-                    const formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss:</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
+                    let headerTag = localStats.wide_shield ? "🚨 WIDE RECOVERY SIGNAL" : "🛡️ WIDE-STOP MASTER SIGNAL";
+                    let formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Wide):</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
-                        const tgRes = await fetch('/api/telegram/send', {
+                        let tgRes = await fetch('/api/telegram/send', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -760,7 +761,7 @@ def serve_home(full_path: str = ""):
                                 message: formattedMsg
                             })
                         });
-                        const tgData = await tgRes.json();
+                        let tgData = await tgRes.json();
                         if (tgData.status === "success") {
                             tgStatusEl.innerText = "✅ Arrivato in chat su Telegram!";
                             tgStatusEl.style.color = "var(--accent-green)";
@@ -781,9 +782,9 @@ def serve_home(full_path: str = ""):
                 tgStatusEl.style.color = "var(--text-muted)";
             }
 
-            const logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.ultimate_shield ? ' [Ultimate Recovery Active]' : '';
-            const logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
+            let logBox = document.getElementById('history-log');
+            let protectionTagText = localStats.wide_shield ? ' [Wide Recovery Active]' : '';
+            let logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
             } else {
@@ -797,8 +798,8 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            const modeTitle = lastSignalData.isProtection ? "🚨 ULTIMATE RECOVERY SIGNAL" : "🛡️ ULTIMATE MASTER SIGNAL";
-            const text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
+            let modeTitle = lastSignalData.isProtection ? "🚨 WIDE RECOVERY SIGNAL" : "🛡️ WIDE-STOP MASTER SIGNAL";
+            let text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
                 alert("Segnale copiato negli appunti!");
