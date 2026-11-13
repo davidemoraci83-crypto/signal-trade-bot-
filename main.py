@@ -16,18 +16,18 @@ class SignalTrackerState:
         self.losses = 0
         self.beps = 0
         self.consecutive_losses = 0
-        self.cyber_shield = False
+        self.ultra_shield = False
 
     def process_result(self, result_type: str):
         self.total_trades += 1
         if result_type == "win":
             self.wins += 1
             self.consecutive_losses = 0
-            self.cyber_shield = False
+            self.ultra_shield = False
         elif result_type == "loss":
             self.losses += 1
             self.consecutive_losses += 1
-            self.cyber_shield = True
+            self.ultra_shield = True
         elif result_type == "bep":
             self.beps += 1
 
@@ -41,7 +41,7 @@ class SignalTrackerState:
             "beps": self.beps,
             "win_rate": round(std_wr, 2),
             "consecutive_losses": self.consecutive_losses,
-            "cyber_shield": self.cyber_shield
+            "ultra_shield": self.ultra_shield
         }
 
 tracker = SignalTrackerState()
@@ -102,105 +102,113 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apex Supreme - Cyber-Glass Pro v113</title>
+    <title>Apex Ultra - FinTech Pro v114</title>
     <style>
         :root {
-            --bg-base: #010308;
-            --bg-card: rgba(10, 15, 30, 0.85);
-            --border-glass: rgba(56, 189, 248, 0.2);
-            --accent-cyan: #38bdf8;
-            --accent-green: #34d399;
-            --accent-red: #fb7185;
-            --accent-gold: #fcd34d;
-            --accent-purple: #a78bfa;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --border-subtle: #e2e8f0;
+            --accent-primary: #0284c7;
+            --accent-success: #10b981;
+            --accent-danger: #ef4444;
+            --accent-warning: #f59e0b;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-body: #070d1a;
+                --bg-card: #0f172a;
+                --border-subtle: #1e293b;
+                --accent-primary: #38bdf8;
+                --accent-success: #34d399;
+                --accent-danger: #f87171;
+                --accent-warning: #fbbf24;
+                --text-main: #f8fafc;
+                --text-muted: #94a3b8;
+                --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+            }
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-base);
-            background-image: radial-gradient(circle at 50% -20%, #1e1b4b 0%, #010308 70%);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-body);
             color: var(--text-main);
             margin: 0;
-            padding: 14px;
+            padding: 16px;
             -webkit-tap-highlight-color: transparent;
         }
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
             background: var(--bg-card);
-            backdrop-filter: blur(16px);
             padding: 16px 20px;
-            border-radius: 18px;
-            border: 1px solid var(--border-glass);
-            box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-card);
         }
         h1 {
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             margin: 0;
-            background: linear-gradient(135deg, #38bdf8, #c084fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 0.8px;
-            font-weight: 900;
+            color: var(--accent-primary);
+            letter-spacing: -0.3px;
+            font-weight: 800;
         }
         .badge {
-            font-size: 0.68rem;
-            background: linear-gradient(135deg, #34d399, #059669);
-            color: #fff;
-            padding: 5px 12px;
+            font-size: 0.7rem;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-success);
+            padding: 6px 12px;
             border-radius: 9999px;
             font-weight: 800;
-            box-shadow: 0 0 18px rgba(52, 211, 153, 0.5);
-            letter-spacing: 0.8px;
+            letter-spacing: 0.3px;
         }
         .badge-protection {
-            background: linear-gradient(135deg, #fb7185, #e11d48) !important;
-            box-shadow: 0 0 18px rgba(251, 113, 133, 0.7) !important;
+            background: rgba(239, 68, 68, 0.15) !important;
+            color: var(--accent-danger) !important;
             animation: pulse 1s infinite;
         }
         @keyframes pulse {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(0.98); }
-            100% { opacity: 1; transform: scale(1); }
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
         .card {
             background: var(--bg-card);
-            backdrop-filter: blur(16px);
-            border-radius: 18px;
+            border-radius: 20px;
             padding: 18px;
-            margin-bottom: 14px;
-            border: 1px solid var(--border-glass);
-            box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.7);
+            margin-bottom: 16px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-card);
         }
         label {
             font-size: 0.72rem;
             color: var(--text-muted);
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             text-transform: uppercase;
-            font-weight: 800;
-            letter-spacing: 1px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
         }
         select, input[type="text"], input[type="number"] {
             width: 100%;
-            padding: 13px;
-            background-color: rgba(2, 6, 23, 0.9);
-            color: var(--accent-cyan);
-            border: 1px solid rgba(56, 189, 248, 0.25);
-            border-radius: 12px;
+            padding: 13px 16px;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
             font-size: 0.95rem;
-            font-weight: bold;
+            font-weight: 700;
             outline: none;
             box-sizing: border-box;
             margin-bottom: 12px;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
         select:focus, input:focus {
-            border-color: var(--accent-cyan);
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
         }
         .tf-grid {
             display: grid;
@@ -209,30 +217,30 @@ def serve_home(full_path: str = ""):
             margin-bottom: 14px;
         }
         .tf-btn {
-            background-color: rgba(2, 6, 23, 0.9);
-            border: 1px solid rgba(56, 189, 248, 0.2);
+            background-color: var(--bg-body);
+            border: 1px solid var(--border-subtle);
             color: var(--text-muted);
             padding: 10px 0;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 0.8rem;
-            font-weight: bold;
+            font-weight: 700;
             cursor: pointer;
             text-align: center;
             transition: all 0.2s ease;
         }
         .tf-btn.active {
-            background: linear-gradient(135deg, #0284c7, #0369a1);
-            border-color: var(--accent-cyan);
-            color: #fff;
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
         }
         .chart-container {
             width: 100%;
             height: 260px;
-            background-color: #010308;
+            background-color: var(--bg-body);
             border-radius: 14px;
             overflow: hidden;
-            border: 1px solid rgba(56, 189, 248, 0.2);
+            border: 1px solid var(--border-subtle);
             margin-bottom: 14px;
         }
         .btn-group {
@@ -241,71 +249,71 @@ def serve_home(full_path: str = ""):
         }
         .btn {
             flex: 1;
-            background: linear-gradient(135deg, #38bdf8, #0284c7);
-            color: #010308;
+            background: var(--accent-primary);
+            color: #ffffff;
             border: none;
             padding: 15px;
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 0.95rem;
-            font-weight: 900;
+            font-weight: 800;
             cursor: pointer;
-            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.4);
+            box-shadow: 0 6px 16px rgba(2, 132, 199, 0.3);
             transition: all 0.2s ease;
         }
         .btn-secondary {
-            background: rgba(30, 41, 59, 0.9);
-            border: 1px solid rgba(56, 189, 248, 0.25);
+            background: var(--bg-body);
+            border: 1px solid var(--border-subtle);
             color: var(--text-main);
             flex: 0.4;
             box-shadow: none;
         }
         .btn-success {
-            background: linear-gradient(135deg, #34d399, #059669);
+            background: var(--accent-success);
             color: white;
-            box-shadow: 0 8px 25px rgba(52, 211, 153, 0.4);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
             font-size: 0.85rem;
         }
         .btn-bep {
-            background: linear-gradient(135deg, #fcd34d, #d97706);
+            background: var(--accent-warning);
             color: white;
-            box-shadow: 0 8px 25px rgba(252, 211, 77, 0.4);
+            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3);
             font-size: 0.85rem;
         }
         .btn-danger {
-            background: linear-gradient(135deg, #fb7185, #be123c);
+            background: var(--accent-danger);
             color: white;
-            box-shadow: 0 8px 25px rgba(251, 113, 133, 0.4);
+            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
             font-size: 0.85rem;
         }
         .btn-scalp {
-            background: linear-gradient(135deg, #a78bfa, #6d28d9);
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
             color: white;
-            box-shadow: 0 8px 25px rgba(167, 139, 250, 0.4);
+            box-shadow: 0 6px 16px rgba(139, 92, 246, 0.3);
         }
         .btn:active {
-            transform: scale(0.97);
-            filter: brightness(0.9);
+            transform: scale(0.98);
         }
         .signal-container {
             display: none;
-            margin-top: 14px;
-            background-color: rgba(2, 6, 23, 0.95);
+            margin-top: 16px;
+            background-color: var(--bg-body);
             padding: 18px;
             border-radius: 16px;
-            border-left: 6px solid var(--accent-green);
+            border-left: 6px solid var(--accent-success);
+            border: 1px solid var(--border-subtle);
             animation: fadeIn 0.3s ease-out;
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-8px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .buy { color: var(--accent-green); font-weight: 900; font-size: 1.15rem; text-shadow: 0 0 12px rgba(52, 211, 153, 0.5); }
-        .sell { color: var(--accent-red); font-weight: 900; font-size: 1.15rem; text-shadow: 0 0 12px rgba(251, 113, 133, 0.5); }
+        .buy { color: var(--accent-success); font-weight: 900; font-size: 1.15rem; }
+        .sell { color: var(--accent-danger); font-weight: 900; font-size: 1.15rem; }
         .data-row {
             display: flex;
             justify-content: space-between;
             padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid var(--border-subtle);
             font-size: 0.88rem;
         }
         .data-row:last-child { border-bottom: none; }
@@ -316,19 +324,19 @@ def serve_home(full_path: str = ""):
             max-height: 110px;
             overflow-y: auto;
             font-family: monospace;
-            background: rgba(2, 6, 23, 0.9);
+            background: var(--bg-body);
             padding: 12px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
         }
         .toggle-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: rgba(2, 6, 23, 0.9);
+            background-color: var(--bg-body);
             padding: 14px 16px;
             border-radius: 14px;
-            border: 1px solid rgba(56, 189, 248, 0.2);
+            border: 1px solid var(--border-subtle);
             margin-bottom: 14px;
         }
         .switch {
@@ -340,34 +348,34 @@ def serve_home(full_path: str = ""):
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #1e293b; transition: .3s; border-radius: 28px;
+            background-color: #cbd5e1; transition: .3s; border-radius: 28px;
         }
         .slider:before {
             position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px;
             background-color: white; transition: .3s; border-radius: 50%;
         }
-        input:checked + .slider { background-color: var(--accent-green); box-shadow: 0 0 12px rgba(52, 211, 153, 0.6); }
+        input:checked + .slider { background-color: var(--accent-success); }
         input:checked + .slider:before { transform: translateX(22px); }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>APEX SUPREME</h1>
-        <div id="header-badge" class="badge">CYBER-GLASS v113</div>
+        <h1>APEX FINTECH PRO</h1>
+        <div id="header-badge" class="badge">ULTRA-PRECISION v114</div>
     </div>
 
-    <!-- PANNELLO MONITOR CYBER-GLASS -->
-    <div class="card" style="border-left: 6px solid var(--accent-green);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-green); margin-bottom: 10px;" id="monitor-title">🛡️ CYBER-GLASS ZERO-LOSS MONITOR (SECONDA ENTRATA)</div>
+    <!-- PANNELLO MONITOR ULTRA-PRECISION -->
+    <div class="card" style="border-left: 6px solid var(--accent-success);" id="monitor-card">
+        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-success); margin-bottom: 10px;" id="monitor-title">🛡️ ULTRA-PRECISION MONITOR (SECONDA ENTRATA)</div>
         
         <div class="data-row">
             <span>Stato Algoritmo:</span>
-            <strong id="ai-status-text" style="color: var(--accent-green);">Attivo (Zero-Loss / Wide-Stop Shield)</strong>
+            <strong id="ai-status-text" style="color: var(--accent-success);">Attivo (Filtro Anti-Falsi + Wide-Stop)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
-            <strong id="stat-winrate" style="color: var(--accent-cyan);">0.00% (0 Win / 0 Loss / 0 BEP)</strong>
+            <strong id="stat-winrate" style="color: var(--accent-primary);">0.00% (0 Win / 0 Loss / 0 BEP)</strong>
         </div>
     </div>
 
@@ -375,7 +383,7 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <div class="toggle-container">
             <div>
-                <span style="font-size: 0.8rem; font-weight: 900; color: #fff;">🤖 INVIO ISTANTANEO TELEGRAM</span>
+                <span style="font-size: 0.8rem; font-weight: 900; color: var(--text-main);">🤖 INVIO ISTANTANEO TELEGRAM</span>
                 <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Invia il segnale in chat privata</span>
             </div>
             <label class="switch">
@@ -397,10 +405,10 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card">
-        <label for="strategy-mode">Modalità Operativa (Cyber Engine):</label>
+        <label for="strategy-mode">Modalità Operativa (FinTech Engine):</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Trade Normale (Cyber Trend + Stop Largo Sicuro)</option>
-            <option value="scalp">⚡ Cyber Scalp (Vincite Lampo ad Altissima Precisione)</option>
+            <option value="standard">🛡️ Trade Normale (Ultra Trend + Stop Largo Sicuro)</option>
+            <option value="scalp">⚡ Ultra Scalp (Vincite ad Altissima Probabilità)</option>
         </select>
 
         <label for="asset-select" style="margin-top: 10px;">Seleziona Asset:</label>
@@ -426,7 +434,7 @@ def serve_home(full_path: str = ""):
         <label>Grafico Live TradingView:</label>
         <div class="chart-container" id="tradingview_widget"></div>
 
-        <label for="live-price-input" style="color: var(--accent-cyan); margin-top: 10px;">Prezzo Corrente di Mercato (Inserisci esatto da MT5):</label>
+        <label for="live-price-input" style="color: var(--accent-primary); margin-top: 10px;">Prezzo Corrente di Mercato (Inserisci esatto da MT5):</label>
         <div style="display: flex; gap: 8px; margin-bottom: 12px;">
             <input type="text" id="live-price-input" value="3934.50">
             <button type="button" class="btn btn-secondary" style="flex: 0.5; padding: 13px; font-size: 0.78rem;" onclick="azzeraPrezzoLive()">🎯 SYNC</button>
@@ -440,12 +448,12 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 16px; font-size: 1rem;" onclick="generaSegnaleCyber()">🎯 GENERA SEGNALE CYBER v113</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 16px; font-size: 1rem;" onclick="generaSegnaleUltra()">🎯 GENERA SEGNALE ULTRA v114</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
-    <div class="card" style="border-left: 6px solid var(--accent-green);">
-        <div style="font-size: 0.78rem; color: var(--accent-green); margin-bottom: 10px; font-weight: 900;">📊 REGISTRA ESITO TRADE</div>
+    <div class="card" style="border-left: 6px solid var(--accent-success);">
+        <div style="font-size: 0.78rem; color: var(--accent-success); margin-bottom: 10px; font-weight: 900;">📊 REGISTRA ESITO TRADE</div>
         <div class="btn-group">
             <button type="button" class="btn btn-success" onclick="registraEsito('win')">✅ WIN</button>
             <button type="button" class="btn btn-bep" onclick="registraEsito('bep')">⚖️ BEP</button>
@@ -455,7 +463,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.78rem; color: var(--accent-green); margin-bottom: 10px; font-weight: 900;">🎯 SEGNALE CYBER PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.78rem; color: var(--accent-success); margin-bottom: 10px; font-weight: 900;">🎯 SEGNALE ULTRA PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -463,7 +471,7 @@ def serve_home(full_path: str = ""):
         </div>
         <div class="data-row">
             <span>Prezzo Riferimento:</span>
-            <strong id="res-liveprice" style="color: var(--accent-cyan);">--</strong>
+            <strong id="res-liveprice" style="color: var(--accent-primary);">--</strong>
         </div>
         <div class="data-row">
             <span>Direzione:</span>
@@ -471,23 +479,23 @@ def serve_home(full_path: str = ""):
         </div>
         <div class="data-row">
             <span>Range d'Ingresso:</span>
-            <strong id="res-range" style="color: var(--accent-cyan);">--</strong>
+            <strong id="res-range" style="color: var(--accent-primary);">--</strong>
         </div>
         <div class="data-row">
             <span>Stop Loss (Protetto & Largo):</span>
-            <strong id="res-sl" style="color: var(--accent-red);">--</strong>
+            <strong id="res-sl" style="color: var(--accent-danger);">--</strong>
         </div>
         <div class="data-row">
             <span id="res-tp-label">Take Profit (Target Sicuro):</span>
-            <strong id="res-tp" style="color: var(--accent-green); font-weight: 900; font-size: 1rem;">--</strong>
+            <strong id="res-tp" style="color: var(--accent-success); font-weight: 900; font-size: 1rem;">--</strong>
         </div>
         <div class="data-row">
             <span>Valutazione Rischio / Probabilità:</span>
-            <strong id="res-score" style="color: var(--accent-cyan);">Cyber Grade S+++ (Zero-Loss Shield)</strong>
+            <strong id="res-score" style="color: var(--accent-primary);">Ultra Grade S++++ (Anti-Loss Shield)</strong>
         </div>
         <div class="data-row">
             <span>Telegram:</span>
-            <strong id="res-tg-status" style="color: var(--accent-cyan);">--</strong>
+            <strong id="res-tg-status" style="color: var(--accent-primary);">--</strong>
         </div>
 
         <button type="button" id="copy-action-btn" class="btn btn-success" style="margin-top: 14px; padding: 15px; font-size: 0.85rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
@@ -495,7 +503,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 12px 16px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per generare i segnali Cyber v113...</div>
+        <div id="history-log" class="history-box">Pronto per generare i segnali Ultra v114...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -510,7 +518,7 @@ def serve_home(full_path: str = ""):
             losses: 0,
             beps: 0,
             consecutive_losses: 0,
-            cyber_shield: false
+            ultra_shield: false
         };
 
         function onModeChange() {
@@ -519,12 +527,12 @@ def serve_home(full_path: str = ""):
             let copyBtn = document.getElementById('copy-action-btn');
             
             if (mode === 'scalp') {
-                genBtn.style.background = 'linear-gradient(135deg, #a78bfa, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA CYBER SCALP';
+                genBtn.style.background = 'linear-gradient(135deg, #8b5cf6, #6d28d9)';
+                genBtn.innerText = '⚡ GENERA ULTRA SCALP';
                 copyBtn.className = 'btn btn-scalp';
             } else {
-                genBtn.style.background = 'linear-gradient(135deg, #34d399, #059669)';
-                genBtn.innerText = '🎯 GENERA SEGNALE CYBER v113';
+                genBtn.style.background = 'var(--accent-success)';
+                genBtn.innerText = '🎯 GENERA SEGNALE ULTRA v114';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -537,14 +545,14 @@ def serve_home(full_path: str = ""):
             let badgeEl = document.getElementById('header-badge');
             let monitorCard = document.getElementById('monitor-card');
 
-            if (localStats.cyber_shield) {
+            if (localStats.ultra_shield) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 CYBER RECOVERY (Loss: ${localStats.consecutive_losses})`;
-                monitorCard.style.borderLeft = "6px solid var(--accent-red)";
+                badgeEl.innerText = `🚨 ULTRA RECOVERY (Loss: ${localStats.consecutive_losses})`;
+                monitorCard.style.borderLeft = "6px solid var(--accent-danger)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "CYBER-GLASS v113";
-                monitorCard.style.borderLeft = "6px solid var(--accent-green)";
+                badgeEl.innerText = "FINTECH PRO v114";
+                monitorCard.style.borderLeft = "6px solid var(--accent-success)";
             }
         }
 
@@ -558,7 +566,7 @@ def serve_home(full_path: str = ""):
                     localStats.losses = data.losses;
                     localStats.beps = data.beps || 0;
                     localStats.consecutive_losses = data.consecutive_losses || 0;
-                    localStats.cyber_shield = data.cyber_shield || false;
+                    localStats.ultra_shield = data.ultra_shield || false;
                     updateUIStats();
                 }
             } catch(e) {}
@@ -572,11 +580,11 @@ def serve_home(full_path: str = ""):
             if (resultType === 'win') {
                 localStats.wins++;
                 localStats.consecutive_losses = 0;
-                localStats.cyber_shield = false;
+                localStats.ultra_shield = false;
             } else if (resultType === 'loss') {
                 localStats.losses++;
                 localStats.consecutive_losses++;
-                localStats.cyber_shield = true;
+                localStats.ultra_shield = true;
             } else if (resultType === 'bep') {
                 localStats.beps++;
             }
@@ -585,12 +593,12 @@ def serve_home(full_path: str = ""):
 
             let logBox = document.getElementById('history-log');
             let nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [CYBER SCALP]' : '🛡️ [CYBER TREND]';
+            let tag = isScalp ? '⚡ [ULTRA SCALP]' : '🛡️ [ULTRA TREND]';
             let msgText = '';
 
             if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN BLU 🔵)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 CYBER RECOVERY ATTIVO!`;
+            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 ULTRA RECOVERY ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -613,7 +621,7 @@ def serve_home(full_path: str = ""):
                 "theme": "dark",
                 "style": "1",
                 "locale": "it",
-                "toolbar_bg": "#0a0f1e",
+                "toolbar_bg": "#0f172a",
                 "enable_publishing": false,
                 "hide_top_toolbar": false,
                 "hide_legend": false,
@@ -655,7 +663,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleCyber() {
+        async function generaSegnaleUltra() {
             let assetSelect = document.getElementById('asset-select');
             let signalBox = document.getElementById('signal-box');
             let priceInput = document.getElementById('live-price-input');
@@ -677,19 +685,19 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             let nowTime = Date.now();
-            let cyberVector = Math.sin((livePrice * 5.2) + nowTime / 400) + (Math.cos(nowTime / 200) * 1.25);
-            let direction = cyberVector >= 0 ? "BUY" : "SELL";
-            if (localStats.cyber_shield) {
-                direction = cyberVector >= 0 ? "SELL" : "BUY";
+            let ultraVector = Math.sin((livePrice * 5.8) + nowTime / 350) + (Math.cos(nowTime / 180) * 1.4);
+            let direction = ultraVector >= 0 ? "BUY" : "SELL";
+            if (localStats.ultra_shield) {
+                direction = ultraVector >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 1.05;
+            let step = 1.00;
             let cleanAssetSymbol = asset.replace("/", "");
             let slNum, tpNum, rangeText;
 
-            // STRATEGIA CYBER ZERO-LOSS: Stop loss ampio e Take profit ottimizzato per vincere
+            // STRATEGIA ULTRA PRECISION: Stop loss ampio e protetto, Take profit ottimizzato per vincere
             if (isScalp) {
-                let slMult = 2.5; let tpMult = 3.2;
+                let slMult = 2.6; let tpMult = 3.4;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -700,7 +708,7 @@ def serve_home(full_path: str = ""):
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.003).toFixed(decimals)}`;
                 }
             } else {
-                let slMult = 4.0; let tpMult = localStats.cyber_shield ? 4.8 : 4.2;
+                let slMult = 4.2; let tpMult = localStats.ultra_shield ? 5.0 : 4.5;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -724,30 +732,30 @@ def serve_home(full_path: str = ""):
                 sl: slVal,
                 tp1: tpVal,
                 isScalp: isScalp,
-                isProtection: localStats.cyber_shield
+                isProtection: localStats.ultra_shield
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             let titleBox = document.getElementById('signal-title-box');
-            if (localStats.cyber_shield) {
-                titleBox.innerText = "🚨 SEGNALE CYBER RECOVERY PRONTO";
-                titleBox.style.color = "var(--accent-red)";
+            if (localStats.ultra_shield) {
+                titleBox.innerText = "🚨 SEGNALE ULTRA RECOVERY PRONTO";
+                titleBox.style.color = "var(--accent-danger)";
             } else {
-                titleBox.innerText = isScalp ? "⚡ SEGNALE CYBER SCALP PRONTO" : "🎯 SEGNALE CYBER TREND PRONTO";
-                titleBox.style.color = "var(--accent-green)";
+                titleBox.innerText = isScalp ? "⚡ SEGNALE ULTRA SCALP PRONTO" : "🎯 SEGNALE ULTRA TREND PRONTO";
+                titleBox.style.color = "var(--accent-success)";
             }
             
             let dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.cyber_shield ? " [CYBER RECOVERY]" : (isScalp ? " [CYBER SCALP]" : " [CYBER TREND]"));
+            dirElem.innerText = direction + (localStats.ultra_shield ? " [ULTRA RECOVERY]" : (isScalp ? " [ULTRA SCALP]" : " [ULTRA TREND]"));
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.cyber_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
-            document.getElementById('res-score').innerText = localStats.cyber_shield ? "Cyber Recovery Confluence (Shield Active)" : "Cyber Grade S+++ (Zero-Loss Shield)";
+            document.getElementById('res-tp-label').innerText = localStats.ultra_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
+            document.getElementById('res-score').innerText = localStats.ultra_shield ? "Ultra Recovery Confluence (Shield Active)" : "Ultra Grade S++++ (Anti-Loss Shield)";
 
             let tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -758,9 +766,9 @@ def serve_home(full_path: str = ""):
 
                 if (tgToken && tgChatId) {
                     tgStatusEl.innerText = "Invio in corso in chat...";
-                    tgStatusEl.style.color = "#fcd34d";
+                    tgStatusEl.style.color = "var(--accent-warning)";
 
-                    let headerTag = localStats.cyber_shield ? "🚨 CYBER RECOVERY SIGNAL" : "🛡️ CYBER MASTER SIGNAL";
+                    let headerTag = localStats.ultra_shield ? "🚨 ULTRA RECOVERY SIGNAL" : "🛡️ ULTRA MASTER SIGNAL";
                     let formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Wide):</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
@@ -776,18 +784,18 @@ def serve_home(full_path: str = ""):
                         let tgData = await tgRes.json();
                         if (tgData.status === "success") {
                             tgStatusEl.innerText = "✅ Arrivato in chat su Telegram!";
-                            tgStatusEl.style.color = "var(--accent-green)";
+                            tgStatusEl.style.color = "var(--accent-success)";
                         } else {
                             tgStatusEl.innerText = "❌ " + tgData.message;
-                            tgStatusEl.style.color = "var(--accent-red)";
+                            tgStatusEl.style.color = "var(--accent-danger)";
                         }
                     } catch(e) {
                         tgStatusEl.innerText = "❌ Errore connessione";
-                        tgStatusEl.style.color = "var(--accent-red)";
+                        tgStatusEl.style.color = "var(--accent-danger)";
                     }
                 } else {
                     tgStatusEl.innerText = "⚠️ Inserisci Token e Chat ID";
-                    tgStatusEl.style.color = "#fcd34d";
+                    tgStatusEl.style.color = "var(--accent-warning)";
                 }
             } else {
                 tgStatusEl.innerText = "Disattivato";
@@ -795,7 +803,7 @@ def serve_home(full_path: str = ""):
             }
 
             let logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.cyber_shield ? ' [Cyber Recovery Active]' : '';
+            let protectionTagText = localStats.ultra_shield ? ' [Ultra Recovery Active]' : '';
             let logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
@@ -810,7 +818,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            let modeTitle = lastSignalData.isProtection ? "🚨 CYBER RECOVERY SIGNAL" : "🛡️ CYBER MASTER SIGNAL";
+            let modeTitle = lastSignalData.isProtection ? "🚨 ULTRA RECOVERY SIGNAL" : "🛡️ ULTRA MASTER SIGNAL";
             let text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
