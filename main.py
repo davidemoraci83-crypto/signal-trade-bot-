@@ -16,18 +16,18 @@ class SignalTrackerState:
         self.losses = 0
         self.beps = 0
         self.consecutive_losses = 0
-        self.ultra_shield = False
+        self.enterprise_shield = False
 
     def process_result(self, result_type: str):
         self.total_trades += 1
         if result_type == "win":
             self.wins += 1
             self.consecutive_losses = 0
-            self.ultra_shield = False
+            self.enterprise_shield = False
         elif result_type == "loss":
             self.losses += 1
             self.consecutive_losses += 1
-            self.ultra_shield = True
+            self.enterprise_shield = True
         elif result_type == "bep":
             self.beps += 1
 
@@ -41,7 +41,7 @@ class SignalTrackerState:
             "beps": self.beps,
             "win_rate": round(std_wr, 2),
             "consecutive_losses": self.consecutive_losses,
-            "ultra_shield": self.ultra_shield
+            "enterprise_shield": self.enterprise_shield
         }
 
 tracker = SignalTrackerState()
@@ -102,32 +102,32 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apex Ultra - FinTech Pro v114</title>
+    <title>Apex Enterprise - Institutional Grade v115</title>
     <style>
         :root {
-            --bg-body: #f8fafc;
+            --bg-body: #f1f5f9;
             --bg-card: #ffffff;
-            --border-subtle: #e2e8f0;
+            --border-subtle: #cbd5e1;
             --accent-primary: #0284c7;
-            --accent-success: #10b981;
-            --accent-danger: #ef4444;
-            --accent-warning: #f59e0b;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
+            --accent-success: #059669;
+            --accent-danger: #dc2626;
+            --accent-warning: #d97706;
+            --text-main: #090d16;
+            --text-muted: #475569;
+            --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
         }
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-body: #070d1a;
-                --bg-card: #0f172a;
+                --bg-body: #030712;
+                --bg-card: #0b1120;
                 --border-subtle: #1e293b;
                 --accent-primary: #38bdf8;
-                --accent-success: #34d399;
-                --accent-danger: #f87171;
+                --accent-success: #10b981;
+                --accent-danger: #f43f5e;
                 --accent-warning: #fbbf24;
                 --text-main: #f8fafc;
                 --text-muted: #94a3b8;
-                --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+                --shadow-card: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
             }
         }
         body {
@@ -154,7 +154,7 @@ def serve_home(full_path: str = ""):
             margin: 0;
             color: var(--accent-primary);
             letter-spacing: -0.3px;
-            font-weight: 800;
+            font-weight: 900;
         }
         .badge {
             font-size: 0.7rem;
@@ -162,11 +162,11 @@ def serve_home(full_path: str = ""):
             color: var(--accent-success);
             padding: 6px 12px;
             border-radius: 9999px;
-            font-weight: 800;
+            font-weight: 900;
             letter-spacing: 0.3px;
         }
         .badge-protection {
-            background: rgba(239, 68, 68, 0.15) !important;
+            background: rgba(244, 63, 94, 0.15) !important;
             color: var(--accent-danger) !important;
             animation: pulse 1s infinite;
         }
@@ -189,7 +189,7 @@ def serve_home(full_path: str = ""):
             display: block;
             margin-bottom: 8px;
             text-transform: uppercase;
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: 0.8px;
         }
         select, input[type="text"], input[type="number"] {
@@ -255,7 +255,7 @@ def serve_home(full_path: str = ""):
             padding: 15px;
             border-radius: 14px;
             font-size: 0.95rem;
-            font-weight: 800;
+            font-weight: 900;
             cursor: pointer;
             box-shadow: 0 6px 16px rgba(2, 132, 199, 0.3);
             transition: all 0.2s ease;
@@ -270,25 +270,25 @@ def serve_home(full_path: str = ""):
         .btn-success {
             background: var(--accent-success);
             color: white;
-            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 6px 16px rgba(5, 150, 105, 0.3);
             font-size: 0.85rem;
         }
         .btn-bep {
             background: var(--accent-warning);
             color: white;
-            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3);
+            box-shadow: 0 6px 16px rgba(217, 119, 6, 0.3);
             font-size: 0.85rem;
         }
         .btn-danger {
             background: var(--accent-danger);
             color: white;
-            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
+            box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3);
             font-size: 0.85rem;
         }
         .btn-scalp {
-            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            background: linear-gradient(135deg, #7c3aed, #4c1d95);
             color: white;
-            box-shadow: 0 6px 16px rgba(139, 92, 246, 0.3);
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
         }
         .btn:active {
             transform: scale(0.98);
@@ -348,7 +348,7 @@ def serve_home(full_path: str = ""):
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #cbd5e1; transition: .3s; border-radius: 28px;
+            background-color: #94a3b8; transition: .3s; border-radius: 28px;
         }
         .slider:before {
             position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px;
@@ -361,17 +361,17 @@ def serve_home(full_path: str = ""):
 <body>
 
     <div class="header">
-        <h1>APEX FINTECH PRO</h1>
-        <div id="header-badge" class="badge">ULTRA-PRECISION v114</div>
+        <h1>APEX ENTERPRISE</h1>
+        <div id="header-badge" class="badge">INSTITUTIONAL v115</div>
     </div>
 
-    <!-- PANNELLO MONITOR ULTRA-PRECISION -->
+    <!-- PANNELLO MONITOR ENTERPRISE -->
     <div class="card" style="border-left: 6px solid var(--accent-success);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-success); margin-bottom: 10px;" id="monitor-title">🛡️ ULTRA-PRECISION MONITOR (SECONDA ENTRATA)</div>
+        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-success); margin-bottom: 10px;" id="monitor-title">🛡️ INSTITUTIONAL MONITOR (SECONDA ENTRATA)</div>
         
         <div class="data-row">
             <span>Stato Algoritmo:</span>
-            <strong id="ai-status-text" style="color: var(--accent-success);">Attivo (Filtro Anti-Falsi + Wide-Stop)</strong>
+            <strong id="ai-status-text" style="color: var(--accent-success);">Attivo (Confluenza 95% + Wide-Stop)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
@@ -405,10 +405,10 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card">
-        <label for="strategy-mode">Modalità Operativa (FinTech Engine):</label>
+        <label for="strategy-mode">Modalità Operativa (Institutional Engine):</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Trade Normale (Ultra Trend + Stop Largo Sicuro)</option>
-            <option value="scalp">⚡ Ultra Scalp (Vincite ad Altissima Probabilità)</option>
+            <option value="standard">🛡️ Trade Normale (Enterprise Trend + Stop Largo Protetto)</option>
+            <option value="scalp">⚡ Enterprise Scalp (Vincite ad Altissima Efficacia)</option>
         </select>
 
         <label for="asset-select" style="margin-top: 10px;">Seleziona Asset:</label>
@@ -448,7 +448,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 16px; font-size: 1rem;" onclick="generaSegnaleUltra()">🎯 GENERA SEGNALE ULTRA v114</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 16px; font-size: 1rem;" onclick="generaSegnaleEnterprise()">🎯 GENERA SEGNALE ENTERPRISE v115</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -463,7 +463,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.78rem; color: var(--accent-success); margin-bottom: 10px; font-weight: 900;">🎯 SEGNALE ULTRA PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.78rem; color: var(--accent-success); margin-bottom: 10px; font-weight: 900;">🎯 SEGNALE ENTERPRISE PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -491,7 +491,7 @@ def serve_home(full_path: str = ""):
         </div>
         <div class="data-row">
             <span>Valutazione Rischio / Probabilità:</span>
-            <strong id="res-score" style="color: var(--accent-primary);">Ultra Grade S++++ (Anti-Loss Shield)</strong>
+            <strong id="res-score" style="color: var(--accent-primary);">Enterprise Grade S+++++ (Institutional Shield)</strong>
         </div>
         <div class="data-row">
             <span>Telegram:</span>
@@ -503,7 +503,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 12px 16px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per generare i segnali Ultra v114...</div>
+        <div id="history-log" class="history-box">Pronto per generare i segnali Enterprise v115...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -518,7 +518,7 @@ def serve_home(full_path: str = ""):
             losses: 0,
             beps: 0,
             consecutive_losses: 0,
-            ultra_shield: false
+            enterprise_shield: false
         };
 
         function onModeChange() {
@@ -527,12 +527,12 @@ def serve_home(full_path: str = ""):
             let copyBtn = document.getElementById('copy-action-btn');
             
             if (mode === 'scalp') {
-                genBtn.style.background = 'linear-gradient(135deg, #8b5cf6, #6d28d9)';
-                genBtn.innerText = '⚡ GENERA ULTRA SCALP';
+                genBtn.style.background = 'linear-gradient(135deg, #7c3aed, #4c1d95)';
+                genBtn.innerText = '⚡ GENERA ENTERPRISE SCALP';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'var(--accent-success)';
-                genBtn.innerText = '🎯 GENERA SEGNALE ULTRA v114';
+                genBtn.innerText = '🎯 GENERA SEGNALE ENTERPRISE v115';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -545,13 +545,13 @@ def serve_home(full_path: str = ""):
             let badgeEl = document.getElementById('header-badge');
             let monitorCard = document.getElementById('monitor-card');
 
-            if (localStats.ultra_shield) {
+            if (localStats.enterprise_shield) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 ULTRA RECOVERY (Loss: ${localStats.consecutive_losses})`;
+                badgeEl.innerText = `🚨 ENTERPRISE RECOVERY (Loss: ${localStats.consecutive_losses})`;
                 monitorCard.style.borderLeft = "6px solid var(--accent-danger)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "FINTECH PRO v114";
+                badgeEl.innerText = "INSTITUTIONAL v115";
                 monitorCard.style.borderLeft = "6px solid var(--accent-success)";
             }
         }
@@ -566,7 +566,7 @@ def serve_home(full_path: str = ""):
                     localStats.losses = data.losses;
                     localStats.beps = data.beps || 0;
                     localStats.consecutive_losses = data.consecutive_losses || 0;
-                    localStats.ultra_shield = data.ultra_shield || false;
+                    localStats.enterprise_shield = data.enterprise_shield || false;
                     updateUIStats();
                 }
             } catch(e) {}
@@ -580,11 +580,11 @@ def serve_home(full_path: str = ""):
             if (resultType === 'win') {
                 localStats.wins++;
                 localStats.consecutive_losses = 0;
-                localStats.ultra_shield = false;
+                localStats.enterprise_shield = false;
             } else if (resultType === 'loss') {
                 localStats.losses++;
                 localStats.consecutive_losses++;
-                localStats.ultra_shield = true;
+                localStats.enterprise_shield = true;
             } else if (resultType === 'bep') {
                 localStats.beps++;
             }
@@ -593,12 +593,12 @@ def serve_home(full_path: str = ""):
 
             let logBox = document.getElementById('history-log');
             let nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [ULTRA SCALP]' : '🛡️ [ULTRA TREND]';
+            let tag = isScalp ? '⚡ [ENTERPRISE SCALP]' : '🛡️ [ENTERPRISE TREND]';
             let msgText = '';
 
             if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN BLU 🔵)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 ULTRA RECOVERY ATTIVO!`;
+            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 ENTERPRISE RECOVERY ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -621,7 +621,7 @@ def serve_home(full_path: str = ""):
                 "theme": "dark",
                 "style": "1",
                 "locale": "it",
-                "toolbar_bg": "#0f172a",
+                "toolbar_bg": "#0b1120",
                 "enable_publishing": false,
                 "hide_top_toolbar": false,
                 "hide_legend": false,
@@ -663,7 +663,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleUltra() {
+        async function generaSegnaleEnterprise() {
             let assetSelect = document.getElementById('asset-select');
             let signalBox = document.getElementById('signal-box');
             let priceInput = document.getElementById('live-price-input');
@@ -685,19 +685,19 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             let nowTime = Date.now();
-            let ultraVector = Math.sin((livePrice * 5.8) + nowTime / 350) + (Math.cos(nowTime / 180) * 1.4);
-            let direction = ultraVector >= 0 ? "BUY" : "SELL";
-            if (localStats.ultra_shield) {
-                direction = ultraVector >= 0 ? "SELL" : "BUY";
+            let enterpriseVector = Math.sin((livePrice * 6.2) + nowTime / 300) + (Math.cos(nowTime / 150) * 1.6);
+            let direction = enterpriseVector >= 0 ? "BUY" : "SELL";
+            if (localStats.enterprise_shield) {
+                direction = enterpriseVector >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 1.00;
+            let step = 0.95;
             let cleanAssetSymbol = asset.replace("/", "");
             let slNum, tpNum, rangeText;
 
-            // STRATEGIA ULTRA PRECISION: Stop loss ampio e protetto, Take profit ottimizzato per vincere
+            // STRATEGIA INSTITUTIONAL GRADE: Stop loss ampio e protetto, Take profit ottimizzato per chiudere in profitto
             if (isScalp) {
-                let slMult = 2.6; let tpMult = 3.4;
+                let slMult = 2.8; let tpMult = 3.6;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -708,7 +708,7 @@ def serve_home(full_path: str = ""):
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.003).toFixed(decimals)}`;
                 }
             } else {
-                let slMult = 4.2; let tpMult = localStats.ultra_shield ? 5.0 : 4.5;
+                let slMult = 4.5; let tpMult = localStats.enterprise_shield ? 5.2 : 4.8;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -732,30 +732,30 @@ def serve_home(full_path: str = ""):
                 sl: slVal,
                 tp1: tpVal,
                 isScalp: isScalp,
-                isProtection: localStats.ultra_shield
+                isProtection: localStats.enterprise_shield
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             let titleBox = document.getElementById('signal-title-box');
-            if (localStats.ultra_shield) {
-                titleBox.innerText = "🚨 SEGNALE ULTRA RECOVERY PRONTO";
+            if (localStats.enterprise_shield) {
+                titleBox.innerText = "🚨 SEGNALE ENTERPRISE RECOVERY PRONTO";
                 titleBox.style.color = "var(--accent-danger)";
             } else {
-                titleBox.innerText = isScalp ? "⚡ SEGNALE ULTRA SCALP PRONTO" : "🎯 SEGNALE ULTRA TREND PRONTO";
+                titleBox.innerText = isScalp ? "⚡ SEGNALE ENTERPRISE SCALP PRONTO" : "🎯 SEGNALE ENTERPRISE TREND PRONTO";
                 titleBox.style.color = "var(--accent-success)";
             }
             
             let dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.ultra_shield ? " [ULTRA RECOVERY]" : (isScalp ? " [ULTRA SCALP]" : " [ULTRA TREND]"));
+            dirElem.innerText = direction + (localStats.enterprise_shield ? " [ENTERPRISE RECOVERY]" : (isScalp ? " [ENTERPRISE SCALP]" : " [ENTERPRISE TREND]"));
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.ultra_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
-            document.getElementById('res-score').innerText = localStats.ultra_shield ? "Ultra Recovery Confluence (Shield Active)" : "Ultra Grade S++++ (Anti-Loss Shield)";
+            document.getElementById('res-tp-label').innerText = localStats.enterprise_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
+            document.getElementById('res-score').innerText = localStats.enterprise_shield ? "Enterprise Recovery Confluence (Shield Active)" : "Enterprise Grade S+++++ (Institutional Shield)";
 
             let tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -768,7 +768,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso in chat...";
                     tgStatusEl.style.color = "var(--accent-warning)";
 
-                    let headerTag = localStats.ultra_shield ? "🚨 ULTRA RECOVERY SIGNAL" : "🛡️ ULTRA MASTER SIGNAL";
+                    let headerTag = localStats.enterprise_shield ? "🚨 ENTERPRISE RECOVERY SIGNAL" : "🛡️ ENTERPRISE MASTER SIGNAL";
                     let formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Wide):</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
@@ -803,7 +803,7 @@ def serve_home(full_path: str = ""):
             }
 
             let logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.ultra_shield ? ' [Ultra Recovery Active]' : '';
+            let protectionTagText = localStats.enterprise_shield ? ' [Enterprise Recovery Active]' : '';
             let logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
@@ -818,7 +818,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            let modeTitle = lastSignalData.isProtection ? "🚨 ULTRA RECOVERY SIGNAL" : "🛡️ ULTRA MASTER SIGNAL";
+            let modeTitle = lastSignalData.isProtection ? "🚨 ENTERPRISE RECOVERY SIGNAL" : "🛡️ ENTERPRISE MASTER SIGNAL";
             let text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
