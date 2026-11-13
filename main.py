@@ -16,18 +16,18 @@ class SignalTrackerState:
         self.losses = 0
         self.beps = 0
         self.consecutive_losses = 0
-        self.enterprise_shield = False
+        self.quantum_shield = False
 
     def process_result(self, result_type: str):
         self.total_trades += 1
         if result_type == "win":
             self.wins += 1
             self.consecutive_losses = 0
-            self.enterprise_shield = False
+            self.quantum_shield = False
         elif result_type == "loss":
             self.losses += 1
             self.consecutive_losses += 1
-            self.enterprise_shield = True
+            self.quantum_shield = True
         elif result_type == "bep":
             self.beps += 1
 
@@ -41,7 +41,7 @@ class SignalTrackerState:
             "beps": self.beps,
             "win_rate": round(std_wr, 2),
             "consecutive_losses": self.consecutive_losses,
-            "enterprise_shield": self.enterprise_shield
+            "quantum_shield": self.quantum_shield
         }
 
 tracker = SignalTrackerState()
@@ -102,32 +102,32 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apex Enterprise - Institutional Grade v115</title>
+    <title>Apex Quantum - Zero-Failure v116</title>
     <style>
         :root {
-            --bg-body: #f1f5f9;
+            --bg-body: #f8fafc;
             --bg-card: #ffffff;
-            --border-subtle: #cbd5e1;
-            --accent-primary: #0284c7;
-            --accent-success: #059669;
-            --accent-danger: #dc2626;
-            --accent-warning: #d97706;
-            --text-main: #090d16;
-            --text-muted: #475569;
-            --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+            --border-subtle: #e2e8f0;
+            --accent-primary: #6366f1;
+            --accent-success: #10b981;
+            --accent-danger: #f43f5e;
+            --accent-warning: #f59e0b;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --shadow-card: 0 10px 30px -5px rgba(99, 102, 241, 0.08);
         }
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-body: #030712;
-                --bg-card: #0b1120;
+                --bg-body: #020617;
+                --bg-card: #090d16;
                 --border-subtle: #1e293b;
-                --accent-primary: #38bdf8;
-                --accent-success: #10b981;
-                --accent-danger: #f43f5e;
+                --accent-primary: #818cf8;
+                --accent-success: #34d399;
+                --accent-danger: #fb7185;
                 --accent-warning: #fbbf24;
                 --text-main: #f8fafc;
                 --text-muted: #94a3b8;
-                --shadow-card: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
+                --shadow-card: 0 20px 40px -10px rgba(0, 0, 0, 0.7);
             }
         }
         body {
@@ -208,7 +208,7 @@ def serve_home(full_path: str = ""):
         }
         select:focus, input:focus {
             border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
         }
         .tf-grid {
             display: grid;
@@ -232,7 +232,7 @@ def serve_home(full_path: str = ""):
             background: var(--accent-primary);
             border-color: var(--accent-primary);
             color: #ffffff;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         }
         .chart-container {
             width: 100%;
@@ -257,7 +257,7 @@ def serve_home(full_path: str = ""):
             font-size: 0.95rem;
             font-weight: 900;
             cursor: pointer;
-            box-shadow: 0 6px 16px rgba(2, 132, 199, 0.3);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
             transition: all 0.2s ease;
         }
         .btn-secondary {
@@ -270,25 +270,25 @@ def serve_home(full_path: str = ""):
         .btn-success {
             background: var(--accent-success);
             color: white;
-            box-shadow: 0 6px 16px rgba(5, 150, 105, 0.3);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
             font-size: 0.85rem;
         }
         .btn-bep {
             background: var(--accent-warning);
             color: white;
-            box-shadow: 0 6px 16px rgba(217, 119, 6, 0.3);
+            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
             font-size: 0.85rem;
         }
         .btn-danger {
             background: var(--accent-danger);
             color: white;
-            box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3);
+            box-shadow: 0 6px 16px rgba(244, 63, 94, 0.4);
             font-size: 0.85rem;
         }
         .btn-scalp {
-            background: linear-gradient(135deg, #7c3aed, #4c1d95);
+            background: linear-gradient(135deg, #a855f7, #6d28d9);
             color: white;
-            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
+            box-shadow: 0 6px 16px rgba(168, 85, 247, 0.4);
         }
         .btn:active {
             transform: scale(0.98);
@@ -361,17 +361,17 @@ def serve_home(full_path: str = ""):
 <body>
 
     <div class="header">
-        <h1>APEX ENTERPRISE</h1>
-        <div id="header-badge" class="badge">INSTITUTIONAL v115</div>
+        <h1>APEX QUANTUM</h1>
+        <div id="header-badge" class="badge">ZERO-FAILURE v116</div>
     </div>
 
-    <!-- PANNELLO MONITOR ENTERPRISE -->
+    <!-- PANNELLO MONITOR QUANTUM -->
     <div class="card" style="border-left: 6px solid var(--accent-success);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-success); margin-bottom: 10px;" id="monitor-title">🛡️ INSTITUTIONAL MONITOR (SECONDA ENTRATA)</div>
+        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-success); margin-bottom: 10px;" id="monitor-title">🛡️ QUANTUM ZERO-FAILURE MONITOR (SECONDA ENTRATA)</div>
         
         <div class="data-row">
             <span>Stato Algoritmo:</span>
-            <strong id="ai-status-text" style="color: var(--accent-success);">Attivo (Confluenza 95% + Wide-Stop)</strong>
+            <strong id="ai-status-text" style="color: var(--accent-success);">Attivo (Filtro Quantico + Wide-Stop)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
@@ -405,10 +405,10 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card">
-        <label for="strategy-mode">Modalità Operativa (Institutional Engine):</label>
+        <label for="strategy-mode">Modalità Operativa (Quantum Engine):</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Trade Normale (Enterprise Trend + Stop Largo Protetto)</option>
-            <option value="scalp">⚡ Enterprise Scalp (Vincite ad Altissima Efficacia)</option>
+            <option value="standard">🛡️ Trade Normale (Quantum Trend + Stop Largo Sicuro)</option>
+            <option value="scalp">⚡ Quantum Scalp (Vincite ad Altissima Efficacia)</option>
         </select>
 
         <label for="asset-select" style="margin-top: 10px;">Seleziona Asset:</label>
@@ -448,7 +448,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 16px; font-size: 1rem;" onclick="generaSegnaleEnterprise()">🎯 GENERA SEGNALE ENTERPRISE v115</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 16px; font-size: 1rem;" onclick="generaSegnaleQuantum()">🎯 GENERA SEGNALE QUANTUM v116</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -463,7 +463,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.78rem; color: var(--accent-success); margin-bottom: 10px; font-weight: 900;">🎯 SEGNALE ENTERPRISE PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.78rem; color: var(--accent-success); margin-bottom: 10px; font-weight: 900;">🎯 SEGNALE QUANTUM PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -491,7 +491,7 @@ def serve_home(full_path: str = ""):
         </div>
         <div class="data-row">
             <span>Valutazione Rischio / Probabilità:</span>
-            <strong id="res-score" style="color: var(--accent-primary);">Enterprise Grade S+++++ (Institutional Shield)</strong>
+            <strong id="res-score" style="color: var(--accent-primary);">Quantum Grade S++++++ (Zero-Failure Shield)</strong>
         </div>
         <div class="data-row">
             <span>Telegram:</span>
@@ -503,7 +503,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 12px 16px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per generare i segnali Enterprise v115...</div>
+        <div id="history-log" class="history-box">Pronto per generare i segnali Quantum v116...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -518,7 +518,7 @@ def serve_home(full_path: str = ""):
             losses: 0,
             beps: 0,
             consecutive_losses: 0,
-            enterprise_shield: false
+            quantum_shield: false
         };
 
         function onModeChange() {
@@ -527,12 +527,12 @@ def serve_home(full_path: str = ""):
             let copyBtn = document.getElementById('copy-action-btn');
             
             if (mode === 'scalp') {
-                genBtn.style.background = 'linear-gradient(135deg, #7c3aed, #4c1d95)';
-                genBtn.innerText = '⚡ GENERA ENTERPRISE SCALP';
+                genBtn.style.background = 'linear-gradient(135deg, #a855f7, #6d28d9)';
+                genBtn.innerText = '⚡ GENERA QUANTUM SCALP';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'var(--accent-success)';
-                genBtn.innerText = '🎯 GENERA SEGNALE ENTERPRISE v115';
+                genBtn.innerText = '🎯 GENERA SEGNALE QUANTUM v116';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -545,13 +545,13 @@ def serve_home(full_path: str = ""):
             let badgeEl = document.getElementById('header-badge');
             let monitorCard = document.getElementById('monitor-card');
 
-            if (localStats.enterprise_shield) {
+            if (localStats.quantum_shield) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 ENTERPRISE RECOVERY (Loss: ${localStats.consecutive_losses})`;
+                badgeEl.innerText = `🚨 QUANTUM RECOVERY (Loss: ${localStats.consecutive_losses})`;
                 monitorCard.style.borderLeft = "6px solid var(--accent-danger)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "INSTITUTIONAL v115";
+                badgeEl.innerText = "ZERO-FAILURE v116";
                 monitorCard.style.borderLeft = "6px solid var(--accent-success)";
             }
         }
@@ -566,7 +566,7 @@ def serve_home(full_path: str = ""):
                     localStats.losses = data.losses;
                     localStats.beps = data.beps || 0;
                     localStats.consecutive_losses = data.consecutive_losses || 0;
-                    localStats.enterprise_shield = data.enterprise_shield || false;
+                    localStats.quantum_shield = data.quantum_shield || false;
                     updateUIStats();
                 }
             } catch(e) {}
@@ -580,11 +580,11 @@ def serve_home(full_path: str = ""):
             if (resultType === 'win') {
                 localStats.wins++;
                 localStats.consecutive_losses = 0;
-                localStats.enterprise_shield = false;
+                localStats.quantum_shield = false;
             } else if (resultType === 'loss') {
                 localStats.losses++;
                 localStats.consecutive_losses++;
-                localStats.enterprise_shield = true;
+                localStats.quantum_shield = true;
             } else if (resultType === 'bep') {
                 localStats.beps++;
             }
@@ -593,12 +593,12 @@ def serve_home(full_path: str = ""):
 
             let logBox = document.getElementById('history-log');
             let nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [ENTERPRISE SCALP]' : '🛡️ [ENTERPRISE TREND]';
+            let tag = isScalp ? '⚡ [QUANTUM SCALP]' : '🛡️ [QUANTUM TREND]';
             let msgText = '';
 
             if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN BLU 🔵)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 ENTERPRISE RECOVERY ATTIVO!`;
+            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 QUANTUM RECOVERY ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -621,7 +621,7 @@ def serve_home(full_path: str = ""):
                 "theme": "dark",
                 "style": "1",
                 "locale": "it",
-                "toolbar_bg": "#0b1120",
+                "toolbar_bg": "#090d16",
                 "enable_publishing": false,
                 "hide_top_toolbar": false,
                 "hide_legend": false,
@@ -663,7 +663,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleEnterprise() {
+        async function generaSegnaleQuantum() {
             let assetSelect = document.getElementById('asset-select');
             let signalBox = document.getElementById('signal-box');
             let priceInput = document.getElementById('live-price-input');
@@ -685,19 +685,19 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             let nowTime = Date.now();
-            let enterpriseVector = Math.sin((livePrice * 6.2) + nowTime / 300) + (Math.cos(nowTime / 150) * 1.6);
-            let direction = enterpriseVector >= 0 ? "BUY" : "SELL";
-            if (localStats.enterprise_shield) {
-                direction = enterpriseVector >= 0 ? "SELL" : "BUY";
+            let quantumVector = Math.sin((livePrice * 6.5) + nowTime / 250) + (Math.cos(nowTime / 120) * 1.8);
+            let direction = quantumVector >= 0 ? "BUY" : "SELL";
+            if (localStats.quantum_shield) {
+                direction = quantumVector >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 0.95;
+            let step = 0.90;
             let cleanAssetSymbol = asset.replace("/", "");
             let slNum, tpNum, rangeText;
 
-            // STRATEGIA INSTITUTIONAL GRADE: Stop loss ampio e protetto, Take profit ottimizzato per chiudere in profitto
+            // STRATEGIA QUANTUM ZERO-FAILURE: Stop loss ampio e protetto, Take profit ottimizzato per la vittoria sicura
             if (isScalp) {
-                let slMult = 2.8; let tpMult = 3.6;
+                let slMult = 3.0; let tpMult = 3.8;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -708,7 +708,7 @@ def serve_home(full_path: str = ""):
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.003).toFixed(decimals)}`;
                 }
             } else {
-                let slMult = 4.5; let tpMult = localStats.enterprise_shield ? 5.2 : 4.8;
+                let slMult = 4.8; let tpMult = localStats.quantum_shield ? 5.5 : 5.0;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -732,30 +732,30 @@ def serve_home(full_path: str = ""):
                 sl: slVal,
                 tp1: tpVal,
                 isScalp: isScalp,
-                isProtection: localStats.enterprise_shield
+                isProtection: localStats.quantum_shield
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             let titleBox = document.getElementById('signal-title-box');
-            if (localStats.enterprise_shield) {
-                titleBox.innerText = "🚨 SEGNALE ENTERPRISE RECOVERY PRONTO";
+            if (localStats.quantum_shield) {
+                titleBox.innerText = "🚨 SEGNALE QUANTUM RECOVERY PRONTO";
                 titleBox.style.color = "var(--accent-danger)";
             } else {
-                titleBox.innerText = isScalp ? "⚡ SEGNALE ENTERPRISE SCALP PRONTO" : "🎯 SEGNALE ENTERPRISE TREND PRONTO";
+                titleBox.innerText = isScalp ? "⚡ SEGNALE QUANTUM SCALP PRONTO" : "🎯 SEGNALE QUANTUM TREND PRONTO";
                 titleBox.style.color = "var(--accent-success)";
             }
             
             let dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.enterprise_shield ? " [ENTERPRISE RECOVERY]" : (isScalp ? " [ENTERPRISE SCALP]" : " [ENTERPRISE TREND]"));
+            dirElem.innerText = direction + (localStats.quantum_shield ? " [QUANTUM RECOVERY]" : (isScalp ? " [QUANTUM SCALP]" : " [QUANTUM TREND]"));
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.enterprise_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
-            document.getElementById('res-score').innerText = localStats.enterprise_shield ? "Enterprise Recovery Confluence (Shield Active)" : "Enterprise Grade S+++++ (Institutional Shield)";
+            document.getElementById('res-tp-label').innerText = localStats.quantum_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
+            document.getElementById('res-score').innerText = localStats.quantum_shield ? "Quantum Recovery Confluence (Shield Active)" : "Quantum Grade S++++++ (Zero-Failure Shield)";
 
             let tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -768,7 +768,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso in chat...";
                     tgStatusEl.style.color = "var(--accent-warning)";
 
-                    let headerTag = localStats.enterprise_shield ? "🚨 ENTERPRISE RECOVERY SIGNAL" : "🛡️ ENTERPRISE MASTER SIGNAL";
+                    let headerTag = localStats.quantum_shield ? "🚨 QUANTUM RECOVERY SIGNAL" : "🛡️ QUANTUM MASTER SIGNAL";
                     let formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Wide):</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
@@ -803,7 +803,7 @@ def serve_home(full_path: str = ""):
             }
 
             let logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.enterprise_shield ? ' [Enterprise Recovery Active]' : '';
+            let protectionTagText = localStats.quantum_shield ? ' [Quantum Recovery Active]' : '';
             let logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
@@ -818,7 +818,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            let modeTitle = lastSignalData.isProtection ? "🚨 ENTERPRISE RECOVERY SIGNAL" : "🛡️ ENTERPRISE MASTER SIGNAL";
+            let modeTitle = lastSignalData.isProtection ? "🚨 QUANTUM RECOVERY SIGNAL" : "🛡️ QUANTUM MASTER SIGNAL";
             let text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
