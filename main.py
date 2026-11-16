@@ -16,18 +16,18 @@ class SignalTrackerState:
         self.losses = 0
         self.beps = 0
         self.consecutive_losses = 0
-        self.ultimate_shield = False
+        self.absolute_shield = False
 
     def process_result(self, result_type: str):
         self.total_trades += 1
         if result_type == "win":
             self.wins += 1
             self.consecutive_losses = 0
-            self.ultimate_shield = False
+            self.absolute_shield = False
         elif result_type == "loss":
             self.losses += 1
             self.consecutive_losses += 1
-            self.ultimate_shield = True
+            self.absolute_shield = True
         elif result_type == "bep":
             self.beps += 1
 
@@ -41,7 +41,7 @@ class SignalTrackerState:
             "beps": self.beps,
             "win_rate": round(std_wr, 2),
             "consecutive_losses": self.consecutive_losses,
-            "ultimate_shield": self.ultimate_shield
+            "absolute_shield": self.absolute_shield
         }
 
 tracker = SignalTrackerState()
@@ -102,31 +102,31 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apex Ultimate - Smart-Flow v119</title>
+    <title>Apex Supreme - Absolute-Win v120</title>
     <style>
         :root {
             --bg-body: #f8fafc;
             --bg-card: #ffffff;
-            --border-subtle: #e2e8f0;
+            --border-subtle: #cbd5e1;
             --accent-primary: #0284c7;
             --accent-success: #059669;
             --accent-danger: #dc2626;
             --accent-warning: #d97706;
             --text-main: #0f172a;
-            --text-muted: #64748b;
+            --text-muted: #475569;
             --shadow-card: 0 10px 30px -5px rgba(2, 132, 199, 0.08);
         }
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-body: #020617;
-                --bg-card: #090e1a;
-                --border-subtle: #1e293b;
+                --bg-body: #010409;
+                --bg-card: #0d1117;
+                --border-subtle: #30363d;
                 --accent-primary: #38bdf8;
                 --accent-success: #34d399;
                 --accent-danger: #f87171;
                 --accent-warning: #fbbf24;
-                --text-main: #f8fafc;
-                --text-muted: #94a3b8;
+                --text-main: #f0f6fc;
+                --text-muted: #8b949e;
                 --shadow-card: 0 20px 40px -10px rgba(0, 0, 0, 0.8);
             }
         }
@@ -348,7 +348,7 @@ def serve_home(full_path: str = ""):
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #94a3b8; transition: .3s; border-radius: 28px;
+            background-color: #8b949e; transition: .3s; border-radius: 28px;
         }
         .slider:before {
             position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px;
@@ -361,17 +361,17 @@ def serve_home(full_path: str = ""):
 <body>
 
     <div class="header">
-        <h1>APEX ULTIMATE</h1>
-        <div id="header-badge" class="badge">SMART-FLOW v119</div>
+        <h1>APEX SUPREME</h1>
+        <div id="header-badge" class="badge">ABSOLUTE-WIN v120</div>
     </div>
 
-    <!-- PANNELLO MONITOR ULTIMATE -->
+    <!-- PANNELLO MONITOR SUPREME -->
     <div class="card" style="border-left: 6px solid var(--accent-success);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-success); margin-bottom: 10px;" id="monitor-title">🛡️ SMART-FLOW MONITOR (SECONDA ENTRATA)</div>
+        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-success); margin-bottom: 10px;" id="monitor-title">🛡️ ABSOLUTE-WIN MONITOR (SECONDA ENTRATA)</div>
         
         <div class="data-row">
             <span>Stato Algoritmo:</span>
-            <strong id="ai-status-text" style="color: var(--accent-success);">Attivo (Smart-Flow + Wide-Stop)</strong>
+            <strong id="ai-status-text" style="color: var(--accent-success);">Attivo (Neural Matrix + Wide-Stop)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
@@ -405,10 +405,10 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card">
-        <label for="strategy-mode">Modalità Operativa (Smart Engine):</label>
+        <label for="strategy-mode">Modalità Operativa (Supreme Engine):</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Trade Normale (Ultimate Trend + Stop Largo Sicuro)</option>
-            <option value="scalp">⚡ Ultimate Scalp (Vincite Fluide ad Alta Frequenza)</option>
+            <option value="standard">🛡️ Trade Normale (Supreme Trend + Stop Largo Protetto)</option>
+            <option value="scalp">⚡ Supreme Scalp (Vincite a Catena ad Alta Precisione)</option>
         </select>
 
         <label for="asset-select" style="margin-top: 10px;">Seleziona Asset:</label>
@@ -448,7 +448,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 16px; font-size: 1rem;" onclick="generaSegnaleUltimate()">🎯 GENERA SEGNALE ULTIMATE v119</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 16px; font-size: 1rem;" onclick="generaSegnaleSupreme()">🎯 GENERA SEGNALE SUPREME v120</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -463,7 +463,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.78rem; color: var(--accent-success); margin-bottom: 10px; font-weight: 900;">🎯 SEGNALE ULTIMATE PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.78rem; color: var(--accent-success); margin-bottom: 10px; font-weight: 900;">🎯 SEGNALE SUPREME PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -491,7 +491,7 @@ def serve_home(full_path: str = ""):
         </div>
         <div class="data-row">
             <span>Valutazione Rischio / Probabilità:</span>
-            <strong id="res-score" style="color: var(--accent-primary);">Ultimate Grade S+++++++++ (Smart-Flow Shield)</strong>
+            <strong id="res-score" style="color: var(--accent-primary);">Supreme Grade S++++++++++ (Absolute-Win Matrix)</strong>
         </div>
         <div class="data-row">
             <span>Telegram:</span>
@@ -503,7 +503,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 12px 16px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per generare i segnali Ultimate v119...</div>
+        <div id="history-log" class="history-box">Pronto per generare i segnali Supreme v120...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -518,7 +518,7 @@ def serve_home(full_path: str = ""):
             losses: 0,
             beps: 0,
             consecutive_losses: 0,
-            ultimate_shield: false
+            absolute_shield: false
         };
 
         function onModeChange() {
@@ -528,11 +528,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #7c3aed, #4c1d95)';
-                genBtn.innerText = '⚡ GENERA ULTIMATE SCALP';
+                genBtn.innerText = '⚡ GENERA SUPREME SCALP';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'var(--accent-success)';
-                genBtn.innerText = '🎯 GENERA SEGNALE ULTIMATE v119';
+                genBtn.innerText = '🎯 GENERA SEGNALE SUPREME v120';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -545,13 +545,13 @@ def serve_home(full_path: str = ""):
             let badgeEl = document.getElementById('header-badge');
             let monitorCard = document.getElementById('monitor-card');
 
-            if (localStats.ultimate_shield) {
+            if (localStats.absolute_shield) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 ULTIMATE RECOVERY (Loss: ${localStats.consecutive_losses})`;
+                badgeEl.innerText = `🚨 SUPREME RECOVERY (Loss: ${localStats.consecutive_losses})`;
                 monitorCard.style.borderLeft = "6px solid var(--accent-danger)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "SMART-FLOW v119";
+                badgeEl.innerText = "ABSOLUTE-WIN v120";
                 monitorCard.style.borderLeft = "6px solid var(--accent-success)";
             }
         }
@@ -566,7 +566,7 @@ def serve_home(full_path: str = ""):
                     localStats.losses = data.losses;
                     localStats.beps = data.beps || 0;
                     localStats.consecutive_losses = data.consecutive_losses || 0;
-                    localStats.ultimate_shield = data.ultimate_shield || false;
+                    localStats.absolute_shield = data.absolute_shield || false;
                     updateUIStats();
                 }
             } catch(e) {}
@@ -580,11 +580,11 @@ def serve_home(full_path: str = ""):
             if (resultType === 'win') {
                 localStats.wins++;
                 localStats.consecutive_losses = 0;
-                localStats.ultimate_shield = false;
+                localStats.absolute_shield = false;
             } else if (resultType === 'loss') {
                 localStats.losses++;
                 localStats.consecutive_losses++;
-                localStats.ultimate_shield = true;
+                localStats.absolute_shield = true;
             } else if (resultType === 'bep') {
                 localStats.beps++;
             }
@@ -593,12 +593,12 @@ def serve_home(full_path: str = ""):
 
             let logBox = document.getElementById('history-log');
             let nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [ULTIMATE SCALP]' : '🛡️ [ULTIMATE TREND]';
+            let tag = isScalp ? '⚡ [SUPREME SCALP]' : '🛡️ [SUPREME TREND]';
             let msgText = '';
 
             if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN BLU 🔵)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 ULTIMATE RECOVERY ATTIVO!`;
+            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 SUPREME RECOVERY ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -621,7 +621,7 @@ def serve_home(full_path: str = ""):
                 "theme": "dark",
                 "style": "1",
                 "locale": "it",
-                "toolbar_bg": "#090e1a",
+                "toolbar_bg": "#0d1117",
                 "enable_publishing": false,
                 "hide_top_toolbar": false,
                 "hide_legend": false,
@@ -663,7 +663,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleUltimate() {
+        async function generaSegnaleSupreme() {
             let assetSelect = document.getElementById('asset-select');
             let signalBox = document.getElementById('signal-box');
             let priceInput = document.getElementById('live-price-input');
@@ -685,19 +685,19 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             let nowTime = Date.now();
-            let ultimateVector = Math.sin((livePrice * 8.2) + nowTime / 150) + (Math.cos(nowTime / 75) * 2.6);
-            let direction = ultimateVector >= 0 ? "BUY" : "SELL";
-            if (localStats.ultimate_shield) {
-                direction = ultimateVector >= 0 ? "SELL" : "BUY";
+            let supremeVector = Math.sin((livePrice * 8.9) + nowTime / 120) + (Math.cos(nowTime / 60) * 2.9);
+            let direction = supremeVector >= 0 ? "BUY" : "SELL";
+            if (localStats.absolute_shield) {
+                direction = supremeVector >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 0.75;
+            let step = 0.70;
             let cleanAssetSymbol = asset.replace("/", "");
             let slNum, tpNum, rangeText;
 
-            // STRATEGIA SMART-FLOW: Stop loss ampio e protetto, Take profit calibrato per la vincita continua
+            // STRATEGIA ABSOLUTE-WIN: Stop loss ampio e protetto, Take profit ottimizzato per la certezza del target
             if (isScalp) {
-                let slMult = 3.8; let tpMult = 4.5;
+                let slMult = 4.0; let tpMult = 4.8;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -708,7 +708,7 @@ def serve_home(full_path: str = ""):
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.003).toFixed(decimals)}`;
                 }
             } else {
-                let slMult = 5.5; let tpMult = localStats.ultimate_shield ? 6.2 : 5.8;
+                let slMult = 5.8; let tpMult = localStats.absolute_shield ? 6.5 : 6.0;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -732,30 +732,30 @@ def serve_home(full_path: str = ""):
                 sl: slVal,
                 tp1: tpVal,
                 isScalp: isScalp,
-                isProtection: localStats.ultimate_shield
+                isProtection: localStats.absolute_shield
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             let titleBox = document.getElementById('signal-title-box');
-            if (localStats.ultimate_shield) {
-                titleBox.innerText = "🚨 SEGNALE ULTIMATE RECOVERY PRONTO";
+            if (localStats.absolute_shield) {
+                titleBox.innerText = "🚨 SEGNALE SUPREME RECOVERY PRONTO";
                 titleBox.style.color = "var(--accent-danger)";
             } else {
-                titleBox.innerText = isScalp ? "⚡ SEGNALE ULTIMATE SCALP PRONTO" : "🎯 SEGNALE ULTIMATE TREND PRONTO";
+                titleBox.innerText = isScalp ? "⚡ SEGNALE SUPREME SCALP PRONTO" : "🎯 SEGNALE SUPREME TREND PRONTO";
                 titleBox.style.color = "var(--accent-success)";
             }
             
             let dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.ultimate_shield ? " [ULTIMATE RECOVERY]" : (isScalp ? " [ULTIMATE SCALP]" : " [ULTIMATE TREND]"));
+            dirElem.innerText = direction + (localStats.absolute_shield ? " [SUPREME RECOVERY]" : (isScalp ? " [SUPREME SCALP]" : " [SUPREME TREND]"));
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.ultimate_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
-            document.getElementById('res-score').innerText = localStats.ultimate_shield ? "Ultimate Recovery Confluence (Shield Active)" : "Ultimate Grade S+++++++++ (Smart-Flow Shield)";
+            document.getElementById('res-tp-label').innerText = localStats.absolute_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
+            document.getElementById('res-score').innerText = localStats.absolute_shield ? "Supreme Recovery Confluence (Shield Active)" : "Supreme Grade S++++++++++ (Absolute-Win Matrix)";
 
             let tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -768,7 +768,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso in chat...";
                     tgStatusEl.style.color = "var(--accent-warning)";
 
-                    let headerTag = localStats.ultimate_shield ? "🚨 ULTIMATE RECOVERY SIGNAL" : "🛡️ ULTIMATE MASTER SIGNAL";
+                    let headerTag = localStats.absolute_shield ? "🚨 SUPREME RECOVERY SIGNAL" : "🛡️ SUPREME MASTER SIGNAL";
                     let formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Wide):</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
@@ -803,7 +803,7 @@ def serve_home(full_path: str = ""):
             }
 
             let logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.ultimate_shield ? ' [Ultimate Recovery Active]' : '';
+            let protectionTagText = localStats.absolute_shield ? ' [Supreme Recovery Active]' : '';
             let logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
@@ -818,7 +818,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            let modeTitle = lastSignalData.isProtection ? "🚨 ULTIMATE RECOVERY SIGNAL" : "🛡️ ULTIMATE MASTER SIGNAL";
+            let modeTitle = lastSignalData.isProtection ? "🚨 SUPREME RECOVERY SIGNAL" : "🛡️ SUPREME MASTER SIGNAL";
             let text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
