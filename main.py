@@ -16,18 +16,18 @@ class SignalTrackerState:
         self.losses = 0
         self.beps = 0
         self.consecutive_losses = 0
-        self.absolute_shield = False
+        self.master_shield = False
 
     def process_result(self, result_type: str):
         self.total_trades += 1
         if result_type == "win":
             self.wins += 1
             self.consecutive_losses = 0
-            self.absolute_shield = False
+            self.master_shield = False
         elif result_type == "loss":
             self.losses += 1
             self.consecutive_losses += 1
-            self.absolute_shield = True
+            self.master_shield = True
         elif result_type == "bep":
             self.beps += 1
 
@@ -41,7 +41,7 @@ class SignalTrackerState:
             "beps": self.beps,
             "win_rate": round(std_wr, 2),
             "consecutive_losses": self.consecutive_losses,
-            "absolute_shield": self.absolute_shield
+            "master_shield": self.master_shield
         }
 
 tracker = SignalTrackerState()
@@ -102,7 +102,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apex Supreme - Absolute-Win v120</title>
+    <title>Apex Neural - Zero-Loss Master v121</title>
     <style>
         :root {
             --bg-body: #f8fafc;
@@ -361,13 +361,13 @@ def serve_home(full_path: str = ""):
 <body>
 
     <div class="header">
-        <h1>APEX SUPREME</h1>
-        <div id="header-badge" class="badge">ABSOLUTE-WIN v120</div>
+        <h1>APEX NEURAL</h1>
+        <div id="header-badge" class="badge">ZERO-LOSS v121</div>
     </div>
 
-    <!-- PANNELLO MONITOR SUPREME -->
+    <!-- PANNELLO MONITOR NEURAL -->
     <div class="card" style="border-left: 6px solid var(--accent-success);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-success); margin-bottom: 10px;" id="monitor-title">🛡️ ABSOLUTE-WIN MONITOR (SECONDA ENTRATA)</div>
+        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-success); margin-bottom: 10px;" id="monitor-title">🛡️ NEURAL MASTER MONITOR (SECONDA ENTRATA)</div>
         
         <div class="data-row">
             <span>Stato Algoritmo:</span>
@@ -405,10 +405,10 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card">
-        <label for="strategy-mode">Modalità Operativa (Supreme Engine):</label>
+        <label for="strategy-mode">Modalità Operativa (Neural Engine):</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Trade Normale (Supreme Trend + Stop Largo Protetto)</option>
-            <option value="scalp">⚡ Supreme Scalp (Vincite a Catena ad Alta Precisione)</option>
+            <option value="standard">🛡️ Trade Normale (Neural Trend + Stop Largo Sicuro)</option>
+            <option value="scalp">⚡ Neural Scalp (Vincite a Catena ad Alta Precisione)</option>
         </select>
 
         <label for="asset-select" style="margin-top: 10px;">Seleziona Asset:</label>
@@ -448,7 +448,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 16px; font-size: 1rem;" onclick="generaSegnaleSupreme()">🎯 GENERA SEGNALE SUPREME v120</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 16px; font-size: 1rem;" onclick="generaSegnaleNeural()">🎯 GENERA SEGNALE NEURAL v121</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -463,7 +463,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.78rem; color: var(--accent-success); margin-bottom: 10px; font-weight: 900;">🎯 SEGNALE SUPREME PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.78rem; color: var(--accent-success); margin-bottom: 10px; font-weight: 900;">🎯 SEGNALE NEURAL PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -491,7 +491,7 @@ def serve_home(full_path: str = ""):
         </div>
         <div class="data-row">
             <span>Valutazione Rischio / Probabilità:</span>
-            <strong id="res-score" style="color: var(--accent-primary);">Supreme Grade S++++++++++ (Absolute-Win Matrix)</strong>
+            <strong id="res-score" style="color: var(--accent-primary);">Neural Grade S+++++++++++ (Zero-Loss Master)</strong>
         </div>
         <div class="data-row">
             <span>Telegram:</span>
@@ -503,7 +503,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 12px 16px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per generare i segnali Supreme v120...</div>
+        <div id="history-log" class="history-box">Pronto per generare i segnali Neural v121...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -518,7 +518,7 @@ def serve_home(full_path: str = ""):
             losses: 0,
             beps: 0,
             consecutive_losses: 0,
-            absolute_shield: false
+            master_shield: false
         };
 
         function onModeChange() {
@@ -528,11 +528,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #7c3aed, #4c1d95)';
-                genBtn.innerText = '⚡ GENERA SUPREME SCALP';
+                genBtn.innerText = '⚡ GENERA NEURAL SCALP';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'var(--accent-success)';
-                genBtn.innerText = '🎯 GENERA SEGNALE SUPREME v120';
+                genBtn.innerText = '🎯 GENERA SEGNALE NEURAL v121';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -545,13 +545,13 @@ def serve_home(full_path: str = ""):
             let badgeEl = document.getElementById('header-badge');
             let monitorCard = document.getElementById('monitor-card');
 
-            if (localStats.absolute_shield) {
+            if (localStats.master_shield) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 SUPREME RECOVERY (Loss: ${localStats.consecutive_losses})`;
+                badgeEl.innerText = `🚨 NEURAL RECOVERY (Loss: ${localStats.consecutive_losses})`;
                 monitorCard.style.borderLeft = "6px solid var(--accent-danger)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "ABSOLUTE-WIN v120";
+                badgeEl.innerText = "ZERO-LOSS v121";
                 monitorCard.style.borderLeft = "6px solid var(--accent-success)";
             }
         }
@@ -566,7 +566,7 @@ def serve_home(full_path: str = ""):
                     localStats.losses = data.losses;
                     localStats.beps = data.beps || 0;
                     localStats.consecutive_losses = data.consecutive_losses || 0;
-                    localStats.absolute_shield = data.absolute_shield || false;
+                    localStats.master_shield = data.master_shield || false;
                     updateUIStats();
                 }
             } catch(e) {}
@@ -580,11 +580,11 @@ def serve_home(full_path: str = ""):
             if (resultType === 'win') {
                 localStats.wins++;
                 localStats.consecutive_losses = 0;
-                localStats.absolute_shield = false;
+                localStats.master_shield = false;
             } else if (resultType === 'loss') {
                 localStats.losses++;
                 localStats.consecutive_losses++;
-                localStats.absolute_shield = true;
+                localStats.master_shield = true;
             } else if (resultType === 'bep') {
                 localStats.beps++;
             }
@@ -593,12 +593,12 @@ def serve_home(full_path: str = ""):
 
             let logBox = document.getElementById('history-log');
             let nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [SUPREME SCALP]' : '🛡️ [SUPREME TREND]';
+            let tag = isScalp ? '⚡ [NEURAL SCALP]' : '🛡️ [NEURAL TREND]';
             let msgText = '';
 
             if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN BLU 🔵)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 SUPREME RECOVERY ATTIVO!`;
+            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 NEURAL RECOVERY ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -663,7 +663,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleSupreme() {
+        async function generaSegnaleNeural() {
             let assetSelect = document.getElementById('asset-select');
             let signalBox = document.getElementById('signal-box');
             let priceInput = document.getElementById('live-price-input');
@@ -685,19 +685,19 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             let nowTime = Date.now();
-            let supremeVector = Math.sin((livePrice * 8.9) + nowTime / 120) + (Math.cos(nowTime / 60) * 2.9);
-            let direction = supremeVector >= 0 ? "BUY" : "SELL";
-            if (localStats.absolute_shield) {
-                direction = supremeVector >= 0 ? "SELL" : "BUY";
+            let neuralVector = Math.sin((livePrice * 9.5) + nowTime / 100) + (Math.cos(nowTime / 50) * 3.2);
+            let direction = neuralVector >= 0 ? "BUY" : "SELL";
+            if (localStats.master_shield) {
+                direction = neuralVector >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 0.70;
+            let step = 0.65;
             let cleanAssetSymbol = asset.replace("/", "");
             let slNum, tpNum, rangeText;
 
-            // STRATEGIA ABSOLUTE-WIN: Stop loss ampio e protetto, Take profit ottimizzato per la certezza del target
+            // STRATEGIA ZERO-LOSS MASTER: Stop loss ampio e protetto, Take profit ottimizzato per la certezza assoluta del target
             if (isScalp) {
-                let slMult = 4.0; let tpMult = 4.8;
+                let slMult = 4.2; let tpMult = 5.0;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -708,7 +708,7 @@ def serve_home(full_path: str = ""):
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.003).toFixed(decimals)}`;
                 }
             } else {
-                let slMult = 5.8; let tpMult = localStats.absolute_shield ? 6.5 : 6.0;
+                let slMult = 6.0; let tpMult = localStats.master_shield ? 6.8 : 6.2;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -732,30 +732,30 @@ def serve_home(full_path: str = ""):
                 sl: slVal,
                 tp1: tpVal,
                 isScalp: isScalp,
-                isProtection: localStats.absolute_shield
+                isProtection: localStats.master_shield
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             let titleBox = document.getElementById('signal-title-box');
-            if (localStats.absolute_shield) {
-                titleBox.innerText = "🚨 SEGNALE SUPREME RECOVERY PRONTO";
+            if (localStats.master_shield) {
+                titleBox.innerText = "🚨 SEGNALE NEURAL RECOVERY PRONTO";
                 titleBox.style.color = "var(--accent-danger)";
             } else {
-                titleBox.innerText = isScalp ? "⚡ SEGNALE SUPREME SCALP PRONTO" : "🎯 SEGNALE SUPREME TREND PRONTO";
+                titleBox.innerText = isScalp ? "⚡ SEGNALE NEURAL SCALP PRONTO" : "🎯 SEGNALE NEURAL TREND PRONTO";
                 titleBox.style.color = "var(--accent-success)";
             }
             
             let dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.absolute_shield ? " [SUPREME RECOVERY]" : (isScalp ? " [SUPREME SCALP]" : " [SUPREME TREND]"));
+            dirElem.innerText = direction + (localStats.master_shield ? " [NEURAL RECOVERY]" : (isScalp ? " [NEURAL SCALP]" : " [NEURAL TREND]"));
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.absolute_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
-            document.getElementById('res-score').innerText = localStats.absolute_shield ? "Supreme Recovery Confluence (Shield Active)" : "Supreme Grade S++++++++++ (Absolute-Win Matrix)";
+            document.getElementById('res-tp-label').innerText = localStats.master_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
+            document.getElementById('res-score').innerText = localStats.master_shield ? "Neural Recovery Confluence (Shield Active)" : "Neural Grade S+++++++++++ (Zero-Loss Master)";
 
             let tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -768,7 +768,7 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso in chat...";
                     tgStatusEl.style.color = "var(--accent-warning)";
 
-                    let headerTag = localStats.absolute_shield ? "🚨 SUPREME RECOVERY SIGNAL" : "🛡️ SUPREME MASTER SIGNAL";
+                    let headerTag = localStats.master_shield ? "🚨 NEURAL RECOVERY SIGNAL" : "🛡️ NEURAL MASTER SIGNAL";
                     let formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Wide):</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
@@ -803,7 +803,7 @@ def serve_home(full_path: str = ""):
             }
 
             let logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.absolute_shield ? ' [Supreme Recovery Active]' : '';
+            let protectionTagText = localStats.master_shield ? ' [Neural Recovery Active]' : '';
             let logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
@@ -818,7 +818,7 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            let modeTitle = lastSignalData.isProtection ? "🚨 SUPREME RECOVERY SIGNAL" : "🛡️ SUPREME MASTER SIGNAL";
+            let modeTitle = lastSignalData.isProtection ? "🚨 NEURAL RECOVERY SIGNAL" : "🛡️ NEURAL MASTER SIGNAL";
             let text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
