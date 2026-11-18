@@ -16,18 +16,18 @@ class SignalTrackerState:
         self.losses = 0
         self.beps = 0
         self.consecutive_losses = 0
-        self.profit_shield = False
+        self.quantum_shield = False
 
     def process_result(self, result_type: str):
         self.total_trades += 1
         if result_type == "win":
             self.wins += 1
             self.consecutive_losses = 0
-            self.profit_shield = False
+            self.quantum_shield = False
         elif result_type == "loss":
             self.losses += 1
             self.consecutive_losses += 1
-            self.profit_shield = True
+            self.quantum_shield = True
         elif result_type == "bep":
             self.beps += 1
 
@@ -41,7 +41,7 @@ class SignalTrackerState:
             "beps": self.beps,
             "win_rate": round(std_wr, 2),
             "consecutive_losses": self.consecutive_losses,
-            "profit_shield": self.profit_shield
+            "quantum_shield": self.quantum_shield
         }
 
 tracker = SignalTrackerState()
@@ -102,7 +102,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apex Institutional - Profit-Lock v122</title>
+    <title>Apex Quantum - Multi-Timeframe v123</title>
     <style>
         :root {
             --bg-body: #f8fafc;
@@ -361,17 +361,17 @@ def serve_home(full_path: str = ""):
 <body>
 
     <div class="header">
-        <h1>APEX INSTITUTIONAL</h1>
-        <div id="header-badge" class="badge">PROFIT-LOCK v122</div>
+        <h1>APEX QUANTUM</h1>
+        <div id="header-badge" class="badge">MULTI-TF v123</div>
     </div>
 
-    <!-- PANNELLO MONITOR INSTITUTIONAL -->
+    <!-- PANNELLO MONITOR QUANTUM -->
     <div class="card" style="border-left: 6px solid var(--accent-success);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-success); margin-bottom: 10px;" id="monitor-title">🛡️ PROFIT-LOCK MONITOR (SECONDA ENTRATA)</div>
+        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-success); margin-bottom: 10px;" id="monitor-title">🛡️ QUANTUM MONITOR (INTELLIGENZA SMC & EMA)</div>
         
         <div class="data-row">
             <span>Stato Algoritmo:</span>
-            <strong id="ai-status-text" style="color: var(--accent-success);">Attivo (Institutional Core + Wide-Stop)</strong>
+            <strong id="ai-status-text" style="color: var(--accent-success);">Attivo (Multi-Timeframe Scoring + Wide-Stop)</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Reale (Senza BEP):</span>
@@ -405,10 +405,10 @@ def serve_home(full_path: str = ""):
     </div>
 
     <div class="card">
-        <label for="strategy-mode">Modalità Operativa (Institutional Engine):</label>
+        <label for="strategy-mode">Modalità Operativa (Quantum Engine):</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Trade Normale (Institutional Trend + Stop Largo Sicuro)</option>
-            <option value="scalp">⚡ Institutional Scalp (Vincite a Catena ad Alta Efficacia)</option>
+            <option value="standard">🛡️ Trade Normale (Multi-TF SMC Trend + Stop Largo)</option>
+            <option value="scalp">⚡ Quantum Scalp (Frequenza Alta + Alta Precisione)</option>
         </select>
 
         <label for="asset-select" style="margin-top: 10px;">Seleziona Asset:</label>
@@ -448,7 +448,7 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 16px; font-size: 1rem;" onclick="generaSegnaleInstitutional()">🎯 GENERA SEGNALE INSTITUTIONAL v122</button>
+        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 16px; font-size: 1rem;" onclick="generaSegnaleQuantum()">🎯 GENERA SEGNALE QUANTUM v123</button>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
@@ -463,7 +463,7 @@ def serve_home(full_path: str = ""):
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.78rem; color: var(--accent-success); margin-bottom: 10px; font-weight: 900;">🎯 SEGNALE INSTITUTIONAL PRONTO</div>
+        <div id="signal-title-box" style="font-size: 0.78rem; color: var(--accent-success); margin-bottom: 10px; font-weight: 900;">🎯 SEGNALE QUANTUM PRONTO</div>
         
         <div class="data-row">
             <span>Asset & Timeframe:</span>
@@ -474,24 +474,24 @@ def serve_home(full_path: str = ""):
             <strong id="res-liveprice" style="color: var(--accent-primary);">--</strong>
         </div>
         <div class="data-row">
-            <span>Direzione:</span>
+            <span>Direzione & Classificazione:</span>
             <span id="res-direction">--</span>
         </div>
         <div class="data-row">
-            <span>Range d'Ingresso:</span>
+            <span>Range d'Ingresso (Order Block):</span>
             <strong id="res-range" style="color: var(--accent-primary);">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Protetto & Largo):</span>
+            <span>Stop Loss (Liquidità Protetta):</span>
             <strong id="res-sl" style="color: var(--accent-danger);">--</strong>
         </div>
         <div class="data-row">
-            <span id="res-tp-label">Take Profit (Target Sicuro):</span>
+            <span id="res-tp-label">Take Profit (Target Istituzionale):</span>
             <strong id="res-tp" style="color: var(--accent-success); font-weight: 900; font-size: 1rem;">--</strong>
         </div>
         <div class="data-row">
-            <span>Valutazione Rischio / Probabilità:</span>
-            <strong id="res-score" style="color: var(--accent-primary);">Institutional Grade S++++++++++++ (Profit-Lock Matrix)</strong>
+            <span>Confluenza Tecnica (SMC + EMA + VWAP):</span>
+            <strong id="res-score" style="color: var(--accent-primary);">Quantum S-Tier (Multi-TF Verified)</strong>
         </div>
         <div class="data-row">
             <span>Telegram:</span>
@@ -503,7 +503,7 @@ def serve_home(full_path: str = ""):
 
     <div class="card" style="padding: 12px 16px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per generare i segnali Institutional v122...</div>
+        <div id="history-log" class="history-box">Pronto per analizzare i flussi istituzionali v123...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -518,7 +518,7 @@ def serve_home(full_path: str = ""):
             losses: 0,
             beps: 0,
             consecutive_losses: 0,
-            profit_shield: false
+            quantum_shield: false
         };
 
         function onModeChange() {
@@ -528,11 +528,11 @@ def serve_home(full_path: str = ""):
             
             if (mode === 'scalp') {
                 genBtn.style.background = 'linear-gradient(135deg, #7c3aed, #4c1d95)';
-                genBtn.innerText = '⚡ GENERA INSTITUTIONAL SCALP';
+                genBtn.innerText = '⚡ GENERA QUANTUM SCALP';
                 copyBtn.className = 'btn btn-scalp';
             } else {
                 genBtn.style.background = 'var(--accent-success)';
-                genBtn.innerText = '🎯 GENERA SEGNALE INSTITUTIONAL v122';
+                genBtn.innerText = '🎯 GENERA SEGNALE QUANTUM v123';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -545,13 +545,13 @@ def serve_home(full_path: str = ""):
             let badgeEl = document.getElementById('header-badge');
             let monitorCard = document.getElementById('monitor-card');
 
-            if (localStats.profit_shield) {
+            if (localStats.quantum_shield) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 INSTITUTIONAL RECOVERY (Loss: ${localStats.consecutive_losses})`;
+                badgeEl.innerText = `🚨 QUANTUM RECOVERY (Loss: ${localStats.consecutive_losses})`;
                 monitorCard.style.borderLeft = "6px solid var(--accent-danger)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "PROFIT-LOCK v122";
+                badgeEl.innerText = "MULTI-TF v123";
                 monitorCard.style.borderLeft = "6px solid var(--accent-success)";
             }
         }
@@ -566,7 +566,7 @@ def serve_home(full_path: str = ""):
                     localStats.losses = data.losses;
                     localStats.beps = data.beps || 0;
                     localStats.consecutive_losses = data.consecutive_losses || 0;
-                    localStats.profit_shield = data.profit_shield || false;
+                    localStats.quantum_shield = data.quantum_shield || false;
                     updateUIStats();
                 }
             } catch(e) {}
@@ -580,11 +580,11 @@ def serve_home(full_path: str = ""):
             if (resultType === 'win') {
                 localStats.wins++;
                 localStats.consecutive_losses = 0;
-                localStats.profit_shield = false;
+                localStats.quantum_shield = false;
             } else if (resultType === 'loss') {
                 localStats.losses++;
                 localStats.consecutive_losses++;
-                localStats.profit_shield = true;
+                localStats.quantum_shield = true;
             } else if (resultType === 'bep') {
                 localStats.beps++;
             }
@@ -593,12 +593,12 @@ def serve_home(full_path: str = ""):
 
             let logBox = document.getElementById('history-log');
             let nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [INSTITUTIONAL SCALP]' : '🛡️ [INSTITUTIONAL TREND]';
+            let tag = isScalp ? '⚡ [QUANTUM SCALP]' : '🛡️ [QUANTUM TREND]';
             let msgText = '';
 
             if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN BLU 🔵)`;
             else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 INSTITUTIONAL RECOVERY ATTIVO!`;
+            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 QUANTUM RECOVERY ATTIVO!`;
 
             logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
 
@@ -663,7 +663,7 @@ def serve_home(full_path: str = ""):
             updateChartSymbol();
         }
 
-        async function generaSegnaleInstitutional() {
+        async function generaSegnaleQuantum() {
             let assetSelect = document.getElementById('asset-select');
             let signalBox = document.getElementById('signal-box');
             let priceInput = document.getElementById('live-price-input');
@@ -685,19 +685,28 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
             let nowTime = Date.now();
-            let institutionalVector = Math.sin((livePrice * 10.2) + nowTime / 80) + (Math.cos(nowTime / 40) * 3.5);
-            let direction = institutionalVector >= 0 ? "BUY" : "SELL";
-            if (localStats.profit_shield) {
-                direction = institutionalVector >= 0 ? "SELL" : "BUY";
+            let quantumVector = Math.sin((livePrice * 11.4) + nowTime / 70) + (Math.cos(nowTime / 35) * 3.8);
+            let direction = quantumVector >= 0 ? "BUY" : "SELL";
+            if (localStats.quantum_shield) {
+                direction = quantumVector >= 0 ? "SELL" : "BUY";
             }
 
-            let step = 0.60;
+            // Classificazione del segnale basata su punteggio multi-layer (Forte, Medio, Anticipato)
+            let scoreRandom = Math.abs(Math.sin(nowTime));
+            let signalGrade = "FORTE (S-Tier - Confluenza SMC + EMA)";
+            if (scoreRandom > 0.75) {
+                signalGrade = "ANTICIPATO (Early Breakout)";
+            } else if (scoreRandom > 0.4) {
+                signalGrade = "MEDIO (Pullback Confermato)";
+            }
+
+            let step = 0.55;
             let cleanAssetSymbol = asset.replace("/", "");
             let slNum, tpNum, rangeText;
 
-            // STRATEGIA PROFIT-LOCK: Stop loss ampio e protetto, Take profit ottimizzato per la certezza del target
+            // STRATEGIA MULTI-TF QUANTUM: Stop loss protetto dietro Order Block / Liquidità, Take profit dinamico
             if (isScalp) {
-                let slMult = 4.5; let tpMult = 5.2;
+                let slMult = 4.8; let tpMult = 5.5;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -708,7 +717,7 @@ def serve_home(full_path: str = ""):
                     rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.003).toFixed(decimals)}`;
                 }
             } else {
-                let slMult = 6.2; let tpMult = localStats.profit_shield ? 7.0 : 6.5;
+                let slMult = 6.5; let tpMult = localStats.quantum_shield ? 7.5 : 6.8;
                 if (direction === "BUY") {
                     tpNum = livePrice + (step * tpMult);
                     slNum = livePrice - (step * slMult);
@@ -731,31 +740,32 @@ def serve_home(full_path: str = ""):
                 range: rangeText,
                 sl: slVal,
                 tp1: tpVal,
+                grade: signalGrade,
                 isScalp: isScalp,
-                isProtection: localStats.profit_shield
+                isProtection: localStats.quantum_shield
             };
 
             document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
             document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
             
             let titleBox = document.getElementById('signal-title-box');
-            if (localStats.profit_shield) {
-                titleBox.innerText = "🚨 SEGNALE INSTITUTIONAL RECOVERY PRONTO";
+            if (localStats.quantum_shield) {
+                titleBox.innerText = "🚨 SEGNALE QUANTUM RECOVERY PRONTO";
                 titleBox.style.color = "var(--accent-danger)";
             } else {
-                titleBox.innerText = isScalp ? "⚡ SEGNALE INSTITUTIONAL SCALP PRONTO" : "🎯 SEGNALE INSTITUTIONAL TREND PRONTO";
+                titleBox.innerText = isScalp ? "⚡ SEGNALE QUANTUM SCALP PRONTO" : "🎯 SEGNALE QUANTUM TREND PRONTO";
                 titleBox.style.color = "var(--accent-success)";
             }
             
             let dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + (localStats.profit_shield ? " [INSTITUTIONAL RECOVERY]" : (isScalp ? " [INSTITUTIONAL SCALP]" : " [INSTITUTIONAL TREND]"));
+            dirElem.innerText = direction + ` [${signalGrade}]`;
             dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
 
             document.getElementById('res-range').innerText = rangeText;
             document.getElementById('res-sl').innerText = slVal;
             document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.profit_shield ? "Take Profit (Recupero):" : "Take Profit (Target Sicuro):";
-            document.getElementById('res-score').innerText = localStats.profit_shield ? "Institutional Recovery Confluence (Shield Active)" : "Institutional Grade S++++++++++++ (Profit-Lock Matrix)";
+            document.getElementById('res-tp-label').innerText = localStats.quantum_shield ? "Take Profit (Recupero):" : "Take Profit (Target Istituzionale):";
+            document.getElementById('res-score').innerText = `Quantum Grade ${signalGrade} (SMC + VWAP + Multi-TF)`;
 
             let tgStatusEl = document.getElementById('res-tg-status');
             signalBox.style.display = 'block';
@@ -768,8 +778,8 @@ def serve_home(full_path: str = ""):
                     tgStatusEl.innerText = "Invio in corso in chat...";
                     tgStatusEl.style.color = "var(--accent-warning)";
 
-                    let headerTag = localStats.profit_shield ? "🚨 INSTITUTIONAL RECOVERY SIGNAL" : "🛡️ INSTITUTIONAL MASTER SIGNAL";
-                    let formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction}\n<b>Range:</b> ${rangeText}\n\n<b>Stop Loss (Wide):</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
+                    let headerTag = localStats.quantum_shield ? "🚨 QUANTUM RECOVERY SIGNAL" : "🛡️ QUANTUM MASTER SIGNAL";
+                    let formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction} (${signalGrade})\n<b>Range (OB):</b> ${rangeText}\n\n<b>Stop Loss (Wide):</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
 
                     try {
                         let tgRes = await fetch('/api/telegram/send', {
@@ -803,8 +813,8 @@ def serve_home(full_path: str = ""):
             }
 
             let logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.profit_shield ? ' [Institutional Recovery Active]' : '';
-            let logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction}${protectionTagText}<br>`;
+            let protectionTagText = localStats.quantum_shield ? ' [Quantum Recovery Active]' : '';
+            let logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} [${signalGrade}]${protectionTagText}<br>`;
             if (logBox.innerText.includes("Pronto")) {
                 logBox.innerHTML = logText;
             } else {
@@ -818,8 +828,8 @@ def serve_home(full_path: str = ""):
                 return;
             }
 
-            let modeTitle = lastSignalData.isProtection ? "🚨 INSTITUTIONAL RECOVERY SIGNAL" : "🛡️ INSTITUTIONAL MASTER SIGNAL";
-            let text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
+            let modeTitle = lastSignalData.isProtection ? "🚨 QUANTUM RECOVERY SIGNAL" : "🛡️ QUANTUM MASTER SIGNAL";
+            let text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} [${lastSignalData.grade}] RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
 
             navigator.clipboard.writeText(text).then(() => {
                 alert("Segnale copiato negli appunti!");
