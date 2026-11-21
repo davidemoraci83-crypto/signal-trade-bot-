@@ -4,36 +4,93 @@ from pydantic import BaseModel
 import uvicorn
 import os
 import urllib.request
-import urllib.parse
 import json
+import math
+from datetime import datetime
 
 app = FastAPI()
+STATE_FILE = "bot_state.json"
+
+
+def load_initial_state():
+    default_state = {
+        "total_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "beps": 0,
+        "consecutive_losses": 0,
+        "shield_active": False,
+        "signals_log": [],
+    }
+    if os.path.exists(STATE_FILE):
+        try:
+            with open(STATE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                default_state.update({k: v for k, v in data.items() if k in default_state})
+        except Exception:
+            pass
+    return default_state
+
 
 class SignalTrackerState:
     def __init__(self):
-        self.total_trades = 0
-        self.wins = 0
-        self.losses = 0
-        self.beps = 0
-        self.consecutive_losses = 0
-        self.quantum_shield = False
+        state = load_initial_state()
+        self.total_trades = state["total_trades"]
+        self.wins = state["wins"]
+        self.losses = state["losses"]
+        self.beps = state["beps"]
+        self.consecutive_losses = state["consecutive_losses"]
+        self.shield_active = state["shield_active"]
+        self.signals_log = state["signals_log"]
+
+    def save(self):
+        try:
+            with open(STATE_FILE, "w", encoding="utf-8") as f:
+                json.dump(
+                    {
+                        "total_trades": self.total_trades,
+                        "wins": self.wins,
+                        "losses": self.losses,
+                        "beps": self.beps,
+                        "consecutive_losses": self.consecutive_losses,
+                        "shield_active": self.shield_active,
+                        "signals_log": self.signals_log[-200:],
+                    },
+                    f,
+                    indent=2,
+                    ensure_ascii=False,
+                )
+        except Exception:
+            pass
+
+    def record_signal(self, sig: dict):
+        self.signals_log.append(sig)
+        self.save()
 
     def process_result(self, result_type: str):
         self.total_trades += 1
         if result_type == "win":
             self.wins += 1
             self.consecutive_losses = 0
-            self.quantum_shield = False
+            self.shield_active = False
         elif result_type == "loss":
             self.losses += 1
             self.consecutive_losses += 1
-            self.quantum_shield = True
+            self.shield_active = True
         elif result_type == "bep":
             self.beps += 1
+
+        if self.signals_log:
+            for item in reversed(self.signals_log):
+                if item.get("executed") and item.get("outcome") == "pending":
+                    item["outcome"] = result_type
+                    break
+        self.save()
 
     def get_stats(self):
         active_trades = self.total_trades - self.beps
         std_wr = (self.wins / active_trades * 100) if active_trades > 0 else 0.0
+        unexecuted_count = sum(1 for s in self.signals_log if not s.get("executed", False))
         return {
             "total_trades": self.total_trades,
             "wins": self.wins,
@@ -41,49 +98,219 @@ class SignalTrackerState:
             "beps": self.beps,
             "win_rate": round(std_wr, 2),
             "consecutive_losses": self.consecutive_losses,
-            "quantum_shield": self.quantum_shield
+            "shield_active": self.shield_active,
+            "logged_signals": len(self.signals_log),
+            "unexecuted_monitored": unexecuted_count,
+            "recent_signals": self.signals_log[-15:],
         }
 
+
 tracker = SignalTrackerState()
+
 
 class TradeResultRequest(BaseModel):
     result_type: str  # "win", "loss", "bep"
     is_scalp: bool = False
+
+
+class LogSignalRequest(BaseModel):
+    asset: str
+    timeframe: str
+    direction: str
+    entry: float
+    sl: float
+    tp: float
+    grade: str
+    est_tp_prob: float
+    executed: bool = True
+    notes: str = ""
+
 
 class TelegramSendRequest(BaseModel):
     bot_token: str
     chat_id: str
     message: str
 
+
+class BacktestRequest(BaseModel):
+    prices: list[float]
+    spread: float = 0.25
+    commission_per_trade: float = 0.0
+    sl_points: float = 2.0
+    tp_points: float = 3.0
+    train_ratio: float = 0.7
+
+
+def _ema(values: list[float], period: int) -> list[float]:
+    if not values:
+        return []
+    k = 2.0 / (period + 1.0)
+    out = [values[0]]
+    for p in values[1:]:
+        out.append(p * k + out[-1] * (1.0 - k))
+    return out
+
+
+def _rsi(values: list[float], period: int = 14) -> float | None:
+    if len(values) <= period:
+        return None
+    gains = []
+    losses = []
+    for i in range(1, len(values)):
+        diff = values[i] - values[i - 1]
+        gains.append(max(diff, 0.0))
+        losses.append(max(-diff, 0.0))
+    avg_gain = sum(gains[-period:]) / period
+    avg_loss = sum(losses[-period:]) / period
+    if avg_loss == 0:
+        return 100.0 if avg_gain > 0 else 50.0
+    rs = avg_gain / avg_loss
+    return 100.0 - (100.0 / (1.0 + rs))
+
+
 @app.get("/api/stats")
 async def get_stats():
     return tracker.get_stats()
+
 
 @app.post("/api/trade/result")
 async def post_trade_result(payload: TradeResultRequest):
     tracker.process_result(payload.result_type)
     return tracker.get_stats()
 
+
+@app.post("/api/signal/log")
+async def post_signal_log(payload: LogSignalRequest):
+    entry_obj = {
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "asset": payload.asset,
+        "timeframe": payload.timeframe,
+        "direction": payload.direction,
+        "entry": payload.entry,
+        "sl": payload.sl,
+        "tp": payload.tp,
+        "grade": payload.grade,
+        "est_tp_prob": payload.est_tp_prob,
+        "executed": payload.executed,
+        "outcome": "pending" if payload.executed else "unexecuted_monitored",
+        "notes": payload.notes,
+    }
+    tracker.record_signal(entry_obj)
+    return {"status": "ok", "stats": tracker.get_stats()}
+
+
+@app.post("/api/backtest")
+async def run_backtest(payload: BacktestRequest):
+    prices = [x for x in payload.prices if isinstance(x, (int, float)) and math.isfinite(x) and x > 0]
+    if len(prices) < 25:
+        return {"status": "error", "message": "Servono almeno 25 prezzi validi per eseguire il backtest."}
+
+    split_idx = max(15, min(len(prices) - 5, int(len(prices) * payload.train_ratio)))
+
+    def simulate_slice(segment: list[float]):
+        fast_ema = _ema(segment, 5)
+        slow_ema = _ema(segment, 15)
+        wins = 0
+        losses = 0
+        net_pnl = 0.0
+        peak = 0.0
+        max_dd = 0.0
+        trades = 0
+
+        i = 15
+        while i < len(segment) - 1:
+            pos = None
+            if fast_ema[i - 1] <= slow_ema[i - 1] and fast_ema[i] > slow_ema[i]:
+                pos = "BUY"
+            elif fast_ema[i - 1] >= slow_ema[i - 1] and fast_ema[i] < slow_ema[i]:
+                pos = "SELL"
+
+            if pos:
+                entry = segment[i] + (payload.spread / 2.0 if pos == "BUY" else -payload.spread / 2.0)
+                sl = entry - payload.sl_points if pos == "BUY" else entry + payload.sl_points
+                tp = entry + payload.tp_points if pos == "BUY" else entry - payload.tp_points
+                exit_price = segment[-1]
+                outcome = "open_end"
+                for j in range(i + 1, len(segment)):
+                    px = segment[j]
+                    if pos == "BUY":
+                        if px <= sl:
+                            exit_price = sl
+                            outcome = "loss"
+                            break
+                        if px >= tp:
+                            exit_price = tp
+                            outcome = "win"
+                            break
+                    else:
+                        if px >= sl:
+                            exit_price = sl
+                            outcome = "loss"
+                            break
+                        if px <= tp:
+                            exit_price = tp
+                            outcome = "win"
+                            break
+
+                raw_pnl = (exit_price - entry) if pos == "BUY" else (entry - exit_price)
+                trade_pnl = raw_pnl - payload.commission_per_trade
+                net_pnl += trade_pnl
+                trades += 1
+                if outcome == "win":
+                    wins += 1
+                elif outcome == "loss":
+                    losses += 1
+
+                if net_pnl > peak:
+                    peak = net_pnl
+                dd = peak - net_pnl
+                if dd > max_dd:
+                    max_dd = dd
+                i = j + 1 if outcome != "open_end" else len(segment)
+            else:
+                i += 1
+
+        closed = wins + losses
+        wr = round((wins / closed) * 100, 2) if closed > 0 else 0.0
+        return {
+            "bars": len(segment),
+            "trades": trades,
+            "wins": wins,
+            "losses": losses,
+            "win_rate_closed": wr,
+            "net_pnl_points": round(net_pnl, 4),
+            "max_drawdown_points": round(max_dd, 4),
+        }
+
+    train_res = simulate_slice(prices[:split_idx])
+    test_res = simulate_slice(prices[split_idx:])
+    return {
+        "status": "ok",
+        "spread_used": payload.spread,
+        "commission_per_trade": payload.commission_per_trade,
+        "train_in_sample": train_res,
+        "test_out_of_sample": test_res,
+    }
+
+
 @app.post("/api/telegram/send")
 async def send_telegram_signal(payload: TelegramSendRequest):
     if not payload.bot_token or not payload.chat_id:
         return {"status": "error", "message": "Token o Chat ID Telegram mancanti."}
-    
+
     url = f"https://api.telegram.org/bot{payload.bot_token.strip()}/sendMessage"
     payload_data = {
         "chat_id": payload.chat_id.strip(),
         "text": payload.message,
-        "parse_mode": "HTML"
+        "parse_mode": "HTML",
     }
-    
+
     try:
         data = json.dumps(payload_data).encode("utf-8")
         req = urllib.request.Request(
-            url, 
-            data=data, 
-            headers={"Content-Type": "application/json"}
+            url, data=data, headers={"Content-Type": "application/json"}
         )
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=10) as response:
             res = json.loads(response.read().decode("utf-8"))
             if res.get("ok"):
                 return {"status": "success", "message": "Segnale inviato con successo!"}
@@ -91,6 +318,7 @@ async def send_telegram_signal(payload: TelegramSendRequest):
                 return {"status": "error", "message": res.get("description", "Errore Telegram")}
     except Exception as e:
         return {"status": "error", "message": f"Errore di rete: {str(e)}"}
+
 
 @app.get("/", response_class=HTMLResponse)
 @app.get("/signals", response_class=HTMLResponse)
@@ -102,7 +330,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apex Quantum - Multi-Timeframe v123</title>
+    <title>Apex Lab - Analisi & Backtest</title>
     <style>
         :root {
             --bg-body: #f8fafc;
@@ -192,21 +420,21 @@ def serve_home(full_path: str = ""):
             font-weight: 800;
             letter-spacing: 0.8px;
         }
-        select, input[type="text"], input[type="number"] {
+        select, input[type="text"], input[type="number"], textarea {
             width: 100%;
-            padding: 13px 16px;
+            padding: 12px 14px;
             background-color: var(--bg-body);
             color: var(--text-main);
             border: 1px solid var(--border-subtle);
             border-radius: 14px;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 700;
             outline: none;
             box-sizing: border-box;
             margin-bottom: 12px;
             transition: all 0.2s ease;
         }
-        select:focus, input:focus {
+        select:focus, input:focus, textarea:focus {
             border-color: var(--accent-primary);
             box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
         }
@@ -236,7 +464,7 @@ def serve_home(full_path: str = ""):
         }
         .chart-container {
             width: 100%;
-            height: 260px;
+            height: 240px;
             background-color: var(--bg-body);
             border-radius: 14px;
             overflow: hidden;
@@ -252,12 +480,12 @@ def serve_home(full_path: str = ""):
             background: var(--accent-primary);
             color: #ffffff;
             border: none;
-            padding: 15px;
+            padding: 14px;
             border-radius: 14px;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 900;
             cursor: pointer;
-            box-shadow: 0 6px 16px rgba(2, 132, 199, 0.4);
+            box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
             transition: all 0.2s ease;
         }
         .btn-secondary {
@@ -270,25 +498,25 @@ def serve_home(full_path: str = ""):
         .btn-success {
             background: var(--accent-success);
             color: white;
-            box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+            box-shadow: 0 6px 16px rgba(5, 150, 105, 0.35);
             font-size: 0.85rem;
         }
         .btn-bep {
             background: var(--accent-warning);
             color: white;
-            box-shadow: 0 6px 16px rgba(217, 119, 6, 0.4);
+            box-shadow: 0 6px 16px rgba(217, 119, 6, 0.35);
             font-size: 0.85rem;
         }
         .btn-danger {
             background: var(--accent-danger);
             color: white;
-            box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+            box-shadow: 0 6px 16px rgba(220, 38, 38, 0.35);
             font-size: 0.85rem;
         }
         .btn-scalp {
             background: linear-gradient(135deg, #7c3aed, #4c1d95);
             color: white;
-            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.35);
         }
         .btn:active {
             transform: scale(0.98);
@@ -301,27 +529,23 @@ def serve_home(full_path: str = ""):
             border-radius: 16px;
             border-left: 6px solid var(--accent-success);
             border: 1px solid var(--border-subtle);
-            animation: fadeIn 0.3s ease-out;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .buy { color: var(--accent-success); font-weight: 900; font-size: 1.15rem; }
-        .sell { color: var(--accent-danger); font-weight: 900; font-size: 1.15rem; }
+        .buy { color: var(--accent-success); font-weight: 900; font-size: 1.1rem; }
+        .sell { color: var(--accent-danger); font-weight: 900; font-size: 1.1rem; }
         .data-row {
             display: flex;
             justify-content: space-between;
+            gap: 12px;
             padding: 8px 0;
             border-bottom: 1px solid var(--border-subtle);
-            font-size: 0.88rem;
+            font-size: 0.86rem;
         }
         .data-row:last-child { border-bottom: none; }
         .history-box {
             font-size: 0.75rem;
             color: var(--text-muted);
             margin-top: 8px;
-            max-height: 110px;
+            max-height: 130px;
             overflow-y: auto;
             font-family: monospace;
             background: var(--bg-body);
@@ -361,21 +585,24 @@ def serve_home(full_path: str = ""):
 <body>
 
     <div class="header">
-        <h1>APEX QUANTUM</h1>
-        <div id="header-badge" class="badge">MULTI-TF v123</div>
+        <h1>APEX LAB</h1>
+        <div id="header-badge" class="badge">PERSISTENT + BACKTEST</div>
     </div>
 
-    <!-- PANNELLO MONITOR QUANTUM -->
+    <!-- MONITOR PERSISTENTE -->
     <div class="card" style="border-left: 6px solid var(--accent-success);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-success); margin-bottom: 10px;" id="monitor-title">🛡️ QUANTUM MONITOR (INTELLIGENZA SMC & EMA)</div>
-        
+        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-success); margin-bottom: 10px;">MONITOR STATO & REGISTRO PERSISTENTE</div>
         <div class="data-row">
-            <span>Stato Algoritmo:</span>
-            <strong id="ai-status-text" style="color: var(--accent-success);">Attivo (Multi-Timeframe Scoring + Wide-Stop)</strong>
+            <span>Stato Motore:</span>
+            <strong id="ai-status-text" style="color: var(--accent-success);">Regole + Controlli Attivi</strong>
         </div>
         <div class="data-row">
-            <span>Win Rate Reale (Senza BEP):</span>
+            <span>Win Rate Registrato (Senza BEP):</span>
             <strong id="stat-winrate" style="color: var(--accent-primary);">0.00% (0 Win / 0 Loss / 0 BEP)</strong>
+        </div>
+        <div class="data-row">
+            <span>Segnali Salvati / Non Eseguiti Monitorati:</span>
+            <strong id="stat-logged">0 / 0</strong>
         </div>
     </div>
 
@@ -383,7 +610,7 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <div class="toggle-container">
             <div>
-                <span style="font-size: 0.8rem; font-weight: 900; color: var(--text-main);">🤖 INVIO ISTANTANEO TELEGRAM</span>
+                <span style="font-size: 0.8rem; font-weight: 900; color: var(--text-main);">INVIO ISTANTANEO TELEGRAM</span>
                 <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Invia il segnale in chat privata</span>
             </div>
             <label class="switch">
@@ -404,14 +631,15 @@ def serve_home(full_path: str = ""):
         </div>
     </div>
 
+    <!-- MOTORE SEGNALI + CONTROLLI -->
     <div class="card">
-        <label for="strategy-mode">Modalità Operativa (Quantum Engine):</label>
+        <label for="strategy-mode">Modalità Operativa:</label>
         <select id="strategy-mode" onchange="onModeChange()">
-            <option value="standard">🛡️ Trade Normale (Multi-TF SMC Trend + Stop Largo)</option>
-            <option value="scalp">⚡ Quantum Scalp (Frequenza Alta + Alta Precisione)</option>
+            <option value="standard">Trade Normale (Regole Trend + Controllo Rischio)</option>
+            <option value="scalp">Scalp Veloce (Range Ridotto + Controllo Spread)</option>
         </select>
 
-        <label for="asset-select" style="margin-top: 10px;">Seleziona Asset:</label>
+        <label for="asset-select">Seleziona Asset:</label>
         <select id="asset-select" onchange="updateChartSymbol()">
             <optgroup label="Mercati Principali">
                 <option value="XAU/USD">Oro (XAU/USD)</option>
@@ -434,11 +662,19 @@ def serve_home(full_path: str = ""):
         <label>Grafico Live TradingView:</label>
         <div class="chart-container" id="tradingview_widget"></div>
 
-        <label for="live-price-input" style="color: var(--accent-primary); margin-top: 10px;">Prezzo Corrente di Mercato (Inserisci esatto da MT5):</label>
-        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-            <input type="text" id="live-price-input" value="3934.50">
-            <button type="button" class="btn btn-secondary" style="flex: 0.5; padding: 13px; font-size: 0.78rem;" onclick="azzeraPrezzoLive()">🎯 SYNC</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div>
+                <label for="live-price-input" style="color: var(--accent-primary);">Prezzo Corrente:</label>
+                <input type="text" id="live-price-input" value="3934.50">
+            </div>
+            <div>
+                <label for="spread-input">Spread Stimato:</label>
+                <input type="number" step="0.01" id="spread-input" value="0.30">
+            </div>
         </div>
+
+        <label for="series-input">Serie Chiusure Recenti (Opzionale, separate da virgola per EMA/RSI):</label>
+        <input type="text" id="series-input" placeholder="Es: 3928.1, 3929.5, 3931.0, 3930.8, 3932.4, 3934.5">
 
         <label>Timeframe:</label>
         <div class="tf-grid">
@@ -448,62 +684,77 @@ def serve_home(full_path: str = ""):
             <div class="tf-btn" onclick="setTF(this, 'H1')">H1</div>
         </div>
 
-        <button type="button" id="gen-btn" class="btn btn-success" style="width: 100%; padding: 16px; font-size: 1rem;" onclick="generaSegnaleQuantum()">🎯 GENERA SEGNALE QUANTUM v123</button>
+        <div class="btn-group">
+            <button type="button" id="gen-btn" class="btn btn-success" style="padding: 15px;" onclick="generaSegnale()">GENERA SEGNALE</button>
+            <button type="button" class="btn btn-secondary" style="padding: 15px; font-size: 0.78rem;" onclick="logNonEseguito()">SALVA SOLO LOG</button>
+        </div>
     </div>
 
     <!-- REGISTRAZIONE ESITO CON BEP -->
     <div class="card" style="border-left: 6px solid var(--accent-success);">
-        <div style="font-size: 0.78rem; color: var(--accent-success); margin-bottom: 10px; font-weight: 900;">📊 REGISTRA ESITO TRADE</div>
+        <div style="font-size: 0.78rem; color: var(--accent-success); margin-bottom: 10px; font-weight: 900;">REGISTRA ESITO TRADE</div>
         <div class="btn-group">
-            <button type="button" class="btn btn-success" onclick="registraEsito('win')">✅ WIN</button>
-            <button type="button" class="btn btn-bep" onclick="registraEsito('bep')">⚖️ BEP</button>
-            <button type="button" class="btn btn-danger" onclick="registraEsito('loss')">❌ LOSS</button>
+            <button type="button" class="btn btn-success" onclick="registraEsito('win')">WIN</button>
+            <button type="button" class="btn btn-bep" onclick="registraEsito('bep')">BEP</button>
+            <button type="button" class="btn btn-danger" onclick="registraEsito('loss')">LOSS</button>
         </div>
     </div>
 
     <!-- BOX RISULTATO SEGNALE -->
     <div id="signal-box" class="card signal-container">
-        <div id="signal-title-box" style="font-size: 0.78rem; color: var(--accent-success); margin-bottom: 10px; font-weight: 900;">🎯 SEGNALE QUANTUM PRONTO</div>
-        
+        <div id="signal-title-box" style="font-size: 0.78rem; color: var(--accent-success); margin-bottom: 10px; font-weight: 900;">SEGNALE GENERATO</div>
         <div class="data-row">
             <span>Asset & Timeframe:</span>
             <strong id="res-asset">--</strong>
         </div>
         <div class="data-row">
-            <span>Prezzo Riferimento:</span>
-            <strong id="res-liveprice" style="color: var(--accent-primary);">--</strong>
-        </div>
-        <div class="data-row">
-            <span>Direzione & Classificazione:</span>
+            <span>Direzione & Classe:</span>
             <span id="res-direction">--</span>
         </div>
         <div class="data-row">
-            <span>Range d'Ingresso (Order Block):</span>
-            <strong id="res-range" style="color: var(--accent-primary);">--</strong>
+            <span>Ingresso / SL / TP:</span>
+            <strong id="res-levels">--</strong>
         </div>
         <div class="data-row">
-            <span>Stop Loss (Liquidità Protetta):</span>
-            <strong id="res-sl" style="color: var(--accent-danger);">--</strong>
+            <span>Stima Probabilità TP vs SL (Indicativa):</span>
+            <strong id="res-prob" style="color: var(--accent-primary);">--</strong>
         </div>
         <div class="data-row">
-            <span id="res-tp-label">Take Profit (Target Istituzionale):</span>
-            <strong id="res-tp" style="color: var(--accent-success); font-weight: 900; font-size: 1rem;">--</strong>
+            <span>Motivo Tecnico:</span>
+            <strong id="res-reason" style="text-align: right; max-width: 65%;">--</strong>
         </div>
         <div class="data-row">
-            <span>Confluenza Tecnica (SMC + EMA + VWAP):</span>
-            <strong id="res-score" style="color: var(--accent-primary);">Quantum S-Tier (Multi-TF Verified)</strong>
+            <span>Avvisi / Invalidazione:</span>
+            <strong id="res-invalid" style="color: var(--accent-warning); text-align: right; max-width: 65%;">--</strong>
         </div>
         <div class="data-row">
             <span>Telegram:</span>
             <strong id="res-tg-status" style="color: var(--accent-primary);">--</strong>
         </div>
+        <button type="button" id="copy-action-btn" class="btn btn-success" style="margin-top: 14px;" onclick="copiaSegnalePro()">COPIA SEGNALE PER TELEGRAM</button>
+    </div>
 
-        <button type="button" id="copy-action-btn" class="btn btn-success" style="margin-top: 14px; padding: 15px; font-size: 0.85rem;" onclick="copiaSegnalePro()">📋 COPIA SEGNALE PER TELEGRAM</button>
+    <!-- SIMULATORE BACKTEST SU DATI UTENTE -->
+    <div class="card">
+        <div style="font-size: 0.82rem; font-weight: 900; color: var(--accent-primary); margin-bottom: 10px;">BACKTEST SU TUA SERIE STORICA (TRAIN / OUT-OF-SAMPLE)</div>
+        <textarea id="bt-prices" rows="3" placeholder="Incolla almeno 25 prezzi separati da virgola (es. 3920, 3922, 3921, 3925, ...)"></textarea>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div>
+                <label>SL (punti):</label>
+                <input type="number" step="0.1" id="bt-sl" value="2.5">
+            </div>
+            <div>
+                <label>TP (punti):</label>
+                <input type="number" step="0.1" id="bt-tp" value="3.5">
+            </div>
+        </div>
+        <button type="button" class="btn" style="width: 100%;" onclick="eseguiBacktest()">ESEGUI BACKTEST REALE</button>
+        <div id="bt-output" class="history-box" style="margin-top: 12px;">Nessun backtest eseguito in questa sessione.</div>
     </div>
 
     <div class="card" style="padding: 12px 16px;">
         <label>Storico Sessione:</label>
-        <div id="history-log" class="history-box">Pronto per analizzare i flussi istituzionali v123...</div>
+        <div id="history-log" class="history-box">Pronto...</div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -518,21 +769,20 @@ def serve_home(full_path: str = ""):
             losses: 0,
             beps: 0,
             consecutive_losses: 0,
-            quantum_shield: false
+            shield_active: false,
+            logged_signals: 0,
+            unexecuted_monitored: 0
         };
 
         function onModeChange() {
             let mode = document.getElementById('strategy-mode').value;
             let genBtn = document.getElementById('gen-btn');
             let copyBtn = document.getElementById('copy-action-btn');
-            
             if (mode === 'scalp') {
-                genBtn.style.background = 'linear-gradient(135deg, #7c3aed, #4c1d95)';
-                genBtn.innerText = '⚡ GENERA QUANTUM SCALP';
+                genBtn.className = 'btn btn-scalp';
                 copyBtn.className = 'btn btn-scalp';
             } else {
-                genBtn.style.background = 'var(--accent-success)';
-                genBtn.innerText = '🎯 GENERA SEGNALE QUANTUM v123';
+                genBtn.className = 'btn btn-success';
                 copyBtn.className = 'btn btn-success';
             }
         }
@@ -541,17 +791,17 @@ def serve_home(full_path: str = ""):
             let activeTrades = localStats.total - localStats.beps;
             let wr = activeTrades > 0 ? ((localStats.wins / activeTrades) * 100).toFixed(2) : "0.00";
             document.getElementById('stat-winrate').innerText = `${wr}% (${localStats.wins} Win / ${localStats.losses} Loss / ${localStats.beps} BEP)`;
-            
+            document.getElementById('stat-logged').innerText = `${localStats.logged_signals} / ${localStats.unexecuted_monitored}`;
+
             let badgeEl = document.getElementById('header-badge');
             let monitorCard = document.getElementById('monitor-card');
-
-            if (localStats.quantum_shield) {
+            if (localStats.shield_active) {
                 badgeEl.className = "badge badge-protection";
-                badgeEl.innerText = `🚨 QUANTUM RECOVERY (Loss: ${localStats.consecutive_losses})`;
+                badgeEl.innerText = `CAUTELA (Loss: ${localStats.consecutive_losses})`;
                 monitorCard.style.borderLeft = "6px solid var(--accent-danger)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "MULTI-TF v123";
+                badgeEl.innerText = "PERSISTENT + BACKTEST";
                 monitorCard.style.borderLeft = "6px solid var(--accent-success)";
             }
         }
@@ -561,15 +811,17 @@ def serve_home(full_path: str = ""):
                 let res = await fetch('/api/stats');
                 let data = await res.json();
                 if (data) {
-                    localStats.total = data.total_trades;
-                    localStats.wins = data.wins;
-                    localStats.losses = data.losses;
+                    localStats.total = data.total_trades || 0;
+                    localStats.wins = data.wins || 0;
+                    localStats.losses = data.losses || 0;
                     localStats.beps = data.beps || 0;
                     localStats.consecutive_losses = data.consecutive_losses || 0;
-                    localStats.quantum_shield = data.quantum_shield || false;
+                    localStats.shield_active = Boolean(data.shield_active);
+                    localStats.logged_signals = data.logged_signals || 0;
+                    localStats.unexecuted_monitored = data.unexecuted_monitored || 0;
                     updateUIStats();
                 }
-            } catch(e) {}
+            } catch (e) {}
         }
 
         function registraEsito(resultType) {
@@ -580,33 +832,26 @@ def serve_home(full_path: str = ""):
             if (resultType === 'win') {
                 localStats.wins++;
                 localStats.consecutive_losses = 0;
-                localStats.quantum_shield = false;
+                localStats.shield_active = false;
             } else if (resultType === 'loss') {
                 localStats.losses++;
                 localStats.consecutive_losses++;
-                localStats.quantum_shield = true;
+                localStats.shield_active = true;
             } else if (resultType === 'bep') {
                 localStats.beps++;
             }
 
             updateUIStats();
-
             let logBox = document.getElementById('history-log');
             let nowStr = new Date().toTimeString().split(' ')[0];
-            let tag = isScalp ? '⚡ [QUANTUM SCALP]' : '🛡️ [QUANTUM TREND]';
-            let msgText = '';
-
-            if (resultType === 'win') msgText = `${tag} [${nowStr}] TARGET PRESO (WIN BLU 🔵)`;
-            else if (resultType === 'bep') msgText = `${tag} [${nowStr}] BREAK EVEN POINT (BEP)`;
-            else msgText = `${tag} [${nowStr}] LOSS -> 🚨 QUANTUM RECOVERY ATTIVO!`;
-
-            logBox.innerHTML = msgText + '<br>' + logBox.innerHTML;
+            let msgText = `[${nowStr}] Esito registrato: ${resultType.toUpperCase()} (${isScalp ? 'SCALP' : 'NORMALE'})<br>`;
+            logBox.innerHTML = msgText + logBox.innerHTML;
 
             fetch('/api/trade/result', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ result_type: resultType, is_scalp: isScalp })
-            }).catch(() => {});
+            }).then(() => fetchStats()).catch(() => {});
         }
 
         fetchStats();
@@ -634,7 +879,6 @@ def serve_home(full_path: str = ""):
             let asset = document.getElementById('asset-select').value;
             let tvSymbol = "OANDA:XAUUSD";
             let defaultP = "3934.50";
-
             if (asset.includes("NAS100")) { tvSymbol = "CAPITALCOM:US100"; defaultP = "20500.00"; }
             else if (asset.includes("EUR")) { tvSymbol = "FX:EURUSD"; defaultP = "1.0845"; }
             else if (asset.includes("GBP")) { tvSymbol = "FX:GBPUSD"; defaultP = "1.3020"; }
@@ -646,7 +890,6 @@ def serve_home(full_path: str = ""):
             else if (asset.includes("DOGE")) { tvSymbol = "BITSTAMP:DOGEUSD"; defaultP = "0.1450"; }
             else if (asset.includes("SHIB")) { tvSymbol = "BITSTAMP:SHIBUSD"; defaultP = "0.00001850"; }
             else if (asset.includes("XRP")) { tvSymbol = "BITSTAMP:XRPUSD"; defaultP = "0.5500"; }
-            
             document.getElementById('live-price-input').value = defaultP;
             initChart(tvSymbol);
         }
@@ -659,167 +902,169 @@ def serve_home(full_path: str = ""):
             currentTF = tf;
         }
 
-        function azzeraPrezzoLive() {
-            updateChartSymbol();
+        function parseSeries() {
+            let raw = document.getElementById('series-input').value.trim();
+            if (!raw) return [];
+            return raw.split(/[\s,;]+/).map(Number).filter(n => !isNaN(n) && isFinite(n) && n > 0);
         }
 
-        async function generaSegnaleQuantum() {
-            let assetSelect = document.getElementById('asset-select');
-            let signalBox = document.getElementById('signal-box');
-            let priceInput = document.getElementById('live-price-input');
+        function calcEMA(arr, period) {
+            let k = 2 / (period + 1);
+            let ema = [arr[0]];
+            for (let i = 1; i < arr.length; i++) {
+                ema.push(arr[i] * k + ema[i - 1] * (1 - k));
+            }
+            return ema;
+        }
+
+        async function generaSegnale(executedFlag = true) {
+            let asset = document.getElementById('asset-select').value;
+            let livePrice = parseFloat(document.getElementById('live-price-input').value);
+            let spread = parseFloat(document.getElementById('spread-input').value) || 0;
             let mode = document.getElementById('strategy-mode').value;
-            let tgToggle = document.getElementById('telegram-toggle').checked;
             let isScalp = mode === 'scalp';
+            let tgToggle = document.getElementById('telegram-toggle').checked;
 
-            if (!assetSelect || !signalBox || !priceInput) return;
-
-            let livePrice = parseFloat(priceInput.value);
             if (isNaN(livePrice) || livePrice <= 0) {
                 alert("Inserisci un prezzo valido!");
                 return;
             }
 
-            let asset = assetSelect.value;
             let decimals = 2;
             if (asset.includes("SHIB")) decimals = 8;
             else if (asset.includes("DOGE") || asset.includes("XRP") || asset.includes("EUR") || asset.includes("GBP") || asset.includes("SUI") || asset.includes("NEAR")) decimals = 4;
 
-            let nowTime = Date.now();
-            let quantumVector = Math.sin((livePrice * 11.4) + nowTime / 70) + (Math.cos(nowTime / 35) * 3.8);
-            let direction = quantumVector >= 0 ? "BUY" : "SELL";
-            if (localStats.quantum_shield) {
-                direction = quantumVector >= 0 ? "SELL" : "BUY";
+            let series = parseSeries();
+            let direction = "BUY";
+            let reason = "Prezzo corrente di riferimento (nessuna serie storica inserita)";
+            let scorePoints = 50;
+            let warnings = [];
+
+            if (spread > (asset.includes("XAU") ? 1.5 : (decimals === 4 ? 0.0008 : 5.0))) {
+                warnings.push("Spread elevato rispetto al riferimento");
+                scorePoints -= 15;
             }
 
-            // Classificazione del segnale basata su punteggio multi-layer (Forte, Medio, Anticipato)
-            let scoreRandom = Math.abs(Math.sin(nowTime));
-            let signalGrade = "FORTE (S-Tier - Confluenza SMC + EMA)";
-            if (scoreRandom > 0.75) {
-                signalGrade = "ANTICIPATO (Early Breakout)";
-            } else if (scoreRandom > 0.4) {
-                signalGrade = "MEDIO (Pullback Confermato)";
-            }
-
-            let step = 0.55;
-            let cleanAssetSymbol = asset.replace("/", "");
-            let slNum, tpNum, rangeText;
-
-            // STRATEGIA MULTI-TF QUANTUM: Stop loss protetto dietro Order Block / Liquidità, Take profit dinamico
-            if (isScalp) {
-                let slMult = 4.8; let tpMult = 5.5;
-                if (direction === "BUY") {
-                    tpNum = livePrice + (step * tpMult);
-                    slNum = livePrice - (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.003).toFixed(decimals)}`;
+            if (series.length >= 8) {
+                let fast = calcEMA(series, 3);
+                let slow = calcEMA(series, 8);
+                let lastF = fast[fast.length - 1];
+                let lastS = slow[slow.length - 1];
+                let momentum = series[series.length - 1] - series[series.length - 4];
+                if (lastF >= lastS && momentum >= 0) {
+                    direction = "BUY";
+                    scorePoints += 25;
+                    reason = `EMA3 > EMA8 e momentum positivo (${momentum.toFixed(decimals)})`;
                 } else {
-                    tpNum = livePrice - (step * tpMult);
-                    slNum = livePrice + (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.003).toFixed(decimals)}`;
+                    direction = "SELL";
+                    scorePoints += 25;
+                    reason = `EMA3 < EMA8 e momentum negativo (${momentum.toFixed(decimals)})`;
                 }
             } else {
-                let slMult = 6.5; let tpMult = localStats.quantum_shield ? 7.5 : 6.8;
-                if (direction === "BUY") {
-                    tpNum = livePrice + (step * tpMult);
-                    slNum = livePrice - (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice + step*0.005).toFixed(decimals)}`;
-                } else {
-                    tpNum = livePrice - (step * tpMult);
-                    slNum = livePrice + (step * slMult);
-                    rangeText = `${livePrice.toFixed(decimals)} / ${(livePrice - step*0.005).toFixed(decimals)}`;
-                }
+                warnings.push("Serie storica < 8 valori: analisi limitata al singolo prezzo");
+                direction = (Math.floor(livePrice * 100) % 2 === 0) ? "BUY" : "SELL";
             }
 
-            let slVal = slNum.toFixed(decimals);
-            let tpVal = tpNum.toFixed(decimals);
-            let now = new Date();
-            let timeStr = now.toTimeString().split(' ')[0];
+            if (localStats.shield_active) {
+                warnings.push("Ultima operazione in LOSS: monitorare con cautela");
+                scorePoints -= 10;
+            }
 
+            let step = decimals === 4 ? 0.0012 : (decimals === 8 ? 0.0000004 : 1.2);
+            let slDist = isScalp ? step * 2.5 : step * 4.0;
+            let tpDist = isScalp ? step * 3.5 : step * 5.6;
+
+            let slNum = direction === "BUY" ? livePrice - slDist : livePrice + slDist;
+            let tpNum = direction === "BUY" ? livePrice + tpDist : livePrice - tpDist;
+
+            let grade = "C";
+            if (scorePoints >= 80) grade = "A++";
+            else if (scorePoints >= 70) grade = "A+";
+            else if (scorePoints >= 60) grade = "A";
+            else if (scorePoints >= 45) grade = "B";
+
+            // Stima indicativa, non una certezza
+            let estProb = Math.max(35, Math.min(72, scorePoints - 5));
+            let invalidation = direction === "BUY"
+                ? `Chiusura decisa sotto ${slNum.toFixed(decimals)} o perdita del momentum rialzista`
+                : `Chiusura decisa sopra ${slNum.toFixed(decimals)} o perdita del momentum ribassista`;
+
+            let cleanSymbol = asset.replace("/", "");
             lastSignalData = {
-                symbol: cleanAssetSymbol,
+                symbol: cleanSymbol,
+                asset: asset,
+                tf: currentTF,
                 dir: direction,
-                range: rangeText,
-                sl: slVal,
-                tp1: tpVal,
-                grade: signalGrade,
-                isScalp: isScalp,
-                isProtection: localStats.quantum_shield
+                entry: livePrice.toFixed(decimals),
+                sl: slNum.toFixed(decimals),
+                tp: tpNum.toFixed(decimals),
+                grade: grade,
+                estProb: estProb,
+                reason: reason,
+                invalidation: invalidation,
+                warnings: warnings.length ? warnings.join("; ") : "Nessuna criticità rilevata"
             };
 
-            document.getElementById('res-asset').innerText = asset + " (" + currentTF + ")";
-            document.getElementById('res-liveprice').innerText = '$' + livePrice.toFixed(decimals);
-            
-            let titleBox = document.getElementById('signal-title-box');
-            if (localStats.quantum_shield) {
-                titleBox.innerText = "🚨 SEGNALE QUANTUM RECOVERY PRONTO";
-                titleBox.style.color = "var(--accent-danger)";
-            } else {
-                titleBox.innerText = isScalp ? "⚡ SEGNALE QUANTUM SCALP PRONTO" : "🎯 SEGNALE QUANTUM TREND PRONTO";
-                titleBox.style.color = "var(--accent-success)";
-            }
-            
-            let dirElem = document.getElementById('res-direction');
-            dirElem.innerText = direction + ` [${signalGrade}]`;
-            dirElem.className = direction === 'BUY' ? 'buy' : 'sell';
+            document.getElementById('signal-box').style.display = 'block';
+            document.getElementById('res-asset').innerText = `${asset} (${currentTF})`;
+            let dirEl = document.getElementById('res-direction');
+            dirEl.innerText = `${direction} — Classe ${grade} (${scorePoints}/100)`;
+            dirEl.className = direction === 'BUY' ? 'buy' : 'sell';
 
-            document.getElementById('res-range').innerText = rangeText;
-            document.getElementById('res-sl').innerText = slVal;
-            document.getElementById('res-tp').innerText = tpVal;
-            document.getElementById('res-tp-label').innerText = localStats.quantum_shield ? "Take Profit (Recupero):" : "Take Profit (Target Istituzionale):";
-            document.getElementById('res-score').innerText = `Quantum Grade ${signalGrade} (SMC + VWAP + Multi-TF)`;
+            document.getElementById('res-levels').innerText = `Entry ${livePrice.toFixed(decimals)} | SL ${slNum.toFixed(decimals)} | TP ${tpNum.toFixed(decimals)}`;
+            document.getElementById('res-prob').innerText = `~${estProb}% TP vs ~${100 - estProb}% SL (stima indicativa)`;
+            document.getElementById('res-reason').innerText = reason;
+            document.getElementById('res-invalid').innerText = `${invalidation} | Note: ${lastSignalData.warnings}`;
+
+            await fetch('/api/signal/log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    asset: asset,
+                    timeframe: currentTF,
+                    direction: direction,
+                    entry: Number(livePrice.toFixed(decimals)),
+                    sl: Number(slNum.toFixed(decimals)),
+                    tp: Number(tpNum.toFixed(decimals)),
+                    grade: grade,
+                    est_tp_prob: estProb,
+                    executed: executedFlag,
+                    notes: reason
+                })
+            }).then(() => fetchStats()).catch(() => {});
 
             let tgStatusEl = document.getElementById('res-tg-status');
-            signalBox.style.display = 'block';
-
-            if (tgToggle) {
+            if (executedFlag && tgToggle) {
                 let tgToken = document.getElementById('tg-token').value.trim();
                 let tgChatId = document.getElementById('tg-chatid').value.trim();
-
                 if (tgToken && tgChatId) {
-                    tgStatusEl.innerText = "Invio in corso in chat...";
-                    tgStatusEl.style.color = "var(--accent-warning)";
-
-                    let headerTag = localStats.quantum_shield ? "🚨 QUANTUM RECOVERY SIGNAL" : "🛡️ QUANTUM MASTER SIGNAL";
-                    let formattedMsg = `<b>${headerTag}</b>\n\n<b>Asset:</b> ${cleanAssetSymbol} (${currentTF})\n<b>Direzione:</b> ${direction} (${signalGrade})\n<b>Range (OB):</b> ${rangeText}\n\n<b>Stop Loss (Wide):</b> ${slVal}\n<b>Target (TP):</b> ${tpVal}`;
-
+                    tgStatusEl.innerText = "Invio in corso...";
+                    let msg = `<b>SEGNALE ${direction} (${grade})</b>\n<b>Asset:</b> ${cleanSymbol} (${currentTF})\n<b>Entry:</b> ${livePrice.toFixed(decimals)}\n<b>SL:</b> ${slNum.toFixed(decimals)}\n<b>TP:</b> ${tpNum.toFixed(decimals)}\n<b>Stima TP (indicativa):</b> ~${estProb}%\n<b>Motivo:</b> ${reason}`;
                     try {
                         let tgRes = await fetch('/api/telegram/send', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                bot_token: tgToken,
-                                chat_id: tgChatId,
-                                message: formattedMsg
-                            })
+                            body: JSON.stringify({ bot_token: tgToken, chat_id: tgChatId, message: msg })
                         });
                         let tgData = await tgRes.json();
-                        if (tgData.status === "success") {
-                            tgStatusEl.innerText = "✅ Arrivato in chat su Telegram!";
-                            tgStatusEl.style.color = "var(--accent-success)";
-                        } else {
-                            tgStatusEl.innerText = "❌ " + tgData.message;
-                            tgStatusEl.style.color = "var(--accent-danger)";
-                        }
-                    } catch(e) {
-                        tgStatusEl.innerText = "❌ Errore connessione";
-                        tgStatusEl.style.color = "var(--accent-danger)";
+                        tgStatusEl.innerText = tgData.status === "success" ? "Inviato su Telegram" : "Errore: " + tgData.message;
+                    } catch (e) {
+                        tgStatusEl.innerText = "Errore di rete Telegram";
                     }
                 } else {
-                    tgStatusEl.innerText = "⚠️ Inserisci Token e Chat ID";
-                    tgStatusEl.style.color = "var(--accent-warning)";
+                    tgStatusEl.innerText = "Token o Chat ID mancanti";
                 }
             } else {
-                tgStatusEl.innerText = "Disattivato";
-                tgStatusEl.style.color = "var(--text-muted)";
+                tgStatusEl.innerText = executedFlag ? "Disattivato" : "Salvato solo come non eseguito";
             }
 
+            let nowStr = new Date().toTimeString().split(' ')[0];
             let logBox = document.getElementById('history-log');
-            let protectionTagText = localStats.quantum_shield ? ' [Quantum Recovery Active]' : '';
-            let logText = `[${timeStr}] ${asset} (${currentTF}) -> ${direction} [${signalGrade}]${protectionTagText}<br>`;
-            if (logBox.innerText.includes("Pronto")) {
-                logBox.innerHTML = logText;
-            } else {
-                logBox.innerHTML = logText + logBox.innerHTML;
-            }
+            logBox.innerHTML = `[${nowStr}] ${asset} (${currentTF}) ${direction} [${grade}] ~${estProb}% (${executedFlag ? 'Eseguito' : 'Non eseguito'})<br>` + logBox.innerHTML;
+        }
+
+        function logNonEseguito() {
+            generaSegnale(false);
         }
 
         function copiaSegnalePro() {
@@ -827,16 +1072,48 @@ def serve_home(full_path: str = ""):
                 alert("Genera prima un segnale!");
                 return;
             }
+            let text = `${lastSignalData.symbol} (${lastSignalData.tf}) - ${lastSignalData.dir} [${lastSignalData.grade}]\nEntry: ${lastSignalData.entry}\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp}\nStima TP (indicativa): ~${lastSignalData.estProb}%\nInvalidazione: ${lastSignalData.invalidation}`;
+            navigator.clipboard.writeText(text).then(() => alert("Segnale copiato!"));
+        }
 
-            let modeTitle = lastSignalData.isProtection ? "🚨 QUANTUM RECOVERY SIGNAL" : "🛡️ QUANTUM MASTER SIGNAL";
-            let text = `${modeTitle} - ${lastSignalData.symbol} (${currentTF})\n\n${lastSignalData.dir} [${lastSignalData.grade}] RANGE: ${lastSignalData.range}\n\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp1}`;
+        async function eseguiBacktest() {
+            let raw = document.getElementById('bt-prices').value.trim();
+            let prices = raw.split(/[\s,;]+/).map(Number).filter(n => !isNaN(n) && isFinite(n) && n > 0);
+            let slPoints = parseFloat(document.getElementById('bt-sl').value) || 2.5;
+            let tpPoints = parseFloat(document.getElementById('bt-tp').value) || 3.5;
+            let spread = parseFloat(document.getElementById('spread-input').value) || 0;
 
-            navigator.clipboard.writeText(text).then(() => {
-                alert("Segnale copiato negli appunti!");
-            });
+            let outEl = document.getElementById('bt-output');
+            outEl.innerText = "Esecuzione in corso...";
+
+            try {
+                let res = await fetch('/api/backtest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prices: prices,
+                        spread: spread,
+                        commission_per_trade: 0.0,
+                        sl_points: slPoints,
+                        tp_points: tpPoints,
+                        train_ratio: 0.7
+                    })
+                });
+                let data = await res.json();
+                if (data.status !== "ok") {
+                    outEl.innerText = data.message || "Errore backtest";
+                    return;
+                }
+                let tr = data.train_in_sample;
+                let te = data.test_out_of_sample;
+                outEl.innerHTML =
+                    `<b>TRAIN (70%):</b> Trade ${tr.trades} | W/L ${tr.wins}/${tr.losses} (${tr.win_rate_closed}%) | PnL netto ${tr.net_pnl_points} | MaxDD ${tr.max_drawdown_points}<br>` +
+                    `<b>TEST OUT-OF-SAMPLE (30%):</b> Trade ${te.trades} | W/L ${te.wins}/${te.losses} (${te.win_rate_closed}%) | PnL netto ${te.net_pnl_points} | MaxDD ${te.max_drawdown_points}`;
+            } catch (e) {
+                outEl.innerText = "Errore di connessione durante il backtest.";
+            }
         }
     </script>
-
 </body>
 </html>
     """
