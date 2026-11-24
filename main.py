@@ -54,7 +54,7 @@ class SignalTrackerState:
                         "beps": self.beps,
                         "consecutive_losses": self.consecutive_losses,
                         "shield_active": self.shield_active,
-                        "signals_log": self.signals_log[-200:],
+                        "signals_log": self.signals_log[-300:],
                     },
                     f,
                     indent=2,
@@ -65,6 +65,13 @@ class SignalTrackerState:
 
     def record_signal(self, sig: dict):
         self.signals_log.append(sig)
+        self.save()
+
+    def update_signal_outcome(self, signal_id: int, outcome: str):
+        for item in reversed(self.signals_log):
+            if item.get("id") == signal_id:
+                item["outcome"] = outcome
+                break
         self.save()
 
     def process_result(self, result_type: str):
@@ -91,6 +98,9 @@ class SignalTrackerState:
         active_trades = self.total_trades - self.beps
         std_wr = (self.wins / active_trades * 100) if active_trades > 0 else 0.0
         unexecuted_count = sum(1 for s in self.signals_log if not s.get("executed", False))
+        buy_count = sum(1 for s in self.signals_log if s.get("direction") == "BUY")
+        sell_count = sum(1 for s in self.signals_log if s.get("direction") == "SELL")
+        total_spread_cost = round(sum(float(s.get("spread", 0.0) or 0.0) for s in self.signals_log if s.get("executed")), 4)
         return {
             "total_trades": self.total_trades,
             "wins": self.wins,
@@ -101,6 +111,9 @@ class SignalTrackerState:
             "shield_active": self.shield_active,
             "logged_signals": len(self.signals_log),
             "unexecuted_monitored": unexecuted_count,
+            "buy_signals": buy_count,
+            "sell_signals": sell_count,
+            "logged_spread_cost": total_spread_cost,
             "recent_signals": self.signals_log[-15:],
         }
 
@@ -120,10 +133,16 @@ class LogSignalRequest(BaseModel):
     entry: float
     sl: float
     tp: float
+    spread: float = 0.0
     grade: str
     est_tp_prob: float
     executed: bool = True
     notes: str = ""
+
+
+class UpdateSignalOutcomeRequest(BaseModel):
+    signal_id: int
+    outcome: str  # "win", "loss", "bep", "unexecuted_monitored", "pending"
 
 
 class TelegramSendRequest(BaseModel):
@@ -181,7 +200,10 @@ async def post_trade_result(payload: TradeResultRequest):
 
 @app.post("/api/signal/log")
 async def post_signal_log(payload: LogSignalRequest):
+    next_id = (tracker.signals_log[-1].get("id", 0) + 1) if tracker.signals_log else 1
     entry_obj = {
+        "id": next_id,
+        "mode_type": "manual_paper_log",
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "asset": payload.asset,
         "timeframe": payload.timeframe,
@@ -189,6 +211,7 @@ async def post_signal_log(payload: LogSignalRequest):
         "entry": payload.entry,
         "sl": payload.sl,
         "tp": payload.tp,
+        "spread": payload.spread,
         "grade": payload.grade,
         "est_tp_prob": payload.est_tp_prob,
         "executed": payload.executed,
@@ -196,6 +219,12 @@ async def post_signal_log(payload: LogSignalRequest):
         "notes": payload.notes,
     }
     tracker.record_signal(entry_obj)
+    return {"status": "ok", "stats": tracker.get_stats()}
+
+
+@app.post("/api/signal/outcome")
+async def post_signal_outcome(payload: UpdateSignalOutcomeRequest):
+    tracker.update_signal_outcome(payload.signal_id, payload.outcome)
     return {"status": "ok", "stats": tracker.get_stats()}
 
 
@@ -213,6 +242,8 @@ async def run_backtest(payload: BacktestRequest):
         wins = 0
         losses = 0
         net_pnl = 0.0
+        gross_profit = 0.0
+        gross_loss = 0.0
         peak = 0.0
         max_dd = 0.0
         trades = 0
@@ -255,6 +286,10 @@ async def run_backtest(payload: BacktestRequest):
                 raw_pnl = (exit_price - entry) if pos == "BUY" else (entry - exit_price)
                 trade_pnl = raw_pnl - payload.commission_per_trade
                 net_pnl += trade_pnl
+                if trade_pnl > 0:
+                    gross_profit += trade_pnl
+                elif trade_pnl < 0:
+                    gross_loss += abs(trade_pnl)
                 trades += 1
                 if outcome == "win":
                     wins += 1
@@ -272,12 +307,16 @@ async def run_backtest(payload: BacktestRequest):
 
         closed = wins + losses
         wr = round((wins / closed) * 100, 2) if closed > 0 else 0.0
+        pf = round(gross_profit / gross_loss, 2) if gross_loss > 0 else None
+        avg_pnl = round(net_pnl / trades, 4) if trades > 0 else 0.0
         return {
             "bars": len(segment),
             "trades": trades,
             "wins": wins,
             "losses": losses,
             "win_rate_closed": wr,
+            "profit_factor": pf,
+            "avg_pnl_points": avg_pnl,
             "net_pnl_points": round(net_pnl, 4),
             "max_drawdown_points": round(max_dd, 4),
         }
@@ -286,6 +325,7 @@ async def run_backtest(payload: BacktestRequest):
     test_res = simulate_slice(prices[split_idx:])
     return {
         "status": "ok",
+        "source_type": "backtest_user_series",
         "spread_used": payload.spread,
         "commission_per_trade": payload.commission_per_trade,
         "train_in_sample": train_res,
@@ -545,7 +585,7 @@ def serve_home(full_path: str = ""):
             font-size: 0.75rem;
             color: var(--text-muted);
             margin-top: 8px;
-            max-height: 130px;
+            max-height: 140px;
             overflow-y: auto;
             font-family: monospace;
             background: var(--bg-body);
@@ -591,18 +631,22 @@ def serve_home(full_path: str = ""):
 
     <!-- MONITOR PERSISTENTE -->
     <div class="card" style="border-left: 6px solid var(--accent-success);" id="monitor-card">
-        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-success); margin-bottom: 10px;">MONITOR STATO & REGISTRO PERSISTENTE</div>
+        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-success); margin-bottom: 10px;">MONITOR STATO & REGISTRO (LOG MANUALE / PAPER)</div>
         <div class="data-row">
-            <span>Stato Motore:</span>
-            <strong id="ai-status-text" style="color: var(--accent-success);">Regole + Controlli Attivi</strong>
+            <span>Fase / Stato Motore:</span>
+            <strong id="ai-status-text" style="color: var(--accent-success);">In attesa di analisi</strong>
         </div>
         <div class="data-row">
             <span>Win Rate Registrato (Senza BEP):</span>
             <strong id="stat-winrate" style="color: var(--accent-primary);">0.00% (0 Win / 0 Loss / 0 BEP)</strong>
         </div>
         <div class="data-row">
-            <span>Segnali Salvati / Non Eseguiti Monitorati:</span>
-            <strong id="stat-logged">0 / 0</strong>
+            <span>Segnali Salvati / BUY-SELL / Non Eseguiti:</span>
+            <strong id="stat-logged">0 / 0-0 / 0</strong>
+        </div>
+        <div class="data-row">
+            <span>Costo Spread Sommato (Log Eseguiti):</span>
+            <strong id="stat-spread">0</strong>
         </div>
     </div>
 
@@ -669,12 +713,12 @@ def serve_home(full_path: str = ""):
             </div>
             <div>
                 <label for="spread-input">Spread Stimato:</label>
-                <input type="number" step="0.01" id="spread-input" value="0.30">
+                <input type="text" id="spread-input" value="0.30">
             </div>
         </div>
 
-        <label for="series-input">Serie Chiusure Recenti (Opzionale, separate da virgola per EMA/RSI):</label>
-        <input type="text" id="series-input" placeholder="Es: 3928.1, 3929.5, 3931.0, 3930.8, 3932.4, 3934.5">
+        <label for="series-input">Serie Chiusure Recenti (Opzionale, virgola/spazio per EMA/RSI/Fase):</label>
+        <input type="text" id="series-input" placeholder="Es: 3530.1, 3531.5, 3533.0, 3534.2, 3536.0, 3538.1">
 
         <label>Timeframe:</label>
         <div class="tf-grid">
@@ -708,11 +752,11 @@ def serve_home(full_path: str = ""):
             <strong id="res-asset">--</strong>
         </div>
         <div class="data-row">
-            <span>Direzione & Classe:</span>
+            <span>Direzione, Fase & Classe:</span>
             <span id="res-direction">--</span>
         </div>
         <div class="data-row">
-            <span>Ingresso / SL / TP:</span>
+            <span>Ingresso / SL / TP (R:R):</span>
             <strong id="res-levels">--</strong>
         </div>
         <div class="data-row">
@@ -720,7 +764,7 @@ def serve_home(full_path: str = ""):
             <strong id="res-prob" style="color: var(--accent-primary);">--</strong>
         </div>
         <div class="data-row">
-            <span>Motivo Tecnico:</span>
+            <span>Motivo Tecnico & Durata Attesa:</span>
             <strong id="res-reason" style="text-align: right; max-width: 65%;">--</strong>
         </div>
         <div class="data-row">
@@ -737,15 +781,15 @@ def serve_home(full_path: str = ""):
     <!-- SIMULATORE BACKTEST SU DATI UTENTE -->
     <div class="card">
         <div style="font-size: 0.82rem; font-weight: 900; color: var(--accent-primary); margin-bottom: 10px;">BACKTEST SU TUA SERIE STORICA (TRAIN / OUT-OF-SAMPLE)</div>
-        <textarea id="bt-prices" rows="3" placeholder="Incolla almeno 25 prezzi separati da virgola (es. 3920, 3922, 3921, 3925, ...)"></textarea>
+        <textarea id="bt-prices" rows="3" placeholder="Incolla almeno 25 prezzi separati da virgola (es. 3520, 3522, 3521, 3525, ...)"></textarea>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
             <div>
                 <label>SL (punti):</label>
-                <input type="number" step="0.1" id="bt-sl" value="2.5">
+                <input type="text" id="bt-sl" value="2.5">
             </div>
             <div>
                 <label>TP (punti):</label>
-                <input type="number" step="0.1" id="bt-tp" value="3.5">
+                <input type="text" id="bt-tp" value="3.5">
             </div>
         </div>
         <button type="button" class="btn" style="width: 100%;" onclick="eseguiBacktest()">ESEGUI BACKTEST REALE</button>
@@ -771,8 +815,28 @@ def serve_home(full_path: str = ""):
             consecutive_losses: 0,
             shield_active: false,
             logged_signals: 0,
-            unexecuted_monitored: 0
+            unexecuted_monitored: 0,
+            buy_signals: 0,
+            sell_signals: 0,
+            logged_spread_cost: 0
         };
+
+        function parseNum(val, fallback = NaN) {
+            if (typeof val === 'number') return Number.isFinite(val) ? val : fallback;
+            if (!val) return fallback;
+            let cleaned = String(val).trim().replace(/\s+/g, '');
+            if (cleaned.includes(',') && cleaned.includes('.')) {
+                if (cleaned.lastIndexOf(',') > cleaned.lastIndexOf('.')) {
+                    cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+                } else {
+                    cleaned = cleaned.replace(/,/g, '');
+                }
+            } else if (cleaned.includes(',')) {
+                cleaned = cleaned.replace(',', '.');
+            }
+            let n = Number(cleaned);
+            return Number.isFinite(n) ? n : fallback;
+        }
 
         function onModeChange() {
             let mode = document.getElementById('strategy-mode').value;
@@ -791,7 +855,8 @@ def serve_home(full_path: str = ""):
             let activeTrades = localStats.total - localStats.beps;
             let wr = activeTrades > 0 ? ((localStats.wins / activeTrades) * 100).toFixed(2) : "0.00";
             document.getElementById('stat-winrate').innerText = `${wr}% (${localStats.wins} Win / ${localStats.losses} Loss / ${localStats.beps} BEP)`;
-            document.getElementById('stat-logged').innerText = `${localStats.logged_signals} / ${localStats.unexecuted_monitored}`;
+            document.getElementById('stat-logged').innerText = `${localStats.logged_signals} / ${localStats.buy_signals}-${localStats.sell_signals} / ${localStats.unexecuted_monitored}`;
+            document.getElementById('stat-spread').innerText = String(localStats.logged_spread_cost);
 
             let badgeEl = document.getElementById('header-badge');
             let monitorCard = document.getElementById('monitor-card');
@@ -819,6 +884,9 @@ def serve_home(full_path: str = ""):
                     localStats.shield_active = Boolean(data.shield_active);
                     localStats.logged_signals = data.logged_signals || 0;
                     localStats.unexecuted_monitored = data.unexecuted_monitored || 0;
+                    localStats.buy_signals = data.buy_signals || 0;
+                    localStats.sell_signals = data.sell_signals || 0;
+                    localStats.logged_spread_cost = data.logged_spread_cost || 0;
                     updateUIStats();
                 }
             } catch (e) {}
@@ -879,18 +947,20 @@ def serve_home(full_path: str = ""):
             let asset = document.getElementById('asset-select').value;
             let tvSymbol = "OANDA:XAUUSD";
             let defaultP = "3934.50";
-            if (asset.includes("NAS100")) { tvSymbol = "CAPITALCOM:US100"; defaultP = "20500.00"; }
-            else if (asset.includes("EUR")) { tvSymbol = "FX:EURUSD"; defaultP = "1.0845"; }
-            else if (asset.includes("GBP")) { tvSymbol = "FX:GBPUSD"; defaultP = "1.3020"; }
-            else if (asset.includes("BTC")) { tvSymbol = "BITSTAMP:BTCUSD"; defaultP = "67500.00"; }
-            else if (asset.includes("ETH")) { tvSymbol = "BITSTAMP:ETHUSD"; defaultP = "2650.00"; }
-            else if (asset.includes("SOL")) { tvSymbol = "BITSTAMP:SOLUSD"; defaultP = "104.80"; }
-            else if (asset.includes("NEAR")) { tvSymbol = "BINANCE:NEARUSD"; defaultP = "5.25"; }
-            else if (asset.includes("SUI")) { tvSymbol = "COINBASE:SUIUSD"; defaultP = "1.00"; }
-            else if (asset.includes("DOGE")) { tvSymbol = "BITSTAMP:DOGEUSD"; defaultP = "0.1450"; }
-            else if (asset.includes("SHIB")) { tvSymbol = "BITSTAMP:SHIBUSD"; defaultP = "0.00001850"; }
-            else if (asset.includes("XRP")) { tvSymbol = "BITSTAMP:XRPUSD"; defaultP = "0.5500"; }
+            let defaultSp = "0.30";
+            if (asset.includes("NAS100")) { tvSymbol = "CAPITALCOM:US100"; defaultP = "20500.00"; defaultSp = "1.50"; }
+            else if (asset.includes("EUR")) { tvSymbol = "FX:EURUSD"; defaultP = "1.0845"; defaultSp = "0.0002"; }
+            else if (asset.includes("GBP")) { tvSymbol = "FX:GBPUSD"; defaultP = "1.3020"; defaultSp = "0.0003"; }
+            else if (asset.includes("BTC")) { tvSymbol = "BITSTAMP:BTCUSD"; defaultP = "67500.00"; defaultSp = "12.00"; }
+            else if (asset.includes("ETH")) { tvSymbol = "BITSTAMP:ETHUSD"; defaultP = "2650.00"; defaultSp = "1.50"; }
+            else if (asset.includes("SOL")) { tvSymbol = "BITSTAMP:SOLUSD"; defaultP = "104.80"; defaultSp = "0.15"; }
+            else if (asset.includes("NEAR")) { tvSymbol = "BINANCE:NEARUSD"; defaultP = "5.25"; defaultSp = "0.0100"; }
+            else if (asset.includes("SUI")) { tvSymbol = "COINBASE:SUIUSD"; defaultP = "1.00"; defaultSp = "0.0050"; }
+            else if (asset.includes("DOGE")) { tvSymbol = "BITSTAMP:DOGEUSD"; defaultP = "0.1450"; defaultSp = "0.0003"; }
+            else if (asset.includes("SHIB")) { tvSymbol = "BITSTAMP:SHIBUSD"; defaultP = "0.00001850"; defaultSp = "0.00000005"; }
+            else if (asset.includes("XRP")) { tvSymbol = "BITSTAMP:XRPUSD"; defaultP = "0.5500"; defaultSp = "0.0005"; }
             document.getElementById('live-price-input').value = defaultP;
+            document.getElementById('spread-input').value = defaultSp;
             initChart(tvSymbol);
         }
 
@@ -905,7 +975,7 @@ def serve_home(full_path: str = ""):
         function parseSeries() {
             let raw = document.getElementById('series-input').value.trim();
             if (!raw) return [];
-            return raw.split(/[\s,;]+/).map(Number).filter(n => !isNaN(n) && isFinite(n) && n > 0);
+            return raw.split(/[;\s]+/).map(tok => parseNum(tok)).filter(n => !isNaN(n) && n > 0);
         }
 
         function calcEMA(arr, period) {
@@ -917,18 +987,33 @@ def serve_home(full_path: str = ""):
             return ema;
         }
 
+        function calcRSI(arr, period = 14) {
+            if (arr.length <= period) return null;
+            let gains = 0, losses = 0;
+            for (let i = arr.length - period; i < arr.length; i++) {
+                let d = arr[i] - arr[i - 1];
+                if (d > 0) gains += d;
+                else losses += Math.abs(d);
+            }
+            let avgG = gains / period;
+            let avgL = losses / period;
+            if (avgL === 0) return avgG > 0 ? 100 : 50;
+            return 100 - (100 / (1 + avgG / avgL));
+        }
+
         async function generaSegnale(executedFlag = true) {
             let asset = document.getElementById('asset-select').value;
-            let livePrice = parseFloat(document.getElementById('live-price-input').value);
-            let spread = parseFloat(document.getElementById('spread-input').value) || 0;
+            let livePrice = parseNum(document.getElementById('live-price-input').value);
+            let spread = parseNum(document.getElementById('spread-input').value, 0);
             let mode = document.getElementById('strategy-mode').value;
             let isScalp = mode === 'scalp';
             let tgToggle = document.getElementById('telegram-toggle').checked;
 
             if (isNaN(livePrice) || livePrice <= 0) {
-                alert("Inserisci un prezzo valido!");
+                alert("Inserisci un prezzo valido (es. 3538.185 o 3538,185)!");
                 return;
             }
+            if (spread < 0) spread = 0;
 
             let decimals = 2;
             if (asset.includes("SHIB")) decimals = 8;
@@ -936,58 +1021,120 @@ def serve_home(full_path: str = ""):
 
             let series = parseSeries();
             let direction = "BUY";
-            let reason = "Prezzo corrente di riferimento (nessuna serie storica inserita)";
+            let reason = "Analisi sul solo prezzo corrente (nessuna serie storica inserita)";
+            let regime = "Dati limitati";
             let scorePoints = 50;
             let warnings = [];
 
-            if (spread > (asset.includes("XAU") ? 1.5 : (decimals === 4 ? 0.0008 : 5.0))) {
-                warnings.push("Spread elevato rispetto al riferimento");
+            let maxNormalSpread = asset.includes("XAU") ? 1.5 : (asset.includes("NAS100") ? 5.0 : (asset.includes("BTC") ? 35.0 : (decimals === 4 ? 0.0008 : 2.0)));
+            if (spread > maxNormalSpread) {
+                warnings.push(`Spread alto (${spread})`);
                 scorePoints -= 15;
             }
 
-            if (series.length >= 8) {
-                let fast = calcEMA(series, 3);
-                let slow = calcEMA(series, 8);
+            // Base unit legata alla scala del prezzo corrente
+            let baseUnit = decimals === 8 ? Math.max(livePrice * 0.008, 0.0000004)
+                : (decimals === 4 ? Math.max(livePrice * 0.0012, 0.0008)
+                : Math.max(livePrice * 0.0005, 0.8));
+
+            if (series.length >= 6) {
+                let diffs = [];
+                for (let i = 1; i < series.length; i++) diffs.push(Math.abs(series[i] - series[i - 1]));
+                let avgMove = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+                if (avgMove > 0) baseUnit = Math.max(avgMove, baseUnit * 0.4);
+
+                let lastStep = diffs[diffs.length - 1] || 0;
+                if (lastStep > avgMove * 3.5 && avgMove > 0) {
+                    warnings.push("Spike/movimento improvviso rispetto alla media recente");
+                    regime = "Alta volatilità / spike";
+                    scorePoints -= 10;
+                }
+
+                let fast = calcEMA(series, Math.min(4, series.length));
+                let slow = calcEMA(series, Math.min(12, series.length));
                 let lastF = fast[fast.length - 1];
                 let lastS = slow[slow.length - 1];
-                let momentum = series[series.length - 1] - series[series.length - 4];
-                if (lastF >= lastS && momentum >= 0) {
+                let rsiVal = calcRSI(series, Math.min(14, series.length - 1));
+
+                let minP = Math.min(...series);
+                let maxP = Math.max(...series);
+                let spanP = maxP - minP;
+                let relRange = spanP > 0 ? (livePrice - minP) / spanP : 0.5;
+
+                let netChange = series[series.length - 1] - series[0];
+                if (spanP < baseUnit * 1.5) {
+                    regime = "Compressione / laterale";
+                    scorePoints -= 5;
+                } else if (netChange > baseUnit * 2.0 && lastF >= lastS) {
+                    regime = "Trend rialzista";
+                    scorePoints += 15;
+                } else if (netChange < -baseUnit * 2.0 && lastF <= lastS) {
+                    regime = "Trend ribassista";
+                    scorePoints += 15;
+                } else if (regime === "Dati limitati") {
+                    regime = "Fase mista / possibile inversione";
+                }
+
+                if (lastF >= lastS) {
                     direction = "BUY";
-                    scorePoints += 25;
-                    reason = `EMA3 > EMA8 e momentum positivo (${momentum.toFixed(decimals)})`;
+                    scorePoints += 10;
+                    reason = `EMA veloce >= lenta (${lastF.toFixed(decimals)} vs ${lastS.toFixed(decimals)})`;
                 } else {
                     direction = "SELL";
-                    scorePoints += 25;
-                    reason = `EMA3 < EMA8 e momentum negativo (${momentum.toFixed(decimals)})`;
+                    scorePoints += 10;
+                    reason = `EMA veloce < lenta (${lastF.toFixed(decimals)} vs ${lastS.toFixed(decimals)})`;
                 }
+
+                if (rsiVal !== null) {
+                    reason += ` | RSI ${rsiVal.toFixed(1)}`;
+                    if (direction === "BUY" && rsiVal > 75) {
+                        warnings.push("RSI elevato (>75): rischio ritracciamento");
+                        scorePoints -= 10;
+                    } else if (direction === "SELL" && rsiVal < 25) {
+                        warnings.push("RSI basso (<25): rischio rimbalzo");
+                        scorePoints -= 10;
+                    } else if ((direction === "BUY" && rsiVal >= 45 && rsiVal <= 70) || (direction === "SELL" && rsiVal <= 55 && rsiVal >= 30)) {
+                        scorePoints += 8;
+                    }
+                }
+
+                if (direction === "BUY" && relRange > 0.85) warnings.push("Prezzo vicino ai massimi del campione");
+                if (direction === "SELL" && relRange < 0.15) warnings.push("Prezzo vicino ai minimi del campione");
             } else {
-                warnings.push("Serie storica < 8 valori: analisi limitata al singolo prezzo");
-                direction = (Math.floor(livePrice * 100) % 2 === 0) ? "BUY" : "SELL";
+                warnings.push("Poche chiusure recenti: inserisci almeno 6 valori per fase e EMA/RSI");
+                direction = (Math.round(livePrice * 100) % 2 === 0) ? "BUY" : "SELL";
             }
 
             if (localStats.shield_active) {
-                warnings.push("Ultima operazione in LOSS: monitorare con cautela");
+                warnings.push(`Ultima operazione in LOSS (serie loss: ${localStats.consecutive_losses})`);
                 scorePoints -= 10;
             }
 
-            let step = decimals === 4 ? 0.0012 : (decimals === 8 ? 0.0000004 : 1.2);
-            let slDist = isScalp ? step * 2.5 : step * 4.0;
-            let tpDist = isScalp ? step * 3.5 : step * 5.6;
+            let slDist = isScalp ? baseUnit * 2.2 : baseUnit * 3.2;
+            let tpDist = isScalp ? baseUnit * 3.0 : baseUnit * 4.5;
 
             let slNum = direction === "BUY" ? livePrice - slDist : livePrice + slDist;
             let tpNum = direction === "BUY" ? livePrice + tpDist : livePrice - tpDist;
+            let rrRatio = slDist > 0 ? (tpDist / slDist).toFixed(2) : "1.00";
 
+            scorePoints = Math.max(20, Math.min(92, scorePoints));
             let grade = "C";
-            if (scorePoints >= 80) grade = "A++";
-            else if (scorePoints >= 70) grade = "A+";
+            if (scorePoints >= 82) grade = "A++";
+            else if (scorePoints >= 72) grade = "A+";
             else if (scorePoints >= 60) grade = "A";
             else if (scorePoints >= 45) grade = "B";
 
-            // Stima indicativa, non una certezza
-            let estProb = Math.max(35, Math.min(72, scorePoints - 5));
+            // Stima prudente e indicativa, mai una certezza
+            let estProb = Math.max(35, Math.min(68, Math.round(scorePoints * 0.72)));
+            let durationHint = currentTF === 'M1' ? "Breve (pochi minuti, attenzione a rumore)"
+                : (currentTF === 'M5' ? "Breve-medio (decine di minuti)"
+                : (currentTF === 'M15' ? "Medio (1-3 ore)" : "Più esteso (diverse ore)"));
+
             let invalidation = direction === "BUY"
-                ? `Chiusura decisa sotto ${slNum.toFixed(decimals)} o perdita del momentum rialzista`
-                : `Chiusura decisa sopra ${slNum.toFixed(decimals)} o perdita del momentum ribassista`;
+                ? `Chiusura sotto ${slNum.toFixed(decimals)} o rottura struttura rialzista`
+                : `Chiusura sopra ${slNum.toFixed(decimals)} o rottura struttura ribassista`;
+
+            document.getElementById('ai-status-text').innerText = `${regime} (${series.length} chiusure)`;
 
             let cleanSymbol = asset.replace("/", "");
             lastSignalData = {
@@ -995,12 +1142,15 @@ def serve_home(full_path: str = ""):
                 asset: asset,
                 tf: currentTF,
                 dir: direction,
+                regime: regime,
                 entry: livePrice.toFixed(decimals),
                 sl: slNum.toFixed(decimals),
                 tp: tpNum.toFixed(decimals),
+                rr: rrRatio,
                 grade: grade,
+                scorePoints: scorePoints,
                 estProb: estProb,
-                reason: reason,
+                reason: `${reason} | Durata: ${durationHint}`,
                 invalidation: invalidation,
                 warnings: warnings.length ? warnings.join("; ") : "Nessuna criticità rilevata"
             };
@@ -1008,12 +1158,12 @@ def serve_home(full_path: str = ""):
             document.getElementById('signal-box').style.display = 'block';
             document.getElementById('res-asset').innerText = `${asset} (${currentTF})`;
             let dirEl = document.getElementById('res-direction');
-            dirEl.innerText = `${direction} — Classe ${grade} (${scorePoints}/100)`;
+            dirEl.innerText = `${direction} | ${regime} — Classe ${grade} (${scorePoints}/100)`;
             dirEl.className = direction === 'BUY' ? 'buy' : 'sell';
 
-            document.getElementById('res-levels').innerText = `Entry ${livePrice.toFixed(decimals)} | SL ${slNum.toFixed(decimals)} | TP ${tpNum.toFixed(decimals)}`;
+            document.getElementById('res-levels').innerText = `Entry ${livePrice.toFixed(decimals)} | SL ${slNum.toFixed(decimals)} | TP ${tpNum.toFixed(decimals)} (R:R 1:${rrRatio})`;
             document.getElementById('res-prob').innerText = `~${estProb}% TP vs ~${100 - estProb}% SL (stima indicativa)`;
-            document.getElementById('res-reason').innerText = reason;
+            document.getElementById('res-reason').innerText = lastSignalData.reason;
             document.getElementById('res-invalid').innerText = `${invalidation} | Note: ${lastSignalData.warnings}`;
 
             await fetch('/api/signal/log', {
@@ -1026,10 +1176,11 @@ def serve_home(full_path: str = ""):
                     entry: Number(livePrice.toFixed(decimals)),
                     sl: Number(slNum.toFixed(decimals)),
                     tp: Number(tpNum.toFixed(decimals)),
+                    spread: spread,
                     grade: grade,
                     est_tp_prob: estProb,
                     executed: executedFlag,
-                    notes: reason
+                    notes: `${regime} - ${reason}`
                 })
             }).then(() => fetchStats()).catch(() => {});
 
@@ -1039,7 +1190,7 @@ def serve_home(full_path: str = ""):
                 let tgChatId = document.getElementById('tg-chatid').value.trim();
                 if (tgToken && tgChatId) {
                     tgStatusEl.innerText = "Invio in corso...";
-                    let msg = `<b>SEGNALE ${direction} (${grade})</b>\n<b>Asset:</b> ${cleanSymbol} (${currentTF})\n<b>Entry:</b> ${livePrice.toFixed(decimals)}\n<b>SL:</b> ${slNum.toFixed(decimals)}\n<b>TP:</b> ${tpNum.toFixed(decimals)}\n<b>Stima TP (indicativa):</b> ~${estProb}%\n<b>Motivo:</b> ${reason}`;
+                    let msg = `<b>SEGNALE ${direction} (${grade})</b>\n<b>Asset:</b> ${cleanSymbol} (${currentTF})\n<b>Fase:</b> ${regime}\n<b>Entry:</b> ${livePrice.toFixed(decimals)}\n<b>SL:</b> ${slNum.toFixed(decimals)}\n<b>TP:</b> ${tpNum.toFixed(decimals)}\n<b>Stima TP (indicativa):</b> ~${estProb}%\n<b>Motivo:</b> ${reason}`;
                     try {
                         let tgRes = await fetch('/api/telegram/send', {
                             method: 'POST',
@@ -1072,16 +1223,16 @@ def serve_home(full_path: str = ""):
                 alert("Genera prima un segnale!");
                 return;
             }
-            let text = `${lastSignalData.symbol} (${lastSignalData.tf}) - ${lastSignalData.dir} [${lastSignalData.grade}]\nEntry: ${lastSignalData.entry}\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp}\nStima TP (indicativa): ~${lastSignalData.estProb}%\nInvalidazione: ${lastSignalData.invalidation}`;
+            let text = `${lastSignalData.symbol} (${lastSignalData.tf}) - ${lastSignalData.dir} [${lastSignalData.grade}]\nFase: ${lastSignalData.regime}\nEntry: ${lastSignalData.entry}\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp} (R:R 1:${lastSignalData.rr})\nStima TP (indicativa): ~${lastSignalData.estProb}%\nInvalidazione: ${lastSignalData.invalidation}`;
             navigator.clipboard.writeText(text).then(() => alert("Segnale copiato!"));
         }
 
         async function eseguiBacktest() {
             let raw = document.getElementById('bt-prices').value.trim();
-            let prices = raw.split(/[\s,;]+/).map(Number).filter(n => !isNaN(n) && isFinite(n) && n > 0);
-            let slPoints = parseFloat(document.getElementById('bt-sl').value) || 2.5;
-            let tpPoints = parseFloat(document.getElementById('bt-tp').value) || 3.5;
-            let spread = parseFloat(document.getElementById('spread-input').value) || 0;
+            let prices = raw.split(/[;\s]+/).map(tok => parseNum(tok)).filter(n => !isNaN(n) && n > 0);
+            let slPoints = parseNum(document.getElementById('bt-sl').value, 2.5);
+            let tpPoints = parseNum(document.getElementById('bt-tp').value, 3.5);
+            let spread = parseNum(document.getElementById('spread-input').value, 0);
 
             let outEl = document.getElementById('bt-output');
             outEl.innerText = "Esecuzione in corso...";
@@ -1107,8 +1258,8 @@ def serve_home(full_path: str = ""):
                 let tr = data.train_in_sample;
                 let te = data.test_out_of_sample;
                 outEl.innerHTML =
-                    `<b>TRAIN (70%):</b> Trade ${tr.trades} | W/L ${tr.wins}/${tr.losses} (${tr.win_rate_closed}%) | PnL netto ${tr.net_pnl_points} | MaxDD ${tr.max_drawdown_points}<br>` +
-                    `<b>TEST OUT-OF-SAMPLE (30%):</b> Trade ${te.trades} | W/L ${te.wins}/${te.losses} (${te.win_rate_closed}%) | PnL netto ${te.net_pnl_points} | MaxDD ${te.max_drawdown_points}`;
+                    `<b>TRAIN (70%):</b> Trade ${tr.trades} | W/L ${tr.wins}/${tr.losses} (${tr.win_rate_closed}%) | PF ${tr.profit_factor ?? 'n/d'} | PnL netto ${tr.net_pnl_points} | MaxDD ${tr.max_drawdown_points}<br>` +
+                    `<b>TEST OUT-OF-SAMPLE (30%):</b> Trade ${te.trades} | W/L ${te.wins}/${te.losses} (${te.win_rate_closed}%) | PF ${te.profit_factor ?? 'n/d'} | PnL netto ${te.net_pnl_points} | MaxDD ${te.max_drawdown_points}`;
             } catch (e) {
                 outEl.innerText = "Errore di connessione durante il backtest.";
             }
