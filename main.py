@@ -100,7 +100,9 @@ class SignalTrackerState:
         unexecuted_count = sum(1 for s in self.signals_log if not s.get("executed", False))
         buy_count = sum(1 for s in self.signals_log if s.get("direction") == "BUY")
         sell_count = sum(1 for s in self.signals_log if s.get("direction") == "SELL")
-        total_spread_cost = round(sum(float(s.get("spread", 0.0) or 0.0) for s in self.signals_log if s.get("executed")), 4)
+        total_spread_cost = round(
+            sum(float(s.get("spread", 0.0) or 0.0) for s in self.signals_log if s.get("executed")), 4
+        )
         return {
             "total_trades": self.total_trades,
             "wins": self.wins,
@@ -136,13 +138,14 @@ class LogSignalRequest(BaseModel):
     spread: float = 0.0
     grade: str
     est_tp_prob: float
+    ev_points: float = 0.0
     executed: bool = True
     notes: str = ""
 
 
 class UpdateSignalOutcomeRequest(BaseModel):
     signal_id: int
-    outcome: str  # "win", "loss", "bep", "unexecuted_monitored", "pending"
+    outcome: str
 
 
 class TelegramSendRequest(BaseModel):
@@ -155,6 +158,7 @@ class BacktestRequest(BaseModel):
     prices: list[float]
     spread: float = 0.25
     commission_per_trade: float = 0.0
+    slippage_points: float = 0.0
     sl_points: float = 2.0
     tp_points: float = 3.0
     train_ratio: float = 0.7
@@ -214,6 +218,7 @@ async def post_signal_log(payload: LogSignalRequest):
         "spread": payload.spread,
         "grade": payload.grade,
         "est_tp_prob": payload.est_tp_prob,
+        "ev_points": payload.ev_points,
         "executed": payload.executed,
         "outcome": "pending" if payload.executed else "unexecuted_monitored",
         "notes": payload.notes,
@@ -257,7 +262,8 @@ async def run_backtest(payload: BacktestRequest):
                 pos = "SELL"
 
             if pos:
-                entry = segment[i] + (payload.spread / 2.0 if pos == "BUY" else -payload.spread / 2.0)
+                cost_half = (payload.spread / 2.0) + payload.slippage_points
+                entry = segment[i] + (cost_half if pos == "BUY" else -cost_half)
                 sl = entry - payload.sl_points if pos == "BUY" else entry + payload.sl_points
                 tp = entry + payload.tp_points if pos == "BUY" else entry - payload.tp_points
                 exit_price = segment[-1]
@@ -327,6 +333,7 @@ async def run_backtest(payload: BacktestRequest):
         "status": "ok",
         "source_type": "backtest_user_series",
         "spread_used": payload.spread,
+        "slippage_used": payload.slippage_points,
         "commission_per_trade": payload.commission_per_trade,
         "train_in_sample": train_res,
         "test_out_of_sample": test_res,
@@ -370,7 +377,7 @@ def serve_home(full_path: str = ""):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apex Lab - Analisi & Backtest</title>
+    <title>Apex Lab - EV, Rischio & Backtest</title>
     <style>
         :root {
             --bg-body: #f8fafc;
@@ -585,7 +592,7 @@ def serve_home(full_path: str = ""):
             font-size: 0.75rem;
             color: var(--text-muted);
             margin-top: 8px;
-            max-height: 140px;
+            max-height: 150px;
             overflow-y: auto;
             font-family: monospace;
             background: var(--bg-body);
@@ -626,7 +633,7 @@ def serve_home(full_path: str = ""):
 
     <div class="header">
         <h1>APEX LAB</h1>
-        <div id="header-badge" class="badge">PERSISTENT + BACKTEST</div>
+        <div id="header-badge" class="badge">EV + RISK + BACKTEST</div>
     </div>
 
     <!-- MONITOR PERSISTENTE -->
@@ -647,6 +654,29 @@ def serve_home(full_path: str = ""):
         <div class="data-row">
             <span>Costo Spread Sommato (Log Eseguiti):</span>
             <strong id="stat-spread">0</strong>
+        </div>
+    </div>
+
+    <!-- CONTROLLO RISCHIO & DIMENSIONAMENTO -->
+    <div class="card">
+        <div style="font-size: 0.8rem; font-weight: 900; color: var(--accent-primary); margin-bottom: 10px;">CONTROLLO RISCHIO & SIZE INDICATIVA</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div>
+                <label for="risk-capital">Capitale Riferimento (€/$):</label>
+                <input type="text" id="risk-capital" value="1000">
+            </div>
+            <div>
+                <label for="risk-pct">Rischio Max Trade (%):</label>
+                <input type="text" id="risk-pct" value="1.0">
+            </div>
+        </div>
+        <div class="data-row">
+            <span>Budget Rischio per Trade:</span>
+            <strong id="risk-budget-val">10.00</strong>
+        </div>
+        <div class="data-row">
+            <span>Nota Disciplina Rischio:</span>
+            <strong id="risk-note-val" style="color: var(--text-muted); text-align: right; max-width: 65%;">Mai aumentare la size dopo una perdita</strong>
         </div>
     </div>
 
@@ -760,6 +790,14 @@ def serve_home(full_path: str = ""):
             <strong id="res-levels">--</strong>
         </div>
         <div class="data-row">
+            <span>Expected Value (Punti, Stima):</span>
+            <strong id="res-ev" style="color: var(--accent-primary);">--</strong>
+        </div>
+        <div class="data-row">
+            <span>Size Indicativa (da Rischio %):</span>
+            <strong id="res-size">--</strong>
+        </div>
+        <div class="data-row">
             <span>Stima Probabilità TP vs SL (Indicativa):</span>
             <strong id="res-prob" style="color: var(--accent-primary);">--</strong>
         </div>
@@ -782,7 +820,7 @@ def serve_home(full_path: str = ""):
     <div class="card">
         <div style="font-size: 0.82rem; font-weight: 900; color: var(--accent-primary); margin-bottom: 10px;">BACKTEST SU TUA SERIE STORICA (TRAIN / OUT-OF-SAMPLE)</div>
         <textarea id="bt-prices" rows="3" placeholder="Incolla almeno 25 prezzi separati da virgola (es. 3520, 3522, 3521, 3525, ...)"></textarea>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
             <div>
                 <label>SL (punti):</label>
                 <input type="text" id="bt-sl" value="2.5">
@@ -790,6 +828,10 @@ def serve_home(full_path: str = ""):
             <div>
                 <label>TP (punti):</label>
                 <input type="text" id="bt-tp" value="3.5">
+            </div>
+            <div>
+                <label>Slippage:</label>
+                <input type="text" id="bt-slip" value="0.10">
             </div>
         </div>
         <button type="button" class="btn" style="width: 100%;" onclick="eseguiBacktest()">ESEGUI BACKTEST REALE</button>
@@ -838,6 +880,22 @@ def serve_home(full_path: str = ""):
             return Number.isFinite(n) ? n : fallback;
         }
 
+        function refreshRiskDisplay() {
+            let cap = parseNum(document.getElementById('risk-capital').value, 1000);
+            let pct = parseNum(document.getElementById('risk-pct').value, 1.0);
+            if (cap < 0) cap = 0;
+            if (pct < 0) pct = 0;
+            if (pct > 5) pct = 5;
+            let budget = (cap * pct) / 100;
+            document.getElementById('risk-budget-val').innerText = budget.toFixed(2);
+            document.getElementById('risk-note-val').innerText = localStats.shield_active
+                ? `In cautela (${localStats.consecutive_losses} loss): mantieni size ridotta o invariata`
+                : "Mai aumentare la size dopo una perdita";
+        }
+
+        document.getElementById('risk-capital').addEventListener('input', refreshRiskDisplay);
+        document.getElementById('risk-pct').addEventListener('input', refreshRiskDisplay);
+
         function onModeChange() {
             let mode = document.getElementById('strategy-mode').value;
             let genBtn = document.getElementById('gen-btn');
@@ -866,9 +924,10 @@ def serve_home(full_path: str = ""):
                 monitorCard.style.borderLeft = "6px solid var(--accent-danger)";
             } else {
                 badgeEl.className = "badge";
-                badgeEl.innerText = "PERSISTENT + BACKTEST";
+                badgeEl.innerText = "EV + RISK + BACKTEST";
                 monitorCard.style.borderLeft = "6px solid var(--accent-success)";
             }
+            refreshRiskDisplay();
         }
 
         async function fetchStats() {
@@ -923,6 +982,7 @@ def serve_home(full_path: str = ""):
         }
 
         fetchStats();
+        refreshRiskDisplay();
 
         function initChart(symbolCode) {
             document.getElementById('tradingview_widget').innerHTML = "";
@@ -1032,7 +1092,6 @@ def serve_home(full_path: str = ""):
                 scorePoints -= 15;
             }
 
-            // Base unit legata alla scala del prezzo corrente
             let baseUnit = decimals === 8 ? Math.max(livePrice * 0.008, 0.0000004)
                 : (decimals === 4 ? Math.max(livePrice * 0.0012, 0.0008)
                 : Math.max(livePrice * 0.0005, 0.8));
@@ -1115,7 +1174,10 @@ def serve_home(full_path: str = ""):
 
             let slNum = direction === "BUY" ? livePrice - slDist : livePrice + slDist;
             let tpNum = direction === "BUY" ? livePrice + tpDist : livePrice - tpDist;
-            let rrRatio = slDist > 0 ? (tpDist / slDist).toFixed(2) : "1.00";
+
+            let netRewardPts = Math.max(0, tpDist - spread);
+            let netRiskPts = Math.max(0.00000001, slDist + spread);
+            let rrRatio = (netRewardPts / netRiskPts).toFixed(2);
 
             scorePoints = Math.max(20, Math.min(92, scorePoints));
             let grade = "C";
@@ -1124,8 +1186,17 @@ def serve_home(full_path: str = ""):
             else if (scorePoints >= 60) grade = "A";
             else if (scorePoints >= 45) grade = "B";
 
-            // Stima prudente e indicativa, mai una certezza
-            let estProb = Math.max(35, Math.min(68, Math.round(scorePoints * 0.72)));
+            // Stima prudente e indicativa, non una certezza
+            let estProb = Math.max(35, Math.min(65, Math.round(scorePoints * 0.68)));
+            let pWin = estProb / 100;
+            let pLoss = 1 - pWin;
+            let evPoints = (pWin * netRewardPts) - (pLoss * netRiskPts);
+
+            let cap = parseNum(document.getElementById('risk-capital').value, 1000);
+            let pct = Math.min(5, Math.max(0, parseNum(document.getElementById('risk-pct').value, 1.0)));
+            let budget = (cap * pct) / 100;
+            let sizeUnits = slDist > 0 ? (budget / slDist) : 0;
+
             let durationHint = currentTF === 'M1' ? "Breve (pochi minuti, attenzione a rumore)"
                 : (currentTF === 'M5' ? "Breve-medio (decine di minuti)"
                 : (currentTF === 'M15' ? "Medio (1-3 ore)" : "Più esteso (diverse ore)"));
@@ -1147,6 +1218,8 @@ def serve_home(full_path: str = ""):
                 sl: slNum.toFixed(decimals),
                 tp: tpNum.toFixed(decimals),
                 rr: rrRatio,
+                ev: evPoints.toFixed(decimals),
+                size: sizeUnits.toFixed(2),
                 grade: grade,
                 scorePoints: scorePoints,
                 estProb: estProb,
@@ -1161,7 +1234,9 @@ def serve_home(full_path: str = ""):
             dirEl.innerText = `${direction} | ${regime} — Classe ${grade} (${scorePoints}/100)`;
             dirEl.className = direction === 'BUY' ? 'buy' : 'sell';
 
-            document.getElementById('res-levels').innerText = `Entry ${livePrice.toFixed(decimals)} | SL ${slNum.toFixed(decimals)} | TP ${tpNum.toFixed(decimals)} (R:R 1:${rrRatio})`;
+            document.getElementById('res-levels').innerText = `Entry ${livePrice.toFixed(decimals)} | SL ${slNum.toFixed(decimals)} | TP ${tpNum.toFixed(decimals)} (R:R netto 1:${rrRatio})`;
+            document.getElementById('res-ev').innerText = `${evPoints >= 0 ? '+' : ''}${evPoints.toFixed(decimals)} pt (al netto spread ${spread}, stima)`;
+            document.getElementById('res-size').innerText = `${sizeUnits.toFixed(2)} unità/pt (rischio ${budget.toFixed(2)})`;
             document.getElementById('res-prob').innerText = `~${estProb}% TP vs ~${100 - estProb}% SL (stima indicativa)`;
             document.getElementById('res-reason').innerText = lastSignalData.reason;
             document.getElementById('res-invalid').innerText = `${invalidation} | Note: ${lastSignalData.warnings}`;
@@ -1179,6 +1254,7 @@ def serve_home(full_path: str = ""):
                     spread: spread,
                     grade: grade,
                     est_tp_prob: estProb,
+                    ev_points: Number(evPoints.toFixed(decimals)),
                     executed: executedFlag,
                     notes: `${regime} - ${reason}`
                 })
@@ -1190,7 +1266,7 @@ def serve_home(full_path: str = ""):
                 let tgChatId = document.getElementById('tg-chatid').value.trim();
                 if (tgToken && tgChatId) {
                     tgStatusEl.innerText = "Invio in corso...";
-                    let msg = `<b>SEGNALE ${direction} (${grade})</b>\n<b>Asset:</b> ${cleanSymbol} (${currentTF})\n<b>Fase:</b> ${regime}\n<b>Entry:</b> ${livePrice.toFixed(decimals)}\n<b>SL:</b> ${slNum.toFixed(decimals)}\n<b>TP:</b> ${tpNum.toFixed(decimals)}\n<b>Stima TP (indicativa):</b> ~${estProb}%\n<b>Motivo:</b> ${reason}`;
+                    let msg = `<b>SEGNALE ${direction} (${grade})</b>\n<b>Asset:</b> ${cleanSymbol} (${currentTF})\n<b>Fase:</b> ${regime}\n<b>Entry:</b> ${livePrice.toFixed(decimals)}\n<b>SL:</b> ${slNum.toFixed(decimals)}\n<b>TP:</b> ${tpNum.toFixed(decimals)}\n<b>EV stimato:</b> ${evPoints >= 0 ? '+' : ''}${evPoints.toFixed(decimals)} pt\n<b>Stima TP (indicativa):</b> ~${estProb}%\n<b>Motivo:</b> ${reason}`;
                     try {
                         let tgRes = await fetch('/api/telegram/send', {
                             method: 'POST',
@@ -1211,7 +1287,7 @@ def serve_home(full_path: str = ""):
 
             let nowStr = new Date().toTimeString().split(' ')[0];
             let logBox = document.getElementById('history-log');
-            logBox.innerHTML = `[${nowStr}] ${asset} (${currentTF}) ${direction} [${grade}] ~${estProb}% (${executedFlag ? 'Eseguito' : 'Non eseguito'})<br>` + logBox.innerHTML;
+            logBox.innerHTML = `[${nowStr}] ${asset} (${currentTF}) ${direction} [${grade}] EV:${evPoints >= 0 ? '+' : ''}${evPoints.toFixed(decimals)} ~${estProb}% (${executedFlag ? 'Eseguito' : 'Non eseguito'})<br>` + logBox.innerHTML;
         }
 
         function logNonEseguito() {
@@ -1223,7 +1299,7 @@ def serve_home(full_path: str = ""):
                 alert("Genera prima un segnale!");
                 return;
             }
-            let text = `${lastSignalData.symbol} (${lastSignalData.tf}) - ${lastSignalData.dir} [${lastSignalData.grade}]\nFase: ${lastSignalData.regime}\nEntry: ${lastSignalData.entry}\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp} (R:R 1:${lastSignalData.rr})\nStima TP (indicativa): ~${lastSignalData.estProb}%\nInvalidazione: ${lastSignalData.invalidation}`;
+            let text = `${lastSignalData.symbol} (${lastSignalData.tf}) - ${lastSignalData.dir} [${lastSignalData.grade}]\nFase: ${lastSignalData.regime}\nEntry: ${lastSignalData.entry}\nSL: ${lastSignalData.sl}\nTP: ${lastSignalData.tp} (R:R netto 1:${lastSignalData.rr})\nEV stimato: ${lastSignalData.ev} pt | Size ind.: ${lastSignalData.size}\nStima TP (indicativa): ~${lastSignalData.estProb}%\nInvalidazione: ${lastSignalData.invalidation}`;
             navigator.clipboard.writeText(text).then(() => alert("Segnale copiato!"));
         }
 
@@ -1232,6 +1308,7 @@ def serve_home(full_path: str = ""):
             let prices = raw.split(/[;\s]+/).map(tok => parseNum(tok)).filter(n => !isNaN(n) && n > 0);
             let slPoints = parseNum(document.getElementById('bt-sl').value, 2.5);
             let tpPoints = parseNum(document.getElementById('bt-tp').value, 3.5);
+            let slippage = parseNum(document.getElementById('bt-slip').value, 0);
             let spread = parseNum(document.getElementById('spread-input').value, 0);
 
             let outEl = document.getElementById('bt-output');
@@ -1245,6 +1322,7 @@ def serve_home(full_path: str = ""):
                         prices: prices,
                         spread: spread,
                         commission_per_trade: 0.0,
+                        slippage_points: slippage,
                         sl_points: slPoints,
                         tp_points: tpPoints,
                         train_ratio: 0.7
